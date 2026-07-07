@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>壽司郎分店即時排隊情況 (Sushiro Store List)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #d11c1c;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .select-input {
+            padding: 8px 12px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            background-color: #fff;
+        }
+        .select-input:focus {
+            border-color: #d11c1c;
+        }
+        .btn {
+            background-color: #d11c1c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background-color: #a81414;
+        }
+        .status {
+            font-size: 14px;
+            color: #666;
+            flex-grow: 1;
+            text-align: right;
+        }
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .status {
+                text-align: left;
+            }
+        }
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .store-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-top: 4px solid #d11c1c;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .store-card:hover {
+            transform: translateY(-3px);
+        }
+        .store-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #111;
+        }
+        .store-info {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .store-info strong {
+            color: #333;
+        }
+        .queue-box {
+            background-color: #fff5f5;
+            border: 1px solid #feb2b2;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .queue-title {
+            font-weight: bold;
+            color: #c53030;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed #feb2b2;
+            padding-bottom: 6px;
+        }
+        .queue-detail {
+            color: #4a5568;
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+        .error-msg {
+            color: #d11c1c;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 20px;
+        }
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            padding: 20px;
+            grid-column: 1 / -1;
+        }
+        .text-muted {
+            color: #a0aec0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍣 壽司郎 Sushiro 分店即時狀況 & 排隊資訊</h1>
+    
+    <div class="controls">
+        <div class="filter-group">
+            <button class="btn" onclick="fetchStoreList()">更新資料</button>
+            
+            <select id="regionFilter" class="select-input" onchange="filterAndRenderStores()">
+                <option value="all">全部地區 (全港分店)</option>
+                <optgroup label="香港島">
+                    <option value="central-western">中西區</option>
+                    <option value="wan-chai">灣仔區</option>
+                    <option value="eastern">東區</option>
+                    <option value="southern">南區</option>
+                </optgroup>
+                <optgroup label="九龍">
+                    <option value="yau-tsim-mong">油尖旺區</option>
+                    <option value="sham-shui-po">深水埗區</option>
+                    <option value="kowloon-city">九龍城區</option>
+                    <option value="wong-tai-sin">黃大仙區</option>
+                    <option value="kwun-tong">觀塘區</option>
+                </optgroup>
+                <optgroup label="新界">
+                    <option value="kwai-tsing">葵青區</option>
+                    <!-- 🎯 這裡加上 selected 屬性，初始化時 HTML 就預設選取荃灣區 -->
+                    <option value="tsuen-wan" selected>荃灣區</option>
+                    <option value="tuen-mun">屯門區</option>
+                    <option value="yuen-long">元朗區</option>
+                    <option value="north">北區</option>
+                    <option value="tai-po">大埔區</option>
+                    <option value="sha-tin">沙田區</option>
+                    <option value="sai-kung">西貢區</option>
+                    <option value="islands">離島區</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="status" id="statusLog">點擊按鈕獲取最新分店資料...</div>
+    </div>
+
+    <div id="errorMessage" style="display: none;"></div>
+    
+    <div class="store-grid" id="storeContainer"></div>
+</div>
+
+<script>
+    const proxyUrl = 'https://cors.freehi.workers.dev/?';
+    const storeApiUrl = proxyUrl + 'https://sushipass.sushiro.com.hk/api/2.0/info/storelist?latitude=22&longitude=114&numresults=50&region=HK';
+    const queueApiBaseUrl = proxyUrl + 'https://sushipass.sushiro.com.hk/api/2.0/remote/groupqueues?region=HK&storeid=';
+
+    let currentFetchedStores = [];
+
+    const backupData = [
+        { store_id: 10, store_name: "元朗廣場店", address: "新界元朗青山公路249-251號元朗廣場3樓341-348號舖", business_hours: "10:30-22:00", waitingGroup: 0 },
+        { store_id: 8, store_name: "旺角瓊華中心店", address: "九龍旺角彌敦道628號瓊華中心地庫", business_hours: "10:30-22:00", waitingGroup: 21 },
+        { store_id: 9, store_name: "屯門市廣場店", address: "新界屯門屯順街1號屯門市廣場1期2樓2192號舖", business_hours: "10:30-22:00", waitingGroup: 15 }
+    ];
+
+    const districtKeywords = {
+        'central-western': ['中西區', '中環', '上環', '西環', '堅尼地城', '石塘咀', '西營盤', '金鐘'],
+        'wan-chai': ['灣仔', '銅鑼灣', '跑馬地', '天后', '大坑'],
+        'eastern': ['東區', '北角', '鰂魚涌', '太古', '筲箕灣', '柴灣', '西灣河', '杏花邨'],
+        'southern': ['南區', '香港仔', '鴨脷洲', '黃竹坑', '赤柱', '淺水灣', '置富', '華富'],
+        'yau-tsim-mong': ['油尖旺', '旺角', '油麻地', '尖沙咀', '大角咀', '佐敦', '太子', '奧運'],
+        'sham-shui-po': ['深水埗', '長沙灣', '荔枝角', '石硤尾', '美孚', '昂船洲', '又一村'],
+        'kowloon-city': ['九龍城', '紅磡', '土瓜灣', '何文田', '九龍塘', '黃埔', '啟德'],
+        'wong-tai-sin': ['黃大仙', '新蒲崗', '鑽石山', '慈雲山', '樂富', '牛池灣'],
+        'kwun-tong': ['觀塘', '牛頭角', '九龍灣', '藍田', '油塘', '秀茂坪'],
+        'kwai-tsing': ['葵青', '葵湧', '青衣', '葵芳', '葵興'],
+        'tsuen-wan': ['荃灣', '深井', '馬灣'],
+        'tuen-mun': ['屯門', '藍地', '黃金海岸'],
+        'yuen-long': ['元朗', '天水圍', '朗屏', '錦田', '新田'],
+        'north': ['北區', '上水', '粉嶺', '沙頭角', '打鼓嶺'],
+        'tai-po': ['大埔', '太和', '白石角'],
+        'sha-tin': ['沙田', '大圍', '馬鞍山', '火炭', '石門'],
+        'sai-kung': ['西貢', '將軍澳', '坑口', '寶琳', '調景嶺'],
+        'islands': ['離島', '東涌', '大嶼山', '長洲', '南丫島', '坪洲', '赤鱲角']
+    };
+
+    async function fetchStoreList() {
+        const container = document.getElementById('storeContainer');
+        const statusLog = document.getElementById('statusLog');
+        const errorDiv = document.getElementById('errorMessage');
+        
+        container.innerHTML = '<div class="loading">載入中分店清單...</div>';
+        errorDiv.style.display = 'none';
+        statusLog.textContent = '正在從 API 獲取資料...';
+
+        try {
+            const response = await fetch(storeApiUrl);
+            if (!response.ok) throw new Error(`HTTP 錯誤！`);
+            
+            const data = await response.json();
+            let stores = data.stores || data.data || (Array.isArray(data) ? data : []);
+            
+            stores.sort((a, b) => {
+                const groupA = a.waitingGroup !== undefined ? Number(a.waitingGroup) : 0;
+                const groupB = b.waitingGroup !== undefined ? Number(b.waitingGroup) : 0;
+                return groupB - groupA;
+            });
+
+            currentFetchedStores = stores;
+            
+            // 🎯 獲取完資料後，會自動執行 filter 邏輯，此時選單值已經預設為 'tsuen-wan'
+            filterAndRenderStores();
+            
+        } catch (error) {
+            console.error('API 請求失敗:', error);
+            statusLog.textContent = 'API 讀取失敗，已載入備用資料。';
+            errorDiv.innerHTML = `<div class="error-msg"><strong>API 連線失敗：</strong>已切換至備用數據。</div>`;
+            errorDiv.style.display = 'block';
+            
+            backupData.sort((a, b) => Number(b.waitingGroup) - Number(a.waitingGroup));
+            currentFetchedStores = backupData;
+            filterAndRenderStores(true);
+        }
+    }
+
+    function filterAndRenderStores(isMock = false) {
+        const filterValue = document.getElementById('regionFilter').value;
+        const statusLog = document.getElementById('statusLog');
+        
+        let filteredStores = currentFetchedStores.filter(store => {
+            if (filterValue === 'all') return true;
+            
+            const address = store.address || '';
+            const keywords = districtKeywords[filterValue];
+            
+            if (!keywords) return true;
+            return keywords.some(keyword => address.includes(keyword));
+        });
+
+        renderStores(filteredStores);
+
+        if (filteredStores.length === 0) {
+            // 🎯 當預設為荃灣區而該區剛好沒店（或API連線失敗只有元朗/旺角/屯門備用資料）時的貼心提示
+            document.getElementById('storeContainer').innerHTML = '<div class="loading">當前行政區（或備用資料中）暫無分店資料。請切換其他地區瀏覽。</div>';
+            statusLog.textContent = `篩選完成，當前行政區無分店。`;
+            return;
+        }
+
+        statusLog.textContent = `已顯示該區 ${filteredStores.length} 間分店。正在同步現場詳細排隊資訊...`;
+        fetchAndRenderQueues(filteredStores, isMock);
+    }
+
+    function renderStores(stores) {
+        const container = document.getElementById('storeContainer');
+        container.innerHTML = '';
+
+        stores.forEach(store => {
+            const storeId = store.store_id || store.id || '';
+            const name = store.store_name || store.name || '未知分店';
+            const address = store.address || '未提供地址';
+            const hours = store.business_hours || '10:30 - 22:00';
+            const waitingGroup = store.waitingGroup !== undefined ? Number(store.waitingGroup) : 0;
+
+            const card = document.createElement('div');
+            card.className = 'store-card';
+            card.innerHTML = `
+                <div>
+                    <div class="store-name">${name}</div>
+                    <div class="store-info"><strong>地址：</strong>${address}</div>
+                    <div class="store-info"><strong>營業時間：</strong>${hours}</div>
+                </div>
+                <div class="queue-box">
+                    <div class="queue-title">排隊情況：<span>${waitingGroup} 組在等待</span></div>
+                    
+                    <div id="store-queue-section-${storeId}" data-waiting-group="${waitingGroup}">
+                        <div class="queue-detail">現時取號（最前）：<span class="text-muted">載入中...</span></div>
+                        <div class="queue-detail">現場等待組數：<span class="text-muted">載入中...</span></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    async function fetchAndRenderQueues(stores, isMock = false) {
+        const statusLog = document.getElementById('statusLog');
+        let completedCount = 0;
+
+        for (const store of stores) {
+            const storeId = store.store_id || store.id;
+            const sectionElement = document.getElementById(`store-queue-section-${storeId}`);
+            if (!sectionElement || !storeId) continue;
+
+            const waitingGroup = Number(sectionElement.getAttribute('data-waiting-group')) || 0;
+
+            if (isMock) {
+                setTimeout(() => {
+                    const currentSection = document.getElementById(`store-queue-section-${storeId}`);
+                    if (!currentSection) return;
+                    const mockFirst = 119;
+                    const calculatedLatest = mockFirst + waitingGroup; 
+                    currentSection.innerHTML = `
+                        <div class="queue-detail">現時取號（最前）：<strong>${calculatedLatest}</strong></div>
+                        <div class="queue-detail">現場等待組數：<strong>[119, 120, 121]</strong></div>
+                    `;
+                }, Math.random() * 300);
+                completedCount++;
+                continue;
+            }
+
+            try {
+                const res = await fetch(queueApiBaseUrl + storeId);
+                const queueData = await res.json();
+                const rootData = queueData.data || queueData;
+                const boothQueue = rootData.boothQueue || [];
+
+                const checkSection = document.getElementById(`store-queue-section-${storeId}`);
+                if (checkSection) {
+                    if (boothQueue.length > 0) {
+                        const firstNumber = Number(boothQueue[0]); 
+                        const calculatedLatest = firstNumber + waitingGroup;
+
+                        checkSection.innerHTML = `
+                            <div class="queue-detail">現時取號（最前）：<strong>${calculatedLatest}</strong></div>
+                            <div class="queue-detail">現場等待組數：<strong>[${boothQueue.join(', ')}]</strong></div>
+                        `;
+                    } else {
+                        checkSection.innerHTML = `
+                            <div class="queue-detail">現時取號（最前）：<strong>-</strong></div>
+                            <div class="queue-detail">現場等待組數：<strong>無</strong></div>
+                        `;
+                    }
+                }
+
+            } catch (err) {
+                const errorSection = document.getElementById(`store-queue-section-${storeId}`);
+                if (errorSection) {
+                    errorSection.innerHTML = `
+                        <div class="queue-detail" style="color:#e53e3e;">⚠️ 無法獲取現場 boothQueue 數據</div>
+                    `;
+                }
+            }
+            
+            completedCount++;
+            statusLog.textContent = `正在同步現場詳細號碼... (${completedCount}/${stores.length})`;
+        }
+        statusLog.textContent = `更新完成！當前分區數據已同步。`;
+    }
+
+    window.onload = fetchStoreList;
+</script>
+
+</body>
+</html>
