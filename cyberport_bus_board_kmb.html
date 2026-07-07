@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數碼港總站 - 綜合交通資訊板</title>
+    <style>
+        :root {
+            --ctb-blue: #0053a0;
+            --ctb-yellow: #f1c40f;
+            --kmb-red: #bb2224;
+            --gmb-green: #27ae60;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --accent-orange: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .board-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .board-header {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .board-header h1 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .time-badge {
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.15);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .list-header {
+            display: flex;
+            background: #e2e8f0;
+            padding: 10px 20px;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            font-weight: bold;
+        }
+
+        .col-route { width: 22%; }
+        .col-dest { width: 33%; }
+        .col-etas { width: 45%; display: flex; justify-content: space-between; text-align: center; }
+        .eta-title-box { flex: 1; }
+
+        .bus-rows {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .bus-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .route-num {
+            font-size: 1.6rem;
+            font-weight: 800;
+            min-width: 70px;
+        }
+
+        .dest-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .dest-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+        }
+
+        .company-tag {
+            align-self: flex-start;
+            font-size: 0.65rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+        .tag-ctb { background-color: #d6a300; color: #fff; }
+        .tag-kmb { background-color: var(--kmb-red); }
+        .tag-gmb { background-color: var(--gmb-green); }
+
+        .etas-box {
+            width: 45%;
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+        }
+
+        .eta-block {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            padding: 6px 2px;
+            border-radius: 6px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .eta-block.next-1 {
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+
+        .mins-txt {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: #334155;
+        }
+
+        .next-1 .mins-txt {
+            color: var(--accent-orange);
+            font-size: 1.25rem;
+        }
+
+        .imminent {
+            color: #ef4444 !important;
+            animation: blink 1s infinite alternate;
+        }
+
+        .seq-lbl {
+            font-size: 0.65rem;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+
+        .board-footer {
+            background: #f8fafc;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .status-msg {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+        }
+
+        .btn-refresh {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @keyframes blink {
+            from { opacity: 1; }
+            to { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="board-container">
+    <div class="board-header">
+        <h1>數碼港總站 - 綜合交通資訊板</h1>
+        <div class="time-badge">現在時間: <span id="lbl-time">--:--:--</span></div>
+    </div>
+
+    <div class="list-header">
+        <div class="col-route">路線</div>
+        <div class="col-dest">目的地</div>
+        <div class="col-etas">
+            <div class="eta-title-box">下班車</div>
+            <div class="eta-title-box">第二班</div>
+            <div class="eta-title-box">第三班</div>
+        </div>
+    </div>
+
+    <div class="bus-rows" id="div-bus-rows"></div>
+
+    <div class="board-footer">
+        <div class="status-msg" id="status-text">正在整合城巴/九巴/小巴數據...</div>
+        <button class="btn-refresh" onclick="loadAllCyberportEta()">手動更新</button>
+    </div>
+</div>
+
+<script>
+    const CYBERPORT_STOPS = {
+        CTB: "002514",               // 城巴總站
+        KMB_970: "69A33177699F9444", // 九巴 970
+        GMB_STATION_ID: 2002364      // 專線小巴數碼港交匯處站
+    };
+
+    // 🌟 輔助函數：將目前的 Date 對象加上指定分鐘數，並格式化為 HH:MM
+    function getActualTimeStr(minsToAdd) {
+        const t = new Date();
+        t.setMinutes(t.getMinutes() + minsToAdd);
+        const hh = String(t.getHours()).padStart(2, '0');
+        const mm = String(t.getMinutes()).padStart(2, '0');
+        return `${hh}:${mm}`;
+    }
+
+    // 備用模擬數據（使用相對分鐘數，方便程式自動換算為實際時間）
+    const MOCK_DATA = [
+        { route: '30X', dest: '中環 (交易廣場)', comp: 'CTB', seq: 1, mins: 4 },
+        { route: '30X', dest: '中環 (交易廣場)', comp: 'CTB', seq: 2, mins: 19 },
+        { route: '42C', dest: '北角碼頭', comp: 'CTB', seq: 1, mins: 9 },
+        { route: '58', dest: '堅尼地城 (站點)', comp: 'GMB', seq: 1, mins: 3, dir: 'O' }, 
+        { route: '58', dest: '堅尼地城 (站點)', comp: 'GMB', seq: 2, mins: 13, dir: 'O' },
+        { route: '58', dest: '香港仔 (經田灣)', comp: 'GMB', seq: 1, mins: 6, dir: 'I' },  
+        { route: '58', dest: '香港仔 (經田灣)', comp: 'GMB', seq: 2, mins: 18, dir: 'I' },
+        { route: '69', dest: '鰂魚涌 (海康街)', comp: 'GMB', seq: 1, mins: 12 },
+        { route: '69A', dest: '香港仔 (經黃竹坑)', comp: 'GMB', seq: 1, mins: 1 },
+        { route: '69X', dest: '銅鑼灣 (駱克道)', comp: 'GMB', seq: 1, mins: 5 },
+        { route: '73', dest: '赤柱監獄', comp: 'CTB', seq: 1, mins: 0 },
+        { route: '970', dest: '蘇屋', comp: 'KMB', seq: 1, mins: 7 }
+    ];
+
+    async function loadAllCyberportEta() {
+        const rowContainer = document.getElementById('div-bus-rows');
+        const statusText = document.getElementById('status-text');
+        let combinedRawList = [];
+        let useMock = false;
+
+        const now = new Date();
+
+        try {
+            const [resCtb, resKmb, resGmb] = await Promise.allSettled([
+                fetch(`https://rt.data.gov.hk/v1/transport/citybus-nwfb/eta/CTB/${CYBERPORT_STOPS.CTB}/all`).then(r => r.json()),
+                fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${CYBERPORT_STOPS.KMB_970}`).then(r => r.json()),
+                fetch(`https://data.etabus.gov.hk/v1/transport/dfis/gmb/stop-eta/${CYBERPORT_STOPS.GMB_STATION_ID}`).then(r => r.json()).catch(() => ({data:[]}))
+            ]);
+
+            // 1. 解析城巴
+            if (resCtb.status === 'fulfilled' && resCtb.value && resCtb.value.data) {
+                resCtb.value.data.forEach(item => {
+                    if(item.eta) {
+                        const diff = Math.max(0, Math.floor((new Date(item.eta) - now) / 1000 / 60));
+                        combinedRawList.push({ route: item.route, dest: item.dest_tc, comp: 'CTB', seq: item.eta_seq, mins: diff, dir: 'N/A' });
+                    }
+                });
+            }
+
+            // 2. 解析九巴
+            if (resKmb.status === 'fulfilled' && resKmb.value && resKmb.value.data) {
+                resKmb.value.data.forEach(item => {
+                    if(item.eta) {
+                        const diff = Math.max(0, Math.floor((new Date(item.eta) - now) / 1000 / 60));
+                        combinedRawList.push({ route: item.route, dest: item.dest_tc, comp: 'KMB', seq: item.eta_seq, mins: diff, dir: 'N/A' });
+                    }
+                });
+            }
+
+            // 3. 解析專線小巴
+            if (resGmb.status === 'fulfilled' && resGmb.value && resGmb.value.data) {
+                resGmb.value.data.forEach(routeGroup => {
+                    const routeName = routeGroup.route_code;
+                    
+                    if(routeGroup.eta) {
+                        routeGroup.eta.forEach(item => {
+                            let customDest = routeGroup.dest_tc || "港島各區";
+                            let directionKey = item.dir || 'O'; 
+
+                            if(routeName === '58') {
+                                if (item.dir === 'I' || customDest.includes("香港仔")) {
+                                    customDest = "香港仔 (經田灣)";
+                                    directionKey = 'I';
+                                } else {
+                                    customDest = "堅尼地城 (站點)";
+                                    directionKey = 'O';
+                                }
+                            }
+                            if(routeName === '69A') customDest = "香港仔 (經黃竹坑)";
+                            if(routeName === '69X') customDest = "銅鑼灣 (駱克道)";
+                            if(routeName === '69') customDest = "鰂魚涌 (海康街)";
+
+                            combinedRawList.push({ 
+                                route: routeName, 
+                                dest: customDest, 
+                                comp: 'GMB', 
+                                seq: item.seq, 
+                                mins: item.diff_to_next_eta,
+                                dir: directionKey
+                            });
+                        });
+                    }
+                });
+            }
+
+            if (combinedRawList.length > 0) {
+                statusText.innerText = "🟢 已更新實時到站時刻表 (小巴 > 城巴 > 九巴)";
+                statusText.style.color = "green";
+            } else {
+                useMock = true;
+            }
+
+        } catch (err) {
+            console.error(err);
+            useMock = true;
+        }
+
+        if (useMock) {
+            combinedRawList = MOCK_DATA;
+            statusText.innerText = "🟡 展示模式 (已轉換為實際到站時間 12:34 格式)";
+            statusText.style.color = "#d97706";
+        }
+
+        // 分組
+        const groupedData = {};
+        combinedRawList.forEach(item => {
+            const key = `${item.route}_${item.comp}_${item.dir}`;
+            if (!groupedData[key]) {
+                groupedData[key] = {
+                    route: item.route,
+                    dest: item.dest,
+                    comp: item.comp,
+                    dir: item.dir,
+                    etas: {}
+                };
+            }
+            if (item.seq <= 3) {
+                groupedData[key].etas[item.seq] = item.mins;
+            }
+        });
+
+        // 權重排序 (小巴=1, 城巴=2, 九巴=3)
+        const companyOrder = { 'GMB': 1, 'CTB': 2, 'KMB': 3 };
+        const sortedGroups = Object.values(groupedData).sort((a, b) => {
+            if (companyOrder[a.comp] !== companyOrder[b.comp]) {
+                return companyOrder[a.comp] - companyOrder[b.comp];
+            }
+            if (a.route !== b.route) {
+                return a.route.localeCompare(b.route, undefined, {numeric: true, sensitivity: 'base'});
+            }
+            return a.dir.localeCompare(b.dir);
+        });
+
+        // 渲染畫面
+        rowContainer.innerHTML = '';
+        sortedGroups.forEach(item => {
+            let etasHtml = '';
+            
+            for (let seq = 1; seq <= 3; seq++) {
+                const mins = item.etas[seq];
+                let displayTime = '--';
+                let isImminent = false;
+
+                if (mins !== undefined && mins !== null && mins !== -1) {
+                    if (mins === 0) {
+                        displayTime = '即將到';
+                        isImminent = true;
+                    } else {
+                        // 🌟 核心改動：將原本的 "Xm" 改為呼叫輔助函數換算為實際時間 "HH:MM"
+                        displayTime = getActualTimeStr(mins);
+                    }
+                }
+
+                etasHtml += `
+                    <div class="eta-block ${seq === 1 ? 'next-1' : ''}">
+                        <div class="mins-txt ${isImminent ? 'imminent' : ''}" style="${!isImminent ? 'font-size: 1.1rem; letter-spacing: 0.5px;' : ''}">${displayTime}</div>
+                        <div class="seq-lbl">${seq === 1 ? '下班' : '第'+seq+'班'}</div>
+                    </div>
+                `;
+            }
+
+            let compLabel = "城巴";
+            let compClass = "tag-ctb";
+            let routeColor = "#1e293b";
+            
+            if (item.comp === 'KMB') { compLabel = "九巴"; compClass = "tag-kmb"; routeColor = "var(--kmb-red)"; }
+            if (item.comp === 'GMB') { compLabel = "專線小巴"; compClass = "tag-gmb"; routeColor = "var(--gmb-green)"; }
+
+            const rowHtml = `
+                <div class="bus-row">
+                    <div class="col-route route-num" style="color: ${routeColor};">${item.route}</div>
+                    <div class="col-dest dest-info">
+                        <div class="dest-title">往 ${item.dest}</div>
+                        <span class="company-tag ${compClass}">${compLabel}</span>
+                    </div>
+                    <div class="etas-box">
+                        ${etasHtml}
+                    </div>
+                </div>
+            `;
+            rowContainer.insertAdjacentHTML('beforeend', rowHtml);
+        });
+
+        document.getElementById('lbl-time').innerText = now.toTimeString().split(' ')[0];
+    }
+
+    loadAllCyberportEta();
+    setInterval(loadAllCyberportEta, 30000);
+</script>
+
+</body>
+</html>
