@@ -155,6 +155,22 @@
             color: #a0aec0;
             font-style: italic;
         }
+		.btn-api {
+			display: inline-block;
+			background-color: #4a5568;
+			color: white;
+			text-decoration: none;
+			padding: 6px 12px;
+			font-size: 13px;
+			border-radius: 4px;
+			margin-top: 10px;
+			text-align: center;
+			cursor: pointer;
+			transition: background 0.2s;
+		}
+		.btn-api:hover {
+			background-color: #2d3748;
+		}
     </style>
 </head>
 <body>
@@ -303,37 +319,41 @@
         fetchAndRenderQueues(filteredStores, isMock);
     }
 
-    function renderStores(stores) {
-        const container = document.getElementById('storeContainer');
-        container.innerHTML = '';
+	function renderStores(stores) {
+			const container = document.getElementById('storeContainer');
+			container.innerHTML = '';
 
-        stores.forEach(store => {
-            const storeId = store.store_id || store.id || '';
-            const name = store.store_name || store.name || '未知分店';
-            const address = store.address || '未提供地址';
-            const hours = store.business_hours || '10:30 - 22:00';
-            const waitingGroup = store.waitingGroup !== undefined ? Number(store.waitingGroup) : 0;
+			stores.forEach(store => {
+				const storeId = store.store_id || store.id || '';
+				const name = store.store_name || store.name || '未知分店';
+				const address = store.address || '未提供地址';
+				const hours = store.business_hours || '10:30 - 22:00';
+				const waitingGroup = store.waitingGroup !== undefined ? Number(store.waitingGroup) : 0;
 
-            const card = document.createElement('div');
-            card.className = 'store-card';
-            card.innerHTML = `
-                <div>
-                    <div class="store-name">${name}</div>
-                    <div class="store-info"><strong>地址：</strong>${address}</div>
-                    <div class="store-info"><strong>營業時間：</strong>${hours}</div>
-                </div>
-                <div class="queue-box">
-                    <div class="queue-title">排隊情況：<span>${waitingGroup} 組在等待</span></div>
-                    
-                    <div id="store-queue-section-${storeId}" data-waiting-group="${waitingGroup}">
-                        <div class="queue-detail">現時取號（最前）：<span class="text-muted">載入中...</span></div>
-                        <div class="queue-detail">現場等待組數：<span class="text-muted">載入中...</span></div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-    }
+				// 🎯 產生該分店對應的 API 連結 (不經由 proxy 轉發，直接彈去原 API 網址)
+				const fullApiUrl = `https://sushipass.sushiro.com.hk/api/2.0/remote/groupqueues?region=HK&storeid=${storeId}`;
+
+				const card = document.createElement('div');
+				card.className = 'store-card';
+				card.innerHTML = `
+					<div>
+						<div class="store-name">${name}</div>
+						<div class="store-info"><strong>地址：</strong>${address}</div>
+						<div class="store-info"><strong>營業時間：</strong>${hours}</div>
+						<a href="${fullApiUrl}" target="_blank" class="btn-api">查看原始排隊 API 數據</a>
+					</div>
+					<div class="queue-box">
+						<div class="queue-title">排隊情況：<span>${waitingGroup} 組在等待</span></div>
+						
+						<div id="store-queue-section-${storeId}" data-waiting-group="${waitingGroup}">
+							<div class="queue-detail">現時取號（最前）：<span class="text-muted">載入中...</span></div>
+							<div class="queue-detail">現場等待組數：<span class="text-muted">載入中...</span></div>
+						</div>
+					</div>
+				`;
+				container.appendChild(card);
+			});
+		}
 
     async function fetchAndRenderQueues(stores, isMock = false) {
         const statusLog = document.getElementById('statusLog');
