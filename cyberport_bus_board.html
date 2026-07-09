@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
+	<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚍</text></svg>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>數碼港實時交通到站提示</title>
     <style>
@@ -38,13 +39,35 @@
 
         .controls {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 8px;
             margin-bottom: 15px;
             background: white;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 倒數計時條樣式 */
+        .timer-bar-container {
+            width: 100%;
+            height: 4px;
+            background-color: #eee;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 100%;
+            background-color: var(--cyberport-blue);
+            transition: width 1s linear;
         }
 
         button {
@@ -133,18 +156,83 @@
         .tag-cache { background: #ffeaa7; color: #d63031; }
         .tag-demo { background: #dfe6e9; color: #636e72; }
         .tag-live { background: #badc58; color: #6ab04c; }
+		
+		/* 改為九巴Style */
+		:root {
+			--kmb-red: #e60012;
+			--text-main: #333;
+			--text-sub: #666;
+			--bg-color: #f8f9fa;
+		}
+
+		body {
+			background-color: var(--bg-color);
+		}
+
+		header {
+			background-color: var(--kmb-red); /* 改為九巴紅 */
+			box-shadow: none;
+		}
+
+		.route-card {
+			border-top: 4px solid #ccc; /* 保持分類色 */
+			border-radius: 12px;
+			padding: 16px;
+			border: 1px solid #e0e0e0;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+		}
+
+		.route-name {
+			font-size: 1.5rem;
+			font-weight: 800;
+		}
+
+		.eta-item {
+			padding: 10px 0;
+		}
+
+		.eta-label {
+			font-size: 0.9rem;
+			color: var(--text-sub);
+			font-weight: bold;
+		}
+
+		.eta-time {
+			font-size: 1.3rem; /* 放大分鐘數 */
+			color: var(--kmb-red);
+			font-family: 'Segoe UI', Arial, sans-serif;
+			font-weight: 700;
+		}
+
+		.eta-actual-time {
+			font-size: 0.8rem;
+			color: #999;
+		}
+
+		/* 狀態標籤美化 */
+		.status-tag {
+			font-size: 0.65rem;
+			padding: 2px 8px;
+			border-radius: 10px;
+			text-transform: uppercase;
+		}
     </style>
 </head>
 <body>
 
     <header>
         <h1>數碼港專用 實時到站提示</h1>
-        <p>Cyberport Real-time Transport ETA</p>
+        <p>Cyberport Real-time Transport ETA (Performance & UI Boost)</p>
     </header>
 
     <div class="controls">
-        <button id="refreshBtn">手動刷新</button>
-        <div class="last-update" id="lastUpdate">最後更新: 未更新</div>
+        <div class="controls-row">
+            <button id="refreshBtn">手動刷新</button>
+            <div class="last-update" id="lastUpdate">最後更新: 未更新</div>
+        </div>
+        <div class="timer-bar-container">
+            <div class="timer-bar" id="timerBar"></div>
+        </div>
     </div>
 
     <div class="category-title category-gmb">專線小巴 (GMB)</div>
@@ -157,41 +245,45 @@
     <div class="route-grid" id="kmb-container"></div>
 
     <script>
-        const PROXY_LIST = [
-            'https://cors.freehi.workers.dev/?',
-            'https://api.allorigins.win/raw?url=',
-            'https://cors-anywhere.herokuapp.com/'
-        ];
+        // 【結構化全域配置】
+        const TRANSPORT_CONFIG = {
+            refreshIntervalSec: 60,
+            cacheKeyPrefix: 'cache_eta_',
+            lastUpdateKey: 'cyberport_last_update',
+            labels: ['下班車', '第二班', '第三班'],
+            proxies: [
+                'https://cors.freehi.workers.dev/?',
+                'https://api.allorigins.win/raw?url=',
+                'https://cors-anywhere.herokuapp.com/'
+            ],
+            routes: {
+                gmb: [
+                    { route: '58', routeId: '2002580', routeSeq: '1', stopSeq: '7', dir: '經數碼港 往香港仔' }, 
+                    { route: '69A', routeId: '2000819', routeSeq: '1', stopSeq: '1', dir: '往 香港仔 (經黃竹坑)' },
+                    { route: '69X', routeId: '2000511', routeSeq: '1', stopSeq: '1', dir: '往 銅鑼灣 (駱克道)' },
+					{ route: '69', routeId: '2000410', routeSeq: '1', stopSeq: '1', dir: '往 鰂魚涌 (海康街)' }
+                ],
+                ctb: [
+                    { route: '30X', stopId: '002392', dir: 'O', labelDir: '往 金鐘 - 港鐵 C 出口' }, 
+                    { route: '33X', stopId: '002392', dir: 'O', labelDir: '往 筲箕灣' },
+                    { route: '73', stopId: '002392', dir: 'O', labelDir: '往 赤柱監獄' },
+                    { route: '970', stopId: '002392', dir: 'O', labelDir: '往 蘇屋' },
+					{ route: '42C', stopId: '002392', dir: 'O', labelDir: '往 北角碼頭' }
+                ],
+                kmb: [
+                    { route: '107P', stopId: '1B41827EB0497A78', serviceType: '1', dir: '往 海逸豪園' } 
+                ]
+            }
+        };
+
         let currentProxyIdx = 0;
-
-        const ETA_LABELS = ['下班車', '第二班', '第三班'];
-
-        // 【小巴路由配置】
-        const GMB_ROUTES = [
-            { route: '58', routeId: '2002580', routeSeq: '1', stopSeq: '7', dir: '經數碼港 往香港仔' }, 
-            { route: '69', routeId: '2000410', routeSeq: '1', stopSeq: '1', dir: '往 鰂魚涌 (海康街)' },
-            { route: '69A', routeId: '2000819', routeSeq: '1', stopSeq: '1', dir: '往 香港仔 (經黃竹坑)' },
-            { route: '69X', routeId: '2000511', routeSeq: '1', stopSeq: '1', dir: '往 銅鑼灣 (駱克道)' }
-        ];
-
-        // 【城巴路由配置】 - 加上 dir 限制防止多方向資料混雜
-        const CTB_ROUTES = [
-            { route: '30X', stopId: '002392', dir: 'O', labelDir: '往 金鐘 - 港鐵 C 出口' }, 
-            { route: '33X', stopId: '002392', dir: 'O', labelDir: '往 筲箕灣' },
-            { route: '42C', stopId: '002392', dir: 'O', labelDir: '往 北角碼頭' },
-            { route: '73', stopId: '002392', dir: 'O', labelDir: '往 赤柱監獄' },
-            { route: '970', stopId: '002392', dir: 'O', labelDir: '往 蘇屋' }
-        ];
-
-        // 【九巴路由配置】
-        const KMB_ROUTES = [
-            { route: '107P', stopId: '1B41827EB0497A78', serviceType: '1', dir: '往 海逸豪園' } 
-        ];
+        let countdownSeconds = TRANSPORT_CONFIG.refreshIntervalSec;
+        let countdownTimer = null;
 
         function initContainers() {
-            initSection('gmb-container', GMB_ROUTES, 'gmb');
-            initSection('ctb-container', CTB_ROUTES, 'ctb');
-            initSection('kmb-container', KMB_ROUTES, 'kmb');
+            initSection('gmb-container', TRANSPORT_CONFIG.routes.gmb, 'gmb');
+            initSection('ctb-container', TRANSPORT_CONFIG.routes.ctb, 'ctb');
+            initSection('kmb-container', TRANSPORT_CONFIG.routes.kmb, 'kmb');
         }
 
         function initSection(containerId, routes, type) {
@@ -218,9 +310,10 @@
 
         async function smartFetch(targetUrl) {
             let lastErr = null;
-            for (let i = 0; i < PROXY_LIST.length; i++) {
-                let idx = (currentProxyIdx + i) % PROXY_LIST.length;
-                let pUrl = PROXY_LIST[idx];
+            const proxies = TRANSPORT_CONFIG.proxies;
+            for (let i = 0; i < proxies.length; i++) {
+                let idx = (currentProxyIdx + i) % proxies.length;
+                let pUrl = proxies[idx];
                 try {
                     let requestUrl = pUrl.includes('allorigins') ? pUrl + encodeURIComponent(targetUrl) : pUrl + targetUrl;
                     const res = await fetch(requestUrl, { method: 'GET' });
@@ -242,16 +335,16 @@
             if (status === 'demo') tagHtml = '<span class="status-tag tag-demo">網絡故障/模擬</span>';
             if (status === 'live') tagHtml = '<span class="status-tag tag-live">實時資料</span>';
 
-            if(htmlContent) {
+            if(container && htmlContent) {
                 container.innerHTML = htmlContent + `<div class="status-container">${tagHtml}</div>`;
                 if(status === 'live') {
-                    localStorage.setItem(`cache_${elementId}`, htmlContent);
+                    localStorage.setItem(`${TRANSPORT_CONFIG.cacheKeyPrefix}${elementId}`, htmlContent);
                 }
             }
         }
 
         function handleFetchFailure(elementId) {
-            const cachedHtml = localStorage.getItem(`cache_${elementId}`);
+            const cachedHtml = localStorage.getItem(`${TRANSPORT_CONFIG.cacheKeyPrefix}${elementId}`);
             if(cachedHtml) {
                 renderETA(elementId, cachedHtml, 'cache');
             } else {
@@ -290,10 +383,11 @@
             return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
         }
 
-        // 小巴 ETA 解析 (由 API 直接提供剩餘分鐘 diff，故維持原設計)
-        async function fetchGMB(routeId, routeSeq, stopSeq, elementId) {
+        // 小巴 Fetch 承諾物件
+        async function fetchGMB(r, index) {
+            const elementId = `eta-gmb-${r.route}-${index}`;
             try {
-                const targetUrl = `https://data.etagmb.gov.hk/eta/route-stop/${routeId}/${routeSeq}/${stopSeq}`;
+                const targetUrl = `https://data.etagmb.gov.hk/eta/route-stop/${r.routeId}/${r.routeSeq}/${r.stopSeq}`;
                 const data = await smartFetch(targetUrl);
                 let etaHtml = '';
                 
@@ -304,7 +398,7 @@
                     sortedEta.forEach((e, idx) => {
                         const min = Math.max(0, e.diff);
                         const urgentClass = min <= 3 ? 'urgent' : '';
-                        const label = ETA_LABELS[idx] || `${idx + 1} 班`;
+                        const label = TRANSPORT_CONFIG.labels[idx] || `${idx + 1} 班`;
                         let remarksHtml = e.remarks_tc ? `<div class="eta-remarks">${e.remarks_tc}</div>` : '';
                         
                         const actualTimeObj = new Date(nowTimestamp + (e.diff * 60 * 1000));
@@ -326,7 +420,6 @@
                     const reason = data.data.description_tc || '到站預報暫停';
                     etaHtml = `<div class="loading">${reason}</div>`;
                 }
-
                 renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo');
             } catch (err) {
                 console.error(`GMB Error:`, err);
@@ -334,25 +427,23 @@
             }
         }
 
-        // 城巴 ETA 解析 - 【已修正時間對齊邏輯】
-        async function fetchCTB(route, stopId, targetDir, elementId) {
+        // 城巴 Fetch 承諾物件
+        async function fetchCTB(r, index) {
+            const elementId = `eta-ctb-${r.route}-${index}`;
             try {
-                const targetUrl = `https://rt.data.gov.hk/v1/transport/citybus-nwfb/eta/CTB/${stopId}/${route}`;
+                const targetUrl = `https://rt.data.gov.hk/v1/transport/citybus-nwfb/eta/CTB/${r.stopId}/${r.route}`;
                 const data = await smartFetch(targetUrl);
                 let etaHtml = '';
                 
                 if (data.data && data.data.length > 0) {
-                    // 1. 過濾指定方向 (例如 30X 往金鐘為 'O')
-                    const filteredData = data.data.filter(item => item.dir === targetDir && item.eta);
+                    const filteredData = data.data.filter(item => item.dir === r.dir && item.eta);
                     
                     filteredData.slice(0, 3).forEach((item, idx) => {
                         const etaDate = new Date(item.eta);
                         const baseDate = new Date(); 
-                        
                         const min = Math.max(0, Math.round((etaDate - baseDate) / 60000));
                         const urgentClass = min <= 3 ? 'urgent' : '';
-                        const label = ETA_LABELS[idx] || `${idx + 1} 班`;
-                        
+                        const label = TRANSPORT_CONFIG.labels[idx] || `${idx + 1} 班`;
                         const actualTimeStr = formatTime(etaDate);
 
                         etaHtml += `
@@ -374,10 +465,11 @@
             }
         }
 
-        // 九巴 ETA 解析 - 【同樣引入 data_timestamp 修正】
-        async function fetchKMB(route, stopId, serviceType, elementId) {
+        // 九巴 Fetch 承諾物件
+        async function fetchKMB(r, index) {
+            const elementId = `eta-kmb-${r.route}-${index}`;
             try {
-                const targetUrl = `https://data.etabus.gov.hk/v1/transport/kmb/eta/${stopId}/${route}/${serviceType}`;
+                const targetUrl = `https://data.etabus.gov.hk/v1/transport/kmb/eta/${r.stopId}/${r.route}/${r.serviceType}`;
                 const data = await smartFetch(targetUrl);
                 let etaHtml = '';
                 
@@ -386,13 +478,10 @@
                     data.data.forEach((item) => {
                         if(item.eta && count < 3) {
                             const etaDate = new Date(item.eta);
-                            // 修正：基準時間改用 API 提供的 data_timestamp
                             const baseDate = new Date(item.data_timestamp);
-
                             const min = Math.max(0, Math.round((etaDate - baseDate) / 60000));
                             const urgentClass = min <= 3 ? 'urgent' : '';
-                            const label = ETA_LABELS[count];
-                            
+                            const label = TRANSPORT_CONFIG.labels[count];
                             const actualTimeStr = formatTime(etaDate);
 
                             etaHtml += `
@@ -416,28 +505,63 @@
             }
         }
 
+        // 【核心最佳化：使用 Promise.all 並行處理解析】
         async function updateAllETA() {
+            // 每次觸發重新整理，立刻重設計時條
+            resetCountdown();
+
             const now = new Date();
             const timeStr = formatTime(now);
-            localStorage.setItem('cyberport_last_update', timeStr);
+            localStorage.setItem(TRANSPORT_CONFIG.lastUpdateKey, timeStr);
             document.getElementById('lastUpdate').innerText = `最後更新: ${timeStr}`;
 
-            GMB_ROUTES.forEach((r, idx) => fetchGMB(r.routeId, r.routeSeq, r.stopSeq, `eta-gmb-${r.route}-${idx}`));
-            CTB_ROUTES.forEach((r, idx) => fetchCTB(r.route, r.stopId, r.dir, `eta-ctb-${r.route}-${idx}`));
-            KMB_ROUTES.forEach((r, idx) => fetchKMB(r.route, r.stopId, r.serviceType, `eta-kmb-${r.route}-${idx}`));
+            // 建立並行 Promise 陣列
+            const tasks = [
+                ...TRANSPORT_CONFIG.routes.gmb.map((r, idx) => fetchGMB(r, idx)),
+                ...TRANSPORT_CONFIG.routes.ctb.map((r, idx) => fetchCTB(r, idx)),
+                ...TRANSPORT_CONFIG.routes.kmb.map((r, idx) => fetchKMB(r, idx))
+            ];
+
+            // 執行並行請求
+            await Promise.all(tasks);
+        }
+
+        // 【倒數自動機制】
+        function startCountdown() {
+            if(countdownTimer) clearInterval(countdownTimer);
+            
+            countdownTimer = setInterval(() => {
+                countdownSeconds--;
+                
+                // 更新 UI 進度條長度百分比
+                const percentage = (countdownSeconds / TRANSPORT_CONFIG.refreshIntervalSec) * 100;
+                document.getElementById('timerBar').style.width = `${percentage}%`;
+                
+                if (countdownSeconds <= 0) {
+                    updateAllETA();
+                }
+            }, 1000);
+        }
+
+        function resetCountdown() {
+            countdownSeconds = TRANSPORT_CONFIG.refreshIntervalSec;
+            document.getElementById('timerBar').style.width = '100%';
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             initContainers();
             
-            const savedTime = localStorage.getItem('cyberport_last_update');
+            const savedTime = localStorage.getItem(TRANSPORT_CONFIG.lastUpdateKey);
             if(savedTime) {
                 document.getElementById('lastUpdate').innerText = `上次留存時間: ${savedTime}`;
             }
 
+            // 初始化加載
             updateAllETA();
+            startCountdown();
+
+            // 事件監聽
             document.getElementById('refreshBtn').addEventListener('click', updateAllETA);
-            setInterval(updateAllETA, 60000);
         });
     </script>
 </body>
