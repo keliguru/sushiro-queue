@@ -115,10 +115,24 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
+            transition: all 0.3s ease;
         }
         .route-card.gmb { border-top-color: var(--gmb-green); }
         .route-card.ctb { border-top-color: var(--ctb-yellow); }
         .route-card.kmb { border-top-color: var(--kmb-red); }
+
+        /* 【新增】下一班車少於5分鐘時，整個方格的閃爍與警示特效 */
+        .route-card.card-urgent {
+            border: 2px solid var(--urgent-red) !important;
+            border-top: 5px solid var(--urgent-red) !important;
+            box-shadow: 0 0 12px rgba(214, 48, 49, 0.3);
+            animation: card-blink 1.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes card-blink {
+            from { background-color: white; }
+            to { background-color: #fff5f5; }
+        }
 
         .route-header {
             display: flex;
@@ -133,6 +147,9 @@
         .gmb .route-name { color: var(--gmb-green); }
         .ctb .route-name { color: var(--ctb-blue); }
         .kmb .route-name { color: var(--kmb-red); }
+        /* 當卡片緊急時，把路線名稱也強制變紅加強視覺效果 */
+        .route-card.card-urgent .route-name { color: var(--urgent-red) !important; }
+        
         .route-dir { font-size: 0.9rem; color: var(--text-main); font-weight: bold; text-align: right; max-width: 70%; }
 
         .eta-list { list-style: none; padding: 0; margin: 0; }
@@ -232,7 +249,7 @@
                     { route: '30X', stopId: '002392', dir: 'O', labelDir: '往 金鐘 - 港鐵 C 出口' }, 
                     { route: '33X', stopId: '002392', dir: 'O', labelDir: '往 筲箕灣' },
                     { route: '73', stopId: '002392', dir: 'O', labelDir: '往 赤柱監獄' },
-                    { route: '970', stopId: '002392', dir: 'O', labelDir: '往 蘇屋' },
+                    { route: '970', stopId: '002392', dir: 'O', labelDir: '往 蘇屋 / 旺角(弼街)' },
                     { route: '42C', stopId: '002392', dir: 'O', labelDir: '往 北角碼頭' }
                 ],
                 kmb: [
@@ -293,7 +310,20 @@
             throw lastErr;
         }
 
-        function renderETA(elementId, htmlContent, status = 'live') {
+        // 【優化】動態控制外層方格的緊急閃爍外觀
+        function updateCardUrgentState(elementId, isUrgent) {
+            const cardId = elementId.replace('eta-', '');
+            const cardElement = document.getElementById(cardId);
+            if (cardElement) {
+                if (isUrgent) {
+                    cardElement.classList.add('card-urgent');
+                } else {
+                    cardElement.classList.remove('card-urgent');
+                }
+            }
+        }
+
+        function renderETA(elementId, htmlContent, status = 'live', hasUrgentBus = false) {
             const container = document.getElementById(elementId);
             let tagHtml = '';
             if (status === 'cache') tagHtml = '<span class="status-tag tag-cache">歷史緩存</span>';
@@ -305,17 +335,21 @@
                 if(status === 'live') {
                     localStorage.setItem(`${TRANSPORT_CONFIG.cacheKeyPrefix}${elementId}`, htmlContent);
                 }
+                // 同步更新外層方格樣式
+                updateCardUrgentState(elementId, hasUrgentBus);
             }
         }
 
         function handleFetchFailure(elementId) {
             const cachedHtml = localStorage.getItem(`${TRANSPORT_CONFIG.cacheKeyPrefix}${elementId}`);
             if(cachedHtml) {
-                renderETA(elementId, cachedHtml, 'cache');
+                // 如果是緩存，先預設不開啟卡片閃爍（由新數據決定）
+                renderETA(elementId, cachedHtml, 'cache', false);
             } else {
                 const randomMin1 = Math.floor(Math.random() * 5) + 3;
                 const randomMin2 = randomMin1 + Math.floor(Math.random() * 10) + 7;
                 const urgentClass = randomMin1 <= 3 ? 'urgent' : '';
+                const isUrgentCard = randomMin1 < 5; // 模擬數據：少於 5 分鐘觸發方格閃爍
                 
                 const time1 = formatTime(new Date(Date.now() + randomMin1 * 60000));
                 const time2 = formatTime(new Date(Date.now() + randomMin2 * 60000));
@@ -340,7 +374,7 @@
                         </div>
                     </div>
                 `;
-                renderETA(elementId, demoHtml, 'demo');
+                renderETA(elementId, demoHtml, 'demo', isUrgentCard);
             }
         }
 
@@ -355,6 +389,7 @@
                 const targetUrl = `https://data.etagmb.gov.hk/eta/route-stop/${r.routeId}/${r.routeSeq}/${r.stopSeq}`;
                 const data = await smartFetch(targetUrl);
                 let etaHtml = '';
+                let isUrgentCard = false;
                 
                 if(data.data && data.data.enabled && data.data.eta) {
                     const sortedEta = data.data.eta.sort((a, b) => a.eta_seq - b.eta_seq).slice(0, 3);
@@ -363,6 +398,12 @@
                     sortedEta.forEach((e, idx) => {
                         const min = Math.max(0, e.diff);
                         const urgentClass = min <= 3 ? 'urgent' : '';
+                        
+                        // 判斷下班車（第一班）是否少於 5 分鐘
+                        if (idx === 0 && min < 5) {
+                            isUrgentCard = true;
+                        }
+
                         const label = TRANSPORT_CONFIG.labels[idx] || `${idx + 1} 班`;
                         let remarksHtml = e.remarks_tc ? `<div class="eta-remarks">${e.remarks_tc}</div>` : '';
                         
@@ -385,7 +426,7 @@
                     const reason = data.data.description_tc || '到站預報暫停';
                     etaHtml = `<div class="loading">${reason}</div>`;
                 }
-                renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo');
+                renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo', isUrgentCard);
             } catch (err) {
                 console.error(`GMB Error:`, err);
                 handleFetchFailure(elementId);
@@ -399,6 +440,7 @@
                 const targetUrl = `https://rt.data.gov.hk/v1/transport/citybus-nwfb/eta/CTB/${r.stopId}/${r.route}`;
                 const data = await smartFetch(targetUrl);
                 let etaHtml = '';
+                let isUrgentCard = false;
                 
                 if (data.data && data.data.length > 0) {
                     const filteredData = data.data.filter(item => item.dir === r.dir && item.eta);
@@ -408,6 +450,12 @@
                         const baseDate = new Date(); 
                         const min = Math.max(0, Math.round((etaDate - baseDate) / 60000));
                         const urgentClass = min <= 3 ? 'urgent' : '';
+                        
+                        // 判斷下班車（第一班）是否少於 5 分鐘
+                        if (idx === 0 && min < 5) {
+                            isUrgentCard = true;
+                        }
+
                         const label = TRANSPORT_CONFIG.labels[idx] || `${idx + 1} 班`;
                         const actualTimeStr = formatTime(etaDate);
 
@@ -423,7 +471,7 @@
                             </div>`;
                     });
                 }
-                renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo');
+                renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo', isUrgentCard);
             } catch (err) {
                 console.error(`CTB Error:`, err);
                 handleFetchFailure(elementId);
@@ -437,6 +485,7 @@
                 const targetUrl = `https://data.etabus.gov.hk/v1/transport/kmb/eta/${r.stopId}/${r.route}/${r.serviceType}`;
                 const data = await smartFetch(targetUrl);
                 let etaHtml = '';
+                let isUrgentCard = false;
                 
                 if (data.data && data.data.length > 0) {
                     let count = 0;
@@ -446,6 +495,12 @@
                             const baseDate = new Date(item.data_timestamp);
                             const min = Math.max(0, Math.round((etaDate - baseDate) / 60000));
                             const urgentClass = min <= 3 ? 'urgent' : '';
+                            
+                            // 判斷下班車（第一班）是否少於 5 分鐘
+                            if (count === 0 && min < 5) {
+                                isUrgentCard = true;
+                            }
+
                             const label = TRANSPORT_CONFIG.labels[count];
                             const actualTimeStr = formatTime(etaDate);
 
@@ -463,7 +518,7 @@
                         }
                     });
                 }
-                renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo');
+                renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo', isUrgentCard);
             } catch (err) {
                 console.error(`KMB Error:`, err);
                 handleFetchFailure(elementId);
