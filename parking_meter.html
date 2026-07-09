@@ -157,9 +157,12 @@
             toggleLoading(true);
             checkNotificationSupport();
             try {
-                await loadBaseInfo();    
+                await loadBaseInfo(); 
+                alert("pass loadbase")
                 await fetchLiveStatus(); 
+                alert("pass live status")
                 renderFavStreetButtons(); 
+                alert("alert pass button")
             } catch (err) {
                 console.error(err);
                 alert(err)
