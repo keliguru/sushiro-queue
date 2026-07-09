@@ -162,6 +162,7 @@
                 renderFavStreetButtons(); 
             } catch (err) {
                 console.error(err);
+                alert(err)
                 alert("初始化失敗，行動網路連線較慢或被攔截，請點擊「更新狀態」或「清除快取」重試。");
             } finally {
                 toggleLoading(false);
