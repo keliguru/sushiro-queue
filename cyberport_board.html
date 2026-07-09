@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-	<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚍</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚍</text></svg>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>數碼港實時交通到站提示</title>
     <style>
@@ -12,40 +12,44 @@
             --ctb-blue: #003399;
             --kmb-red: #e60012;
             --gmb-green: #008751;
-            --dark-gray: #333;
-            --light-bg: #f4f6f9;
+            --dark-gray: #222222; /* 加深減少色差 */
+            --light-bg: #f8f9fa;
+            --text-main: #111111;
+            --text-sub: #555555;
+            --urgent-red: #d63031;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--light-bg);
             margin: 0;
             padding: 15px;
-            color: var(--dark-gray);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
         }
 
         header {
-            background-color: var(--cyberport-blue);
+            background-color: var(--kmb-red); /* 改為鮮明九巴紅大底 */
             color: white;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 16px;
+            border-radius: 12px;
             text-align: center;
             margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        header h1 { margin: 0; font-size: 1.4rem; }
-        header p { margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.9; }
+        header h1 { margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
+        header p { margin: 6px 0 0 0; font-size: 0.85rem; opacity: 0.9; }
 
         .controls {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             margin-bottom: 15px;
             background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         .controls-row {
@@ -54,12 +58,11 @@
             align-items: center;
         }
 
-        /* 倒數計時條樣式 */
         .timer-bar-container {
             width: 100%;
-            height: 4px;
+            height: 6px;
             background-color: #eee;
-            border-radius: 2px;
+            border-radius: 3px;
             overflow: hidden;
         }
 
@@ -74,38 +77,42 @@
             background-color: var(--cyberport-blue);
             color: white;
             border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
+            padding: 10px 18px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 0.95rem;
         }
 
         button:hover { opacity: 0.9; }
-        .last-update { font-size: 0.85rem; color: #666; }
+        .last-update { font-size: 0.9rem; color: var(--text-sub); font-weight: 500; }
 
+        /* 分類標題增強對比 */
         .category-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin: 20px 0 10px 0;
-            padding-left: 8px;
-            border-left: 4px solid var(--dark-gray);
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin: 24px 0 12px 0;
+            padding-left: 10px;
+            border-left: 5px solid var(--dark-gray);
         }
-        .category-gmb { border-left-color: var(--gmb-green); }
-        .category-ctb { border-left-color: var(--ctb-blue); }
-        .category-kmb { border-left-color: var(--kmb-red); }
+        .category-gmb { border-left-color: var(--gmb-green); color: var(--gmb-green); }
+        .category-ctb { border-left-color: var(--ctb-blue); color: var(--ctb-blue); }
+        .category-kmb { border-left-color: var(--kmb-red); color: var(--kmb-red); }
 
         .route-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 12px;
+            gap: 14px;
         }
 
+        /* 卡片設計融合九巴鋼性線條與清晰分類 */
         .route-card {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            padding: 12px;
-            border-top: 4px solid #ccc;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #e0e0e0;
+            border-top: 5px solid #ccc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
         }
@@ -117,112 +124,70 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
         }
-        .route-name { font-size: 1.2rem; font-weight: bold; }
+        
+        .route-name { font-size: 1.6rem; font-weight: 900; font-family: 'Arial Black', sans-serif; }
         .gmb .route-name { color: var(--gmb-green); }
         .ctb .route-name { color: var(--ctb-blue); }
         .kmb .route-name { color: var(--kmb-red); }
-        .route-dir { font-size: 0.85rem; color: #555; text-align: right; max-width: 70%; }
+        .route-dir { font-size: 0.9rem; color: var(--text-main); font-weight: bold; text-align: right; max-width: 70%; }
 
         .eta-list { list-style: none; padding: 0; margin: 0; }
         .eta-item-container {
-            border-bottom: 1px dashed #eee;
-            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 10px 0;
         }
         .eta-item-container:last-child { border-bottom: none; }
         
         .eta-item {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            padding: 0;
-            font-size: 0.95rem;
+            align-items: center;
         }
-        .eta-label { color: #555; font-weight: 500; }
+        .eta-label { color: var(--text-sub); font-weight: bold; font-size: 0.95rem; }
         .eta-time-group { text-align: right; }
-        .eta-time { font-weight: bold; color: #e67e22; }
-        .eta-time.urgent { color: var(--kmb-red); animation: blink 1s infinite alternate; }
         
-        .eta-actual-time { font-size: 0.75rem; color: #888; margin-top: 1px; font-weight: normal; }
-        .eta-remarks { font-size: 0.75rem; color: #888; margin-top: 4px; text-align: left; width: 100%; }
+        /* 預設到站時間色彩：高對比深色 */
+        .eta-time { 
+            font-size: 1.4rem; 
+            font-weight: 800; 
+            color: #222; 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        /* 緊急時間才變紅並閃爍，避免全螢幕色差混亂 */
+        .eta-time.urgent { 
+            color: var(--urgent-red); 
+            animation: blink 1.2s infinite alternate; 
+        }
+        
+        .eta-actual-time { font-size: 0.8rem; color: #777; margin-top: 2px; font-weight: 600; }
+        .eta-remarks { font-size: 0.8rem; color: #ff7675; margin-top: 4px; text-align: left; font-weight: bold; }
 
-        @keyframes blink { from { opacity: 1; } to { opacity: 0.6; } }
-        .loading { text-align: center; color: #888; font-style: italic; padding: 5px 0; }
-        .status-container { text-align: right; margin-top: 5px; }
-        .status-tag { font-size: 0.75rem; font-weight: normal; padding: 2px 6px; border-radius: 3px; }
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
+        .loading { text-align: center; color: #888; font-style: italic; padding: 10px 0; font-weight: bold; }
+        .status-container { text-align: right; margin-top: 8px; }
+        
+        /* 狀態標籤高對比美化 */
+        .status-tag { 
+            font-size: 0.7rem; 
+            font-weight: bold; 
+            padding: 3px 10px; 
+            border-radius: 12px; 
+        }
         .tag-cache { background: #ffeaa7; color: #d63031; }
-        .tag-demo { background: #dfe6e9; color: #636e72; }
-        .tag-live { background: #badc58; color: #6ab04c; }
-		
-		/* 改為九巴Style */
-		:root {
-			--kmb-red: #e60012;
-			--text-main: #333;
-			--text-sub: #666;
-			--bg-color: #f8f9fa;
-		}
-
-		body {
-			background-color: var(--bg-color);
-		}
-
-		header {
-			background-color: var(--kmb-red); /* 改為九巴紅 */
-			box-shadow: none;
-		}
-
-		.route-card {
-			border-top: 4px solid #ccc; /* 保持分類色 */
-			border-radius: 12px;
-			padding: 16px;
-			border: 1px solid #e0e0e0;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-		}
-
-		.route-name {
-			font-size: 1.5rem;
-			font-weight: 800;
-		}
-
-		.eta-item {
-			padding: 10px 0;
-		}
-
-		.eta-label {
-			font-size: 0.9rem;
-			color: var(--text-sub);
-			font-weight: bold;
-		}
-
-		.eta-time {
-			font-size: 1.3rem; /* 放大分鐘數 */
-			color: var(--kmb-red);
-			font-family: 'Segoe UI', Arial, sans-serif;
-			font-weight: 700;
-		}
-
-		.eta-actual-time {
-			font-size: 0.8rem;
-			color: #999;
-		}
-
-		/* 狀態標籤美化 */
-		.status-tag {
-			font-size: 0.65rem;
-			padding: 2px 8px;
-			border-radius: 10px;
-			text-transform: uppercase;
-		}
+        .tag-demo { background: #dfe6e9; color: #2d3436; }
+        .tag-live { background: #e1f5fe; color: #0288d1; border: 1px solid #b3e5fc; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>數碼港專用 實時到站提示</h1>
-        <p>Cyberport Real-time Transport ETA (Performance & UI Boost)</p>
+        <p>Cyberport Real-time Transport ETA (Contrast & UI Boost)</p>
     </header>
 
     <div class="controls">
@@ -261,14 +226,14 @@
                     { route: '58', routeId: '2002580', routeSeq: '1', stopSeq: '7', dir: '經數碼港 往香港仔' }, 
                     { route: '69A', routeId: '2000819', routeSeq: '1', stopSeq: '1', dir: '往 香港仔 (經黃竹坑)' },
                     { route: '69X', routeId: '2000511', routeSeq: '1', stopSeq: '1', dir: '往 銅鑼灣 (駱克道)' },
-					{ route: '69', routeId: '2000410', routeSeq: '1', stopSeq: '1', dir: '往 鰂魚涌 (海康街)' }
+                    { route: '69', routeId: '2000410', routeSeq: '1', stopSeq: '1', dir: '往 鰂魚涌 (海康街)' }
                 ],
                 ctb: [
                     { route: '30X', stopId: '002392', dir: 'O', labelDir: '往 金鐘 - 港鐵 C 出口' }, 
                     { route: '33X', stopId: '002392', dir: 'O', labelDir: '往 筲箕灣' },
                     { route: '73', stopId: '002392', dir: 'O', labelDir: '往 赤柱監獄' },
                     { route: '970', stopId: '002392', dir: 'O', labelDir: '往 蘇屋' },
-					{ route: '42C', stopId: '002392', dir: 'O', labelDir: '往 北角碼頭' }
+                    { route: '42C', stopId: '002392', dir: 'O', labelDir: '往 北角碼頭' }
                 ],
                 kmb: [
                     { route: '107P', stopId: '1B41827EB0497A78', serviceType: '1', dir: '往 海逸豪園' } 
@@ -505,9 +470,8 @@
             }
         }
 
-        // 【核心最佳化：使用 Promise.all 並行處理解析】
+        // 【使用 Promise.all 並行處理解析】
         async function updateAllETA() {
-            // 每次觸發重新整理，立刻重設計時條
             resetCountdown();
 
             const now = new Date();
@@ -515,14 +479,12 @@
             localStorage.setItem(TRANSPORT_CONFIG.lastUpdateKey, timeStr);
             document.getElementById('lastUpdate').innerText = `最後更新: ${timeStr}`;
 
-            // 建立並行 Promise 陣列
             const tasks = [
                 ...TRANSPORT_CONFIG.routes.gmb.map((r, idx) => fetchGMB(r, idx)),
                 ...TRANSPORT_CONFIG.routes.ctb.map((r, idx) => fetchCTB(r, idx)),
                 ...TRANSPORT_CONFIG.routes.kmb.map((r, idx) => fetchKMB(r, idx))
             ];
 
-            // 執行並行請求
             await Promise.all(tasks);
         }
 
@@ -533,7 +495,6 @@
             countdownTimer = setInterval(() => {
                 countdownSeconds--;
                 
-                // 更新 UI 進度條長度百分比
                 const percentage = (countdownSeconds / TRANSPORT_CONFIG.refreshIntervalSec) * 100;
                 document.getElementById('timerBar').style.width = `${percentage}%`;
                 
@@ -556,11 +517,9 @@
                 document.getElementById('lastUpdate').innerText = `上次留存時間: ${savedTime}`;
             }
 
-            // 初始化加載
             updateAllETA();
             startCountdown();
 
-            // 事件監聽
             document.getElementById('refreshBtn').addEventListener('click', updateAllETA);
         });
     </script>
