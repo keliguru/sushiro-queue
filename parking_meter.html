@@ -54,7 +54,6 @@
                     <input type="text" id="search-input" placeholder="搜尋車位 ID、街道、地區..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 
-                <!-- 地區篩選 -->
                 <div class="w-full md:w-auto flex gap-2 overflow-x-auto pb-2 md:pb-0" id="region-filters">
                     <button class="region-filter-btn bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-region="ALL">全部地區</button>
                     <button class="region-filter-btn bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-region="HONG KONG">香港島</button>
@@ -63,7 +62,6 @@
                 </div>
             </div>
 
-            <!-- 新增：車型篩選按鈕群組 -->
             <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-100 items-center">
                 <span class="text-xs text-gray-400 self-center"><i class="fa-solid fa-car-side"></i> 許可車型:</span>
                 <div id="vehicle-filters" class="flex flex-wrap gap-2 overflow-x-auto">
@@ -125,7 +123,7 @@
         let rawInfoData = null;   
         let parkingData = [];     
         let currentRegion = 'ALL';
-        let currentVehicleType = 'ALL'; // 新增：存放當前車型篩選狀態
+        let currentVehicleType = 'ALL';
         let currentSelectedStreet = 'ALL'; 
         let currentSearch = '';
         let showFavoritesOnly = false;
@@ -133,10 +131,9 @@
         let favStreets = JSON.parse(localStorage.getItem(CACHE_KEY_FAV_STREETS)) || [];
         let previousFavStatusMap = new Map(); 
 
-        // 分頁與動態加載變數
-        let filteredDataGlobal = []; // 存放當前篩選過後的完整陣列
-        let itemsPerPage = 40;       // 每次加載的數量
-        let currentPage = 1;         // 當前已加載的頁數
+        let filteredDataGlobal = []; 
+        let itemsPerPage = 40;       
+        let currentPage = 1;         
 
         document.addEventListener('DOMContentLoaded', initPage);
         document.getElementById('refresh-btn').addEventListener('click', () => fetchLiveStatus(true));
@@ -145,11 +142,10 @@
         document.getElementById('fav-toggle-btn').addEventListener('click', toggleFavoritesFilter);
         document.getElementById('notify-auth-btn').addEventListener('click', requestNotificationPermission);
         
-        // 監聽滾動事件來觸發「向下拉顯示更多」
         window.addEventListener('scroll', handleWindowScroll);
         
         setupRegionFilters();
-        setupVehicleFilters(); // 新增：初始化車型篩選監聽
+        setupVehicleFilters();
 
         async function initPage() {
             toggleLoading(true);
@@ -259,15 +255,35 @@
                     const streetName = (row[12] || row[11] || '未知街道').trim();
 
                     let displayRegion = '其他';
-                    if(row[2] === 'HONG KONG') displayRegion = '香港島';
-                    if(row[2] === 'KOWLOON') displayRegion = '九龍';
-                    if(row[2] === 'NEW TERRITORIES') displayRegion = '新界';
+                    let regionColorClass = 'bg-slate-100 text-slate-800 border-slate-300 font-bold';
+                    let cardBorderClass = 'border-slate-300 bg-white';
+                    
+                    // 香港：藍色
+                    if(row[2] === 'HONG KONG') {
+                        displayRegion = '香港島';
+                        regionColorClass = 'bg-blue-100 text-blue-900 border-blue-400 font-bold';
+                        cardBorderClass = 'border-blue-400 bg-blue-50/25';
+                    } 
+                    // 新界：綠色
+                    else if(row[2] === 'NEW TERRITORIES') {
+                        displayRegion = '新界';
+                        regionColorClass = 'bg-emerald-100 text-emerald-900 border-emerald-400 font-bold';
+                        cardBorderClass = 'border-emerald-400 bg-emerald-50/25';
+                    } 
+                    // 九龍：紅色
+                    else if(row[2] === 'KOWLOON') {
+                        displayRegion = '九龍';
+                        regionColorClass = 'bg-rose-100 text-rose-900 border-rose-400 font-bold';
+                        cardBorderClass = 'border-rose-400 bg-rose-50/25';
+                    }
 
                     const item = {
                         id: spaceId,
                         poleId: row[0],                                                                                                                                                                                                                                                                                                                                 
                         regionCode: (row[2] || '').trim(),                                                                                      
                         region: displayRegion,                                                                                                                                                                                                        
+                        regionColorClass: regionColorClass,
+                        cardBorderClass: cardBorderClass,
                         district: row[6] || row[5] || '未知地區',                                                                                                                                                                                                         
                         street: streetName, 
                         latitude: row[17],                                                                                                                                                                                                                                                                                          
@@ -296,7 +312,6 @@
 
                 document.getElementById('update-time').innerText = new Date().toLocaleTimeString();
                 
-                // 初始化與刷新時重新渲染
                 prepareAndRenderInitialCards();
 
             } catch (error) {
@@ -408,17 +423,13 @@
             }
         }
 
-        // 核心邏輯處理：做數據過濾與排序，並準備初始化分頁
         function prepareAndRenderInitialCards() {
             currentPage = 1; 
             const container = document.getElementById('parking-list');
-            container.innerHTML = ''; // 清空舊卡片
+            container.innerHTML = ''; 
 
-            // 執行篩選
             filteredDataGlobal = parkingData.filter(item => {
-			
                 const matchRegion = (currentRegion === 'ALL' || item.regionCode === currentRegion);
-                // 新增：比對車型篩選
                 const matchVehicle = (currentVehicleType === 'ALL' || item.vehicleType === currentVehicleType);
                 const matchSearch = (
                     item.id.toLowerCase().includes(currentSearch) ||
@@ -437,7 +448,6 @@
                 return matchRegion && matchVehicle && matchSearch && matchFav;
             });
 
-            // 執行排序
             filteredDataGlobal.sort((a, b) => {
                 const aFav = favStreets.includes(a.street) ? 1 : 0;
                 const bFav = favStreets.includes(b.street) ? 1 : 0;
@@ -452,7 +462,6 @@
                 return getOrder(a) - getOrder(b);
             });
 
-            // 更新總計數量顯示
             document.getElementById('total-count').innerText = filteredDataGlobal.length;
 
             if (filteredDataGlobal.length === 0) {
@@ -463,15 +472,12 @@
                 return;
             }
 
-            // 渲染第一頁
             appendCardsPage();
         }
 
-        // 負責追加新一頁的卡片到畫面上
         function appendCardsPage() {
             const container = document.getElementById('parking-list');
             
-            // 計算這次加載的範圍限制
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = Math.min(startIndex + itemsPerPage, filteredDataGlobal.length);
             
@@ -485,96 +491,96 @@
 
                 if (!isUsable) {
                     occText = '<i class="fa-solid fa-ban"></i> 暫停服務';
-                    occClass = 'bg-gray-100 text-gray-400 border-gray-200';
+                    occClass = 'bg-gray-200 text-gray-500 border-gray-300 font-bold';
                 } else if (item.occupancyStatus === 'V') {
-                    occText = '<i class="fa-solid fa-circle-check"></i> 有空位 (Vacant)';
-                    occClass = 'bg-green-50 text-green-700 border-green-200';
+                    occText = '<i class="fa-solid fa-circle-check text-green-600"></i> 有空位 (Vacant)';
+                    occClass = 'bg-green-100 text-green-900 border-green-400 font-bold shadow-sm';
                 } else if (item.occupancyStatus === 'O') {
-                    occText = '<i class="fa-solid fa-car"></i> 已被佔用 (Occupied)';
-                    occClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                    occText = '<i class="fa-solid fa-car text-rose-600"></i> 已被佔用 (Occupied)';
+                    occClass = 'bg-rose-100 text-rose-900 border-rose-400 font-bold shadow-sm';
                 } else {
                     occText = '未知';
-                    occClass = 'bg-gray-50 text-gray-500 border-gray-200';
+                    occClass = 'bg-gray-100 text-gray-700 border-gray-300 font-bold';
                 }
 
                 if (item.meterStatus === 'N') {
-                    meterText = '<i class="fa-solid fa-check-to-slot"></i> 正常服務 (Normal)';
-                    meterClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                    meterText = '<i class="fa-solid fa-check-to-slot text-blue-600"></i> 正常服務 (Normal)';
+                    meterClass = 'bg-blue-100 text-blue-900 border-blue-400 font-bold';
                 } else if (item.meterStatus === 'NU') {
-                    meterText = '<i class="fa-solid fa-triangle-exclamation"></i> 暫停使用 (Not for Use)';
-                    meterClass = 'bg-amber-100 text-amber-800 border-amber-300 animate-pulse';
+                    meterText = '<i class="fa-solid fa-triangle-exclamation text-amber-700"></i> 暫停使用 (Not for Use)';
+                    meterClass = 'bg-amber-200 text-amber-950 border-amber-400 font-bold animate-pulse';
                 }
 
                 let vehicleTypeDesc = '';
                 let vehicleIcon = '';
                 if (item.vehicleType === 'G') {
                     vehicleTypeDesc = '貨車專用位 (Goods Vehicles Only)';
-                    vehicleIcon = '<i class="fa-solid fa-truck text-amber-600"></i>';
+                    vehicleIcon = '<i class="fa-solid fa-truck text-amber-700"></i>';
                 } else if (item.vehicleType === 'C') {
                     vehicleTypeDesc = '巴士/旅遊巴位 (Coaches Only)';
-                    vehicleIcon = '<i class="fa-solid fa-bus text-indigo-600"></i>';
+                    vehicleIcon = '<i class="fa-solid fa-bus text-indigo-700"></i>';
                 } else {
                     vehicleTypeDesc = '一般車輛 (Any Vehicles)';
-                    vehicleIcon = '<i class="fa-solid fa-car text-blue-600"></i>';
+                    vehicleIcon = '<i class="fa-solid fa-car text-blue-700"></i>';
                 }
 
                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
 
                 let periodBadge = '';
                 if (item.maxParkingPeriod.includes('120')) {
-                    periodBadge = '<span class="bg-amber-500 text-white text-xs px-2 py-0.5 rounded font-bold">2小時錶</span>';
+                    periodBadge = '<span class="bg-amber-600 text-white text-xs px-2 py-0.5 rounded font-black shadow-sm">2小時錶</span>';
                 } else if (item.maxParkingPeriod.includes('60')) {
-                    periodBadge = '<span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded font-bold">1小時錶</span>';
+                    periodBadge = '<span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded font-black shadow-sm">1小時錶</span>';
                 } else if (item.maxParkingPeriod.includes('30')) {
-                    periodBadge = '<span class="bg-blue-500 text-white text-xs px-2 py-0.5 rounded font-bold">30分鐘錶</span>';
+                    periodBadge = '<span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-black shadow-sm">30分鐘錶</span>';
                 } else {
-                    periodBadge = `<span class="bg-slate-600 text-white text-xs px-2 py-0.5 rounded font-bold">${item.maxParkingPeriod}</span>`;
+                    periodBadge = `<span class="bg-slate-700 text-white text-xs px-2 py-0.5 rounded font-black shadow-sm">${item.maxParkingPeriod}</span>`;
                 }
 
                 const cardHtml = `
-                    <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border ${!isUsable ? 'border-gray-200 opacity-70' : 'border-gray-200'} flex flex-col justify-between">
+                    <div class="rounded-xl shadow-md hover:shadow-xl transition overflow-hidden border-2 ${item.cardBorderClass} ${!isUsable ? 'opacity-75 grayscale-[0.2]' : ''} flex flex-col justify-between">
                         <div class="p-5">
                             <div class="mb-3 flex justify-between items-center">
-                                <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded border border-slate-200">
+                                <span class="text-xs px-3 py-1 rounded-lg border-2 shadow-sm ${item.regionColorClass}">
                                     ${item.region} · ${item.district}
                                 </span>
                                 <div class="flex gap-1.5 items-center">
                                     ${periodBadge}
                                     <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-lg focus:outline-none p-1 hover:scale-110 transition" title="收藏/取消收藏整條街道">
-                                        <i class="${isStreetFaved ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-gray-300'}"></i>
+                                        <i class="${isStreetFaved ? 'fa-solid fa-star text-amber-500 drop-shadow' : 'fa-regular fa-star text-gray-400'}"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <h3 class="text-2xl font-black text-slate-800 tracking-tight mb-1">
+                            <h3 class="text-2xl font-black text-slate-900 tracking-tight mb-1">
                                 ${item.id}
                             </h3>
-                            <p class="text-gray-700 font-bold text-sm mb-1"><i class="fa-solid fa-location-dot text-gray-400 text-xs mr-1"></i>${item.street}</p>
-                            <p class="text-gray-400 text-xs mb-4">柱號: ${item.poleId}</p>
+                            <p class="text-gray-900 font-extrabold text-sm mb-1"><i class="fa-solid fa-location-dot text-gray-500 text-xs mr-1"></i>${item.street}</p>
+                            <p class="text-gray-500 text-xs font-semibold mb-4">柱號: ${item.poleId}</p>
                             
                             <div class="space-y-2 mb-4">
-                                <div class="text-xs font-semibold px-3 py-2 rounded-lg border flex justify-between items-center ${meterClass}">
+                                <div class="text-xs px-3 py-2.5 rounded-lg border-2 flex justify-between items-center ${meterClass}">
                                     <span>錶柱運作狀態：</span>
                                     <span>${meterText}</span>
                                 </div>
-                                <div class="text-xs font-semibold px-3 py-2 rounded-lg border flex justify-between items-center ${occClass}">
+                                <div class="text-xs px-3 py-2.5 rounded-lg border-2 flex justify-between items-center ${occClass}">
                                     <span>車位實時空置：</span>
                                     <span>${occText}</span>
                                 </div>
                             </div>
 
-                            <div class="text-gray-700 text-xs bg-slate-50 p-2.5 rounded border border-slate-100 flex items-start gap-2">
-                                <div class="mt-0.5">${vehicleIcon}</div>
+                            <div class="text-gray-800 text-xs bg-white/90 p-2.5 rounded-lg border-2 border-slate-200 flex items-start gap-2 shadow-inner">
+                                <div class="mt-0.5 text-sm">${vehicleIcon}</div>
                                 <div>
-                                    <span class="font-bold block mb-0.5">許可車型 (${item.vehicleType})</span>
-                                    <span class="text-gray-500">${vehicleTypeDesc}</span>
+                                    <span class="font-extrabold block mb-0.5">許可車型 (${item.vehicleType})</span>
+                                    <span class="text-gray-600 font-medium">${vehicleTypeDesc}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-slate-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
-                            <span><i class="fa-solid fa-signal ${isUsable ? 'text-green-500 animate-pulse' : 'text-gray-300'}"></i> 訊號對接</span>
-                            <a href="${mapsUrl}" target="_blank" class="text-blue-600 hover:underline font-semibold flex items-center gap-1 bg-white border border-gray-200 shadow-sm px-3 py-1 rounded-md hover:bg-blue-50 transition text-sm">
+                        <div class="bg-slate-100/90 px-5 py-3 border-t-2 border-slate-200 flex justify-between items-center text-xs text-gray-600 font-bold">
+                            <span><i class="fa-solid fa-signal ${isUsable ? 'text-green-600 animate-pulse' : 'text-gray-400'}"></i> 訊號對接</span>
+                            <a href="${mapsUrl}" target="_blank" class="text-blue-700 hover:underline font-bold flex items-center gap-1 bg-white border-2 border-blue-300 shadow px-3 py-1.5 rounded-md hover:bg-blue-50 transition text-sm">
                                 <i class="fa-solid fa-map-location-dot"></i> 地圖導航
                             </a>
                         </div>
@@ -583,10 +589,8 @@
                 container.insertAdjacentHTML('beforeend', cardHtml);
             });
 
-            // 更新當前顯示的數量進度
             document.getElementById('displayed-count').innerText = endIndex;
 
-            // 控制底部滾動提示與完成狀態
             const scrollTrigger = document.getElementById('infinite-scroll-trigger');
             const allLoadedText = document.getElementById('all-loaded-text');
             
@@ -595,7 +599,6 @@
                 allLoadedText.classList.add('hidden');
             } else {
                 scrollTrigger.classList.add('hidden');
-                // 如果總共數據本來就少於一頁（例如只有幾個最愛車位），不特別秀「看完了」提示以免干擾畫面
                 if (filteredDataGlobal.length > itemsPerPage) {
                     allLoadedText.classList.remove('hidden');
                 } else {
@@ -604,15 +607,12 @@
             }
         }
 
-        // 視窗滾動偵測
         function handleWindowScroll() {
-            // 如果加載層正在轉、或者當前根本沒有篩選數據，就不重複觸發
             if (filteredDataGlobal.length === 0) return;
 
             const scrollTrigger = document.getElementById('infinite-scroll-trigger');
-            if (scrollTrigger.classList.contains('hidden')) return; // 已經全部加載完就不再觸發
+            if (scrollTrigger.classList.contains('hidden')) return; 
 
-            // 當滾動到距離底部小於 200px 時，自動加載下一頁
             if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 200) {
                 currentPage++;
                 appendCardsPage();
@@ -682,7 +682,6 @@
             });
         }
 
-        // 新增：設定車型篩選按鈕點擊監聽與樣式切換邏輯
         function setupVehicleFilters() {
             const buttons = document.querySelectorAll('.vehicle-filter-btn');
             buttons.forEach(btn => {
