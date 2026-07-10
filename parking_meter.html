@@ -6,11 +6,11 @@
     <title>香港智能錶位實時</title>
 	
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
 	<meta property="og:type" content="website">
 	<meta property="og:title" content="香港智能錶位實時">
 	<meta property="og:description" content="香港智能錶位實時">
 	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png"> 
-	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
 
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -163,7 +163,7 @@
     </main>
 
     <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-6 text-[11px]">
-        <p>© 2026 香港實時錶位. 資料來源：DATA.GOV.HK (運輸署)</p>
+        <p>© 2026 香港實時錶位. 資料來源：DATA.GOV.HK (運輸署)[cite: 1]</p>
     </footer>
 
     <script>
@@ -518,7 +518,7 @@
                     }
 
                     if (changesCount <= 3) {
-                        notificationText += `【${item.street}】錶位 ${item.id} ➔ ${statusDesc}\n`;
+                        notificationText += `【${item.street}】車位 ➔ ${statusDesc}\n`;
                     }
                 }
             });
@@ -714,7 +714,6 @@
                                 </div>
                             </div>
 
-                            <h3 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight mb-1">${item.id}</h3>
                             <p class="text-gray-900 text-sm font-bold mb-1 truncate"><i class="fa-solid fa-location-dot text-gray-400 text-xs mr-1"></i>${item.street}</p>
                             <p class="text-gray-400 text-[10px] mb-3">柱號: ${item.poleId}</p>
                             
