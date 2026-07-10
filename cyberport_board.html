@@ -12,11 +12,12 @@
             --ctb-blue: #003399;
             --kmb-red: #e60012;
             --gmb-green: #008751;
-            --dark-gray: #222222; /* 加深減少色差 */
+            --dark-gray: #222222;
             --light-bg: #f8f9fa;
             --text-main: #111111;
             --text-sub: #555555;
             --urgent-red: #d63031;
+            --star-gold: #f39c12;
         }
 
         body {
@@ -29,7 +30,7 @@
         }
 
         header {
-            background-color: var(--kmb-red); /* 改為鮮明九巴紅大底 */
+            background-color: var(--kmb-red);
             color: white;
             padding: 16px;
             border-radius: 12px;
@@ -56,6 +57,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .controls-buttons {
+            display: flex;
+            gap: 8px;
         }
 
         .timer-bar-container {
@@ -85,9 +93,11 @@
         }
 
         button:hover { opacity: 0.9; }
+        button.secondary { background-color: #636e72; }
+        button.secondary.active { background-color: var(--star-gold); }
+
         .last-update { font-size: 0.9rem; color: var(--text-sub); font-weight: 500; }
 
-        /* 分類標題增強對比 */
         .category-title {
             font-size: 1.2rem;
             font-weight: 800;
@@ -105,7 +115,6 @@
             gap: 14px;
         }
 
-        /* 卡片設計融合九巴鋼性線條與清晰分類 */
         .route-card {
             background: white;
             border-radius: 12px;
@@ -121,7 +130,6 @@
         .route-card.ctb { border-top-color: var(--ctb-yellow); }
         .route-card.kmb { border-top-color: var(--kmb-red); }
 
-        /* 【新增】下一班車少於5分鐘時，整個方格的閃爍與警示特效 */
         .route-card.card-urgent {
             border: 2px solid var(--urgent-red) !important;
             border-top: 5px solid var(--urgent-red) !important;
@@ -143,14 +151,32 @@
             border-bottom: 2px solid #f0f0f0;
         }
         
+        .route-title-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .star-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            color: #ccc;
+            line-height: 1;
+            transition: transform 0.2s;
+        }
+        .star-btn:hover { transform: scale(1.2); opacity: 1; }
+        .star-btn.favorited { color: var(--star-gold); }
+
         .route-name { font-size: 1.6rem; font-weight: 900; font-family: 'Arial Black', sans-serif; }
         .gmb .route-name { color: var(--gmb-green); }
         .ctb .route-name { color: var(--ctb-blue); }
         .kmb .route-name { color: var(--kmb-red); }
-        /* 當卡片緊急時，把路線名稱也強制變紅加強視覺效果 */
         .route-card.card-urgent .route-name { color: var(--urgent-red) !important; }
         
-        .route-dir { font-size: 0.9rem; color: var(--text-main); font-weight: bold; text-align: right; max-width: 70%; }
+        .route-dir { font-size: 0.9rem; color: var(--text-main); font-weight: bold; text-align: right; max-width: 60%; }
 
         .eta-list { list-style: none; padding: 0; margin: 0; }
         .eta-item-container {
@@ -167,7 +193,6 @@
         .eta-label { color: var(--text-sub); font-weight: bold; font-size: 0.95rem; }
         .eta-time-group { text-align: right; }
         
-        /* 預設到站時間色彩：高對比深色 */
         .eta-time { 
             font-size: 1.4rem; 
             font-weight: 800; 
@@ -175,7 +200,6 @@
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
         
-        /* 緊急時間才變紅並閃爍，避免全螢幕色差混亂 */
         .eta-time.urgent { 
             color: var(--urgent-red); 
             animation: blink 1.2s infinite alternate; 
@@ -188,7 +212,6 @@
         .loading { text-align: center; color: #888; font-style: italic; padding: 10px 0; font-weight: bold; }
         .status-container { text-align: right; margin-top: 8px; }
         
-        /* 狀態標籤高對比美化 */
         .status-tag { 
             font-size: 0.7rem; 
             font-weight: bold; 
@@ -198,18 +221,22 @@
         .tag-cache { background: #ffeaa7; color: #d63031; }
         .tag-demo { background: #dfe6e9; color: #2d3436; }
         .tag-live { background: #e1f5fe; color: #0288d1; border: 1px solid #b3e5fc; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>數碼港專用 實時到站提示</h1>
-        <p>Cyberport Real-time Transport ETA (Contrast & UI Boost)</p>
+        <p>Cyberport Real-time Transport ETA (Favorite Boost)</p>
     </header>
 
     <div class="controls">
         <div class="controls-row">
-            <button id="refreshBtn">手動刷新</button>
+            <div class="controls-buttons">
+                <button id="refreshBtn">手動刷新</button>
+                <button id="filterFavBtn" class="secondary">★ 只看最愛</button>
+            </div>
             <div class="last-update" id="lastUpdate">最後更新: 未更新</div>
         </div>
         <div class="timer-bar-container">
@@ -217,21 +244,21 @@
         </div>
     </div>
 
-    <div class="category-title category-gmb">專線小巴 (GMB)</div>
+    <div class="category-title category-gmb" id="title-gmb">專線小巴 (GMB)</div>
     <div class="route-grid" id="gmb-container"></div>
 
-    <div class="category-title category-ctb">城巴 (CTB)</div>
+    <div class="category-title category-ctb" id="title-ctb">城巴 (CTB)</div>
     <div class="route-grid" id="ctb-container"></div>
 
-    <div class="category-title category-kmb">九巴 (KMB)</div>
+    <div class="category-title category-kmb" id="title-kmb">九巴 (KMB)</div>
     <div class="route-grid" id="kmb-container"></div>
 
     <script>
-        // 【結構化全域配置】
         const TRANSPORT_CONFIG = {
             refreshIntervalSec: 60,
             cacheKeyPrefix: 'cache_eta_',
             lastUpdateKey: 'cyberport_last_update',
+            favStorageKey: 'cyberport_favorites',
             labels: ['下班車', '第二班', '第三班'],
             proxies: [
                 'https://cors.freehi.workers.dev/?',
@@ -240,22 +267,22 @@
             ],
             routes: {
                 gmb: [
-					{ route: '58', routeId: '2002580', routeSeq: '2', stopSeq: '7', dir: '經數碼港 往堅尼地城' }, 
-                    { route: '58', routeId: '2002580', routeSeq: '1', stopSeq: '7', dir: '經數碼港 往香港仔' }, 
-                    { route: '69X', routeId: '2000511', routeSeq: '1', stopSeq: '1', dir: '往 銅鑼灣 (駱克道)' },
-                    { route: '69X', routeId: '2000511', routeSeq: '2', stopSeq: '1', dir: '往 數碼港' },
-					{ route: '69A', routeId: '2000819', routeSeq: '1', stopSeq: '1', dir: '往 香港仔 (經黃竹坑)' },
-					{ route: '69', routeId: '2000410', routeSeq: '1', stopSeq: '1', dir: '往 鰂魚涌 (海康街)' }
+                    { id: 'gmb-58-2', route: '58', routeId: '2002580', routeSeq: '2', stopSeq: '7', dir: '經數碼港 往堅尼地城', type: 'gmb' }, 
+                    { id: 'gmb-58-1', route: '58', routeId: '2002580', routeSeq: '1', stopSeq: '7', dir: '經數碼港 往香港仔', type: 'gmb' }, 
+                    { id: 'gmb-69X-1', route: '69X', routeId: '2000511', routeSeq: '1', stopSeq: '1', dir: '往 銅鑼灣 (駱克道)', type: 'gmb' },
+                    { id: 'gmb-69X-2', route: '69X', routeId: '2000511', routeSeq: '2', stopSeq: '1', dir: '往 數碼港', type: 'gmb' },
+                    { id: 'gmb-69A-1', route: '69A', routeId: '2000819', routeSeq: '1', stopSeq: '1', dir: '往 香港仔 (經黃竹坑)', type: 'gmb' },
+                    { id: 'gmb-69-1', route: '69', routeId: '2000410', routeSeq: '1', stopSeq: '1', dir: '往 鰂魚涌 (海康街)', type: 'gmb' }
                 ],
                 ctb: [
-                    { route: '30X', stopId: '002392', dir: 'O', labelDir: '往 金鐘 - 港鐵 C 出口' }, 
-                    { route: '33X', stopId: '002392', dir: 'O', labelDir: '往 筲箕灣' },
-                    { route: '73', stopId: '002392', dir: 'O', labelDir: '往 赤柱監獄' },
-                    { route: '970', stopId: '002392', dir: 'O', labelDir: '往 蘇屋 / 旺角(弼街)' },
-                    { route: '42C', stopId: '002392', dir: 'O', labelDir: '往 北角碼頭' }
+                    { id: 'ctb-30X', route: '30X', stopId: '002392', dir: 'O', labelDir: '往 金鐘 - 港鐵 C 出口', type: 'ctb' }, 
+                    { id: 'ctb-33X', route: '33X', stopId: '002392', dir: 'O', labelDir: '往 筲箕灣', type: 'ctb' },
+                    { id: 'ctb-73', route: '73', stopId: '002392', dir: 'O', labelDir: '往 赤柱監獄', type: 'ctb' },
+                    { id: 'ctb-970', route: '970', stopId: '002392', dir: 'O', labelDir: '往 蘇屋 / 旺角(弼街)', type: 'ctb' },
+                    { id: 'ctb-42C', route: '42C', stopId: '002392', dir: 'O', labelDir: '往 北角碼頭', type: 'ctb' }
                 ],
                 kmb: [
-                    { route: '107P', stopId: '1B41827EB0497A78', serviceType: '1', dir: '往 海逸豪園' } 
+                    { id: 'kmb-107P', route: '107P', stopId: '1B41827EB0497A78', serviceType: '1', dir: '往 海逸豪園', type: 'kmb' } 
                 ]
             }
         };
@@ -263,33 +290,80 @@
         let currentProxyIdx = 0;
         let countdownSeconds = TRANSPORT_CONFIG.refreshIntervalSec;
         let countdownTimer = null;
+        let onlyShowFavorites = false;
 
-        function initContainers() {
-            initSection('gmb-container', TRANSPORT_CONFIG.routes.gmb, 'gmb');
-            initSection('ctb-container', TRANSPORT_CONFIG.routes.ctb, 'ctb');
-            initSection('kmb-container', TRANSPORT_CONFIG.routes.kmb, 'kmb');
+        function getFavorites() {
+            const favs = localStorage.getItem(TRANSPORT_CONFIG.favStorageKey);
+            return favs ? JSON.parse(favs) : [];
         }
 
-        function initSection(containerId, routes, type) {
+        function toggleFavorite(routeId) {
+            let favs = getFavorites();
+            if (favs.includes(routeId)) {
+                favs = favs.filter(id => id !== routeId);
+            } else {
+                favs.push(routeId);
+            }
+            localStorage.setItem(TRANSPORT_CONFIG.favStorageKey, JSON.stringify(favs));
+            initContainers();
+            updateAllETA();
+        }
+
+        function sortRoutes(routesArray) {
+            const favs = getFavorites();
+            return [...routesArray].sort((a, b) => {
+                const aFav = favs.includes(a.id) ? 1 : 0;
+                const bFav = favs.includes(b.id) ? 1 : 0;
+                return bFav - aFav; // 置頂最愛
+            });
+        }
+
+        function initContainers() {
+            initSection('gmb-container', sortRoutes(TRANSPORT_CONFIG.routes.gmb), 'gmb', 'title-gmb');
+            initSection('ctb-container', sortRoutes(TRANSPORT_CONFIG.routes.ctb), 'ctb', 'title-ctb');
+            initSection('kmb-container', sortRoutes(TRANSPORT_CONFIG.routes.kmb), 'kmb', 'title-kmb');
+        }
+
+        function initSection(containerId, routes, type, titleId) {
             const container = document.getElementById(containerId);
+            const titleElement = document.getElementById(titleId);
             container.innerHTML = '';
-            routes.forEach((r, index) => {
+            
+            const favs = getFavorites();
+            let visibleCount = 0;
+
+            routes.forEach((r) => {
+                const isFav = favs.includes(r.id);
+                if (onlyShowFavorites && !isFav) return;
+
+                visibleCount++;
                 const card = document.createElement('div');
                 card.className = `route-card ${type}`;
-                card.id = `${type}-${r.route}-${index}`;
+                card.id = `card-${r.id}`;
                 
                 const displayDir = r.labelDir || r.dir;
                 card.innerHTML = `
                     <div class="route-header">
-                        <span class="route-name">${r.route}</span>
+                        <div class="route-title-area">
+                            <button class="star-btn ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${r.id}')">${isFav ? '★' : '☆'}</button>
+                            <span class="route-name">${r.route}</span>
+                        </div>
                         <span class="route-dir">${displayDir}</span>
                     </div>
-                    <div class="eta-list" id="eta-${type}-${r.route}-${index}">
+                    <div class="eta-list" id="eta-${r.id}">
                         <div class="loading">載入中...</div>
                     </div>
                 `;
                 container.appendChild(card);
             });
+
+            if (visibleCount === 0) {
+                titleElement.classList.add('hidden');
+                container.classList.add('hidden');
+            } else {
+                titleElement.classList.remove('hidden');
+                container.classList.remove('hidden');
+            }
         }
 
         async function smartFetch(targetUrl) {
@@ -312,9 +386,8 @@
             throw lastErr;
         }
 
-        // 【優化】動態控制外層方格的緊急閃爍外觀
         function updateCardUrgentState(elementId, isUrgent) {
-            const cardId = elementId.replace('eta-', '');
+            const cardId = elementId.replace('eta-', 'card-');
             const cardElement = document.getElementById(cardId);
             if (cardElement) {
                 if (isUrgent) {
@@ -337,7 +410,6 @@
                 if(status === 'live') {
                     localStorage.setItem(`${TRANSPORT_CONFIG.cacheKeyPrefix}${elementId}`, htmlContent);
                 }
-                // 同步更新外層方格樣式
                 updateCardUrgentState(elementId, hasUrgentBus);
             }
         }
@@ -345,13 +417,12 @@
         function handleFetchFailure(elementId) {
             const cachedHtml = localStorage.getItem(`${TRANSPORT_CONFIG.cacheKeyPrefix}${elementId}`);
             if(cachedHtml) {
-                // 如果是緩存，先預設不開啟卡片閃爍（由新數據決定）
                 renderETA(elementId, cachedHtml, 'cache', false);
             } else {
                 const randomMin1 = Math.floor(Math.random() * 5) + 3;
                 const randomMin2 = randomMin1 + Math.floor(Math.random() * 10) + 7;
                 const urgentClass = randomMin1 <= 3 ? 'urgent' : '';
-                const isUrgentCard = randomMin1 < 5; // 模擬數據：少於 5 分鐘觸發方格閃爍
+                const isUrgentCard = randomMin1 < 5;
                 
                 const time1 = formatTime(new Date(Date.now() + randomMin1 * 60000));
                 const time2 = formatTime(new Date(Date.now() + randomMin2 * 60000));
@@ -384,9 +455,9 @@
             return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
         }
 
-        // 小巴 Fetch 承諾物件
-        async function fetchGMB(r, index) {
-            const elementId = `eta-gmb-${r.route}-${index}`;
+        async function fetchGMB(r) {
+            const elementId = `eta-${r.id}`;
+            if (!document.getElementById(elementId)) return;
             try {
                 const targetUrl = `https://data.etagmb.gov.hk/eta/route-stop/${r.routeId}/${r.routeSeq}/${r.stopSeq}`;
                 const data = await smartFetch(targetUrl);
@@ -400,17 +471,11 @@
                     sortedEta.forEach((e, idx) => {
                         const min = Math.max(0, e.diff);
                         const urgentClass = min <= 3 ? 'urgent' : '';
-                        
-                        // 判斷下班車（第一班）是否少於 5 分鐘
-                        if (idx === 0 && min < 5) {
-                            isUrgentCard = true;
-                        }
+                        if (idx === 0 && min < 5) isUrgentCard = true;
 
                         const label = TRANSPORT_CONFIG.labels[idx] || `${idx + 1} 班`;
                         let remarksHtml = e.remarks_tc ? `<div class="eta-remarks">${e.remarks_tc}</div>` : '';
-                        
-                        const actualTimeObj = new Date(nowTimestamp + (e.diff * 60 * 1000));
-                        const actualTimeStr = formatTime(actualTimeObj);
+                        const actualTimeStr = formatTime(new Date(nowTimestamp + (e.diff * 60 * 1000)));
                         
                         etaHtml += `
                             <div class="eta-item-container">
@@ -425,19 +490,17 @@
                             </div>`;
                     });
                 } else if (data.data && data.data.enabled === false) {
-                    const reason = data.data.description_tc || '到站預報暫停';
-                    etaHtml = `<div class="loading">${reason}</div>`;
+                    etaHtml = `<div class="loading">${data.data.description_tc || '到站預報暫停'}</div>`;
                 }
                 renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo', isUrgentCard);
             } catch (err) {
-                console.error(`GMB Error:`, err);
                 handleFetchFailure(elementId);
             }
         }
 
-        // 城巴 Fetch 承諾物件
-        async function fetchCTB(r, index) {
-            const elementId = `eta-ctb-${r.route}-${index}`;
+        async function fetchCTB(r) {
+            const elementId = `eta-${r.id}`;
+            if (!document.getElementById(elementId)) return;
             try {
                 const targetUrl = `https://rt.data.gov.hk/v1/transport/citybus-nwfb/eta/CTB/${r.stopId}/${r.route}`;
                 const data = await smartFetch(targetUrl);
@@ -446,28 +509,20 @@
                 
                 if (data.data && data.data.length > 0) {
                     const filteredData = data.data.filter(item => item.dir === r.dir && item.eta);
-                    
                     filteredData.slice(0, 3).forEach((item, idx) => {
                         const etaDate = new Date(item.eta);
-                        const baseDate = new Date(); 
-                        const min = Math.max(0, Math.round((etaDate - baseDate) / 60000));
+                        const min = Math.max(0, Math.round((etaDate - new Date()) / 60000));
                         const urgentClass = min <= 3 ? 'urgent' : '';
-                        
-                        // 判斷下班車（第一班）是否少於 5 分鐘
-                        if (idx === 0 && min < 5) {
-                            isUrgentCard = true;
-                        }
+                        if (idx === 0 && min < 5) isUrgentCard = true;
 
                         const label = TRANSPORT_CONFIG.labels[idx] || `${idx + 1} 班`;
-                        const actualTimeStr = formatTime(etaDate);
-
                         etaHtml += `
                             <div class="eta-item-container">
                                 <div class="eta-item">
                                     <span class="eta-label">${label}</span>
                                     <div class="eta-time-group">
                                         <div class="eta-time ${urgentClass}">${min} 分鐘</div>
-                                        <div class="eta-actual-time">${actualTimeStr}</div>
+                                        <div class="eta-actual-time">${formatTime(etaDate)}</div>
                                     </div>
                                 </div>
                             </div>`;
@@ -475,14 +530,13 @@
                 }
                 renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo', isUrgentCard);
             } catch (err) {
-                console.error(`CTB Error:`, err);
                 handleFetchFailure(elementId);
             }
         }
 
-        // 九巴 Fetch 承諾物件
-        async function fetchKMB(r, index) {
-            const elementId = `eta-kmb-${r.route}-${index}`;
+        async function fetchKMB(r) {
+            const elementId = `eta-${r.id}`;
+            if (!document.getElementById(elementId)) return;
             try {
                 const targetUrl = `https://data.etabus.gov.hk/v1/transport/kmb/eta/${r.stopId}/${r.route}/${r.serviceType}`;
                 const data = await smartFetch(targetUrl);
@@ -494,25 +548,17 @@
                     data.data.forEach((item) => {
                         if(item.eta && count < 3) {
                             const etaDate = new Date(item.eta);
-                            const baseDate = new Date(item.data_timestamp);
-                            const min = Math.max(0, Math.round((etaDate - baseDate) / 60000));
+                            const min = Math.max(0, Math.round((etaDate - new Date(item.data_timestamp)) / 60000));
                             const urgentClass = min <= 3 ? 'urgent' : '';
-                            
-                            // 判斷下班車（第一班）是否少於 5 分鐘
-                            if (count === 0 && min < 5) {
-                                isUrgentCard = true;
-                            }
-
-                            const label = TRANSPORT_CONFIG.labels[count];
-                            const actualTimeStr = formatTime(etaDate);
+                            if (count === 0 && min < 5) isUrgentCard = true;
 
                             etaHtml += `
                                 <div class="eta-item-container">
                                     <div class="eta-item">
-                                        <span class="eta-label">${label}</span>
+                                        <span class="eta-label">${TRANSPORT_CONFIG.labels[count]}</span>
                                         <div class="eta-time-group">
                                             <div class="eta-time ${urgentClass}">${min} 分鐘</div>
-                                            <div class="eta-actual-time">${actualTimeStr}</div>
+                                            <div class="eta-actual-time">${formatTime(etaDate)}</div>
                                         </div>
                                     </div>
                                 </div>`;
@@ -522,42 +568,37 @@
                 }
                 renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo', isUrgentCard);
             } catch (err) {
-                console.error(`KMB Error:`, err);
                 handleFetchFailure(elementId);
             }
         }
 
-        // 【使用 Promise.all 並行處理解析】
         async function updateAllETA() {
             resetCountdown();
-
-            const now = new Date();
-            const timeStr = formatTime(now);
+            const timeStr = formatTime(new Date());
             localStorage.setItem(TRANSPORT_CONFIG.lastUpdateKey, timeStr);
             document.getElementById('lastUpdate').innerText = `最後更新: ${timeStr}`;
 
-            const tasks = [
-                ...TRANSPORT_CONFIG.routes.gmb.map((r, idx) => fetchGMB(r, idx)),
-                ...TRANSPORT_CONFIG.routes.ctb.map((r, idx) => fetchCTB(r, idx)),
-                ...TRANSPORT_CONFIG.routes.kmb.map((r, idx) => fetchKMB(r, idx))
+            const allRoutes = [
+                ...TRANSPORT_CONFIG.routes.gmb,
+                ...TRANSPORT_CONFIG.routes.ctb,
+                ...TRANSPORT_CONFIG.routes.kmb
             ];
+
+            const tasks = allRoutes.map(r => {
+                if (r.type === 'gmb') return fetchGMB(r);
+                if (r.type === 'ctb') return fetchCTB(r);
+                if (r.type === 'kmb') return fetchKMB(r);
+            });
 
             await Promise.all(tasks);
         }
 
-        // 【倒數自動機制】
         function startCountdown() {
             if(countdownTimer) clearInterval(countdownTimer);
-            
             countdownTimer = setInterval(() => {
                 countdownSeconds--;
-                
-                const percentage = (countdownSeconds / TRANSPORT_CONFIG.refreshIntervalSec) * 100;
-                document.getElementById('timerBar').style.width = `${percentage}%`;
-                
-                if (countdownSeconds <= 0) {
-                    updateAllETA();
-                }
+                document.getElementById('timerBar').style.width = `${(countdownSeconds / TRANSPORT_CONFIG.refreshIntervalSec) * 100}%`;
+                if (countdownSeconds <= 0) updateAllETA();
             }, 1000);
         }
 
@@ -570,14 +611,21 @@
             initContainers();
             
             const savedTime = localStorage.getItem(TRANSPORT_CONFIG.lastUpdateKey);
-            if(savedTime) {
-                document.getElementById('lastUpdate').innerText = `上次留存時間: ${savedTime}`;
-            }
+            if(savedTime) document.getElementById('lastUpdate').innerText = `上次留存時間: ${savedTime}`;
 
             updateAllETA();
             startCountdown();
 
             document.getElementById('refreshBtn').addEventListener('click', updateAllETA);
+            
+            const filterBtn = document.getElementById('filterFavBtn');
+            filterBtn.addEventListener('click', () => {
+                onlyShowFavorites = !onlyShowFavorites;
+                filterBtn.classList.toggle('active', onlyShowFavorites);
+                filterBtn.innerText = onlyShowFavorites ? '★ 顯示全部' : '★ 只看最愛';
+                initContainers();
+                updateAllETA();
+            });
         });
     </script>
 </body>
