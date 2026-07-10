@@ -128,6 +128,17 @@
                 </div>
             </div>
 
+            <!-- 時限篩選按鈕列 -->
+            <div class="flex items-center gap-2 pt-2 border-t border-gray-100 overflow-x-auto no-scrollbar">
+                <span class="text-[11px] text-gray-400 shrink-0 font-medium"><i class="fa-solid fa-clock"></i> 時限:</span>
+                <div id="period-filters" class="flex gap-1.5">
+                    <button class="period-filter-btn bg-purple-600 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm shadow-purple-500/20 transition" data-period="ALL">全部</button>
+                    <button class="period-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-period="30分鐘">30分鐘</button>
+                    <button class="period-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-period="1小時">1小時</button>
+                    <button class="period-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-period="2小時">2小時</button>
+                </div>
+            </div>
+
             <div id="fav-street-buttons-container" class="flex items-center gap-2 pt-2 border-t border-gray-100 hidden overflow-x-auto no-scrollbar">
                 <span class="text-[11px] text-gray-400 shrink-0 font-medium"><i class="fa-solid fa-tags"></i> 捷徑:</span>
                 <div id="fav-street-btns" class="flex gap-1.5 items-center"></div>
@@ -183,6 +194,7 @@
         let oldParkingStatusMap = new Map(); 
         let currentRegion = 'ALL';
         let currentVehicleType = 'ALL';
+        let currentMaxPeriod = 'ALL'; // 時限篩選狀態
         let currentSelectedStreet = 'ALL'; 
         let currentSearch = '';
         let showFavoritesOnly = false;
@@ -211,6 +223,7 @@
         
         setupRegionFilters();
         setupVehicleFilters();
+        setupPeriodFilters(); // 初始化時限篩選事件
 
         async function initPage() {
             updateNotifyIconStyle();
@@ -236,6 +249,7 @@
         function resetAllFilters() {
             currentRegion = 'ALL';
             currentVehicleType = 'ALL';
+            currentMaxPeriod = 'ALL';
             currentSelectedStreet = 'ALL';
             currentSearch = '';
             showFavoritesOnly = false;
@@ -259,6 +273,16 @@
                     b.className = "vehicle-filter-btn bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm shadow-indigo-500/20 transition";
                 } else {
                     b.className = "vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition";
+                }
+            });
+
+            const periodButtons = document.querySelectorAll('.period-filter-btn');
+            periodButtons.forEach(b => {
+                const per = b.getAttribute('data-period');
+                if (per === 'ALL') {
+                    b.className = "period-filter-btn bg-purple-600 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm shadow-purple-500/20 transition";
+                } else {
+                    b.className = "period-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition";
                 }
             });
 
@@ -599,6 +623,7 @@
             filteredDataGlobal = parkingData.filter(item => {
                 const matchRegion = (currentRegion === 'ALL' || item.regionCode === currentRegion);
                 const matchVehicle = (currentVehicleType === 'ALL' || item.vehicleType === currentVehicleType);
+                const matchPeriod = (currentMaxPeriod === 'ALL' || item.maxParkingPeriod === currentMaxPeriod); // 時限篩選邏輯
                 const matchSearch = (
                     item.id.toLowerCase().includes(currentSearch) ||
                     item.street.toLowerCase().includes(currentSearch) || 
@@ -609,7 +634,7 @@
                 if (showFavoritesOnly) matchFav = favStreets.includes(item.street);
                 if (currentSelectedStreet !== 'ALL') matchFav = (item.street === currentSelectedStreet);
 
-                return matchRegion && matchVehicle && matchSearch && matchFav;
+                return matchRegion && matchVehicle && matchPeriod && matchSearch && matchFav;
             });
 
             let currentFilterAvailableCount = 0;
@@ -825,6 +850,22 @@
             });
         }
 
+        function setupPeriodFilters() {
+            const buttons = document.querySelectorAll('.period-filter-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    buttons.forEach(b => {
+                        b.classList.remove('bg-purple-600', 'text-white', 'shadow-sm', 'shadow-purple-500/20');
+                        b.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+                    });
+                    e.target.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+                    e.target.classList.add('bg-purple-600', 'text-white', 'shadow-sm', 'shadow-purple-500/20');
+                    currentMaxPeriod = e.target.getAttribute('data-period');
+                    prepareAndRenderInitialCards();
+                });
+            });
+        }
+
         function toggleLoading(isLoading) {
             const loader = document.getElementById('loading-view');
             const list = document.getElementById('parking-list');
@@ -842,3 +883,4 @@
     </script>
 </body>
 </html>
+```[cite: 1, 2]
