@@ -108,7 +108,7 @@
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
                     <i class="fa-solid fa-magnifying-glass text-sm"></i>
                 </span>
-                <input type="text" id="search-input" placeholder="搜尋 ID、街道、地區..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                <input type="text" id="search-input" placeholder="搜尋街道、地區..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
             </div>
             
             <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5" id="region-filters">
@@ -151,7 +151,7 @@
             <p id="progress-percent" class="text-[11px] text-gray-400 mt-1.5">0%</p>
         </div>
 
-        <div id="parking-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 hidden">
+        <div id="parking-list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 hidden">
         </div>
 
         <div id="infinite-scroll-trigger" class="w-full text-center py-5 text-xs text-gray-400 hidden">
@@ -192,13 +192,13 @@
         let notifySettings = JSON.parse(localStorage.getItem(CACHE_KEY_NOTIFY_SETTINGS)) || { enabled: false, streets: [] };
 
         let filteredDataGlobal = []; 
-        let itemsPerPage = 30;       
+        let itemsPerPage = 50;       
         let currentPage = 1;         
 
         document.addEventListener('DOMContentLoaded', initPage);
         document.addEventListener('visibilitychange', handleVisibilityChange);
         document.getElementById('refresh-btn').addEventListener('click', () => fetchAllData(true));
-        document.getElementById('reset-filter-btn').addEventListener('click', resetAllFilters); // 重設按鈕事件
+        document.getElementById('reset-filter-btn').addEventListener('click', resetAllFilters);
         document.getElementById('search-input').addEventListener('input', handleSearch);
         document.getElementById('fav-toggle-btn').addEventListener('click', toggleFavoritesFilter);
         
@@ -233,7 +233,6 @@
             }, 300000);
         }
 
-        // 重設全部篩選功能
         function resetAllFilters() {
             currentRegion = 'ALL';
             currentVehicleType = 'ALL';
@@ -241,10 +240,8 @@
             currentSearch = '';
             showFavoritesOnly = false;
 
-            // 清空搜尋框
             document.getElementById('search-input').value = '';
 
-            // 重設地區按鈕樣式
             const regionButtons = document.querySelectorAll('.region-filter-btn');
             regionButtons.forEach(b => {
                 const reg = b.getAttribute('data-region');
@@ -255,7 +252,6 @@
                 }
             });
 
-            // 重設車型按鈕樣式
             const vehicleButtons = document.querySelectorAll('.vehicle-filter-btn');
             vehicleButtons.forEach(b => {
                 const veh = b.getAttribute('data-vehicle');
@@ -266,13 +262,11 @@
                 }
             });
 
-            // 重設最愛切換按鈕狀態
             const favBtn = document.getElementById('fav-toggle-btn');
             const favText = document.getElementById('fav-toggle-text');
             favBtn.className = "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1";
             favText.innerText = "最愛";
 
-            // 更新捷徑按鈕樣式
             if (favStreets.length > 0) {
                 updateFavStreetButtonStyles();
             }
@@ -666,70 +660,68 @@
                 const isStreetFaved = favStreets.includes(item.street);
 
                 if (!isUsable) {
-                    occText = '<i class="fa-solid fa-ban text-gray-400"></i> <span class="font-bold text-sm">暫停服務</span>';
+                    occText = '<span class="font-bold text-xs text-gray-400">暫停</span>';
                 } else if (item.occupancyStatus === 'V') {
-                    occText = '<i class="fa-solid fa-circle-check text-green-600 font-bold"></i> <span class="text-green-700 font-black text-base">有空位</span>';
+                    occText = '<span class="text-green-700 font-extrabold text-xs">有空位</span>';
                 } else if (item.occupancyStatus === 'O') {
-                    occText = '<i class="fa-solid fa-car text-rose-500"></i> <span class="text-rose-600 font-black text-base">已佔用</span>';
+                    occText = '<span class="text-rose-600 font-extrabold text-xs">已佔用</span>';
                 } else {
                     occText = '未知';
                 }
 
                 if (item.meterStatus === 'N') {
-                    meterText = '<i class="fa-solid fa-check text-blue-500"></i> <span class="font-bold text-sm text-gray-900">正常</span>';
+                    meterText = '<span class="text-xs text-gray-800">正常</span>';
                 } else if (item.meterStatus === 'NU') {
-                    meterText = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> <span class="font-bold text-sm text-amber-600">暫停</span>';
+                    meterText = '<span class="text-xs text-amber-600 font-bold">暫停</span>';
                 }
 
-                let vehicleTypeDesc = item.vehicleType === 'G' ? '貨車' : (item.vehicleType === 'C' ? '巴士' : '一般車輛');
                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
 
                 let periodColorClass = 'bg-gray-100 text-gray-700';
                 if (item.maxParkingPeriod === '2小時') {
-                    periodColorClass = 'bg-purple-100 text-purple-700 border border-purple-200/60';
+                    periodColorClass = 'bg-purple-100 text-purple-700';
                 } else if (item.maxParkingPeriod === '1小時') {
-                    periodColorClass = 'bg-blue-100 text-blue-700 border border-blue-200/60';
+                    periodColorClass = 'bg-blue-100 text-blue-700';
                 } else if (item.maxParkingPeriod === '30分鐘') {
-                    periodColorClass = 'bg-orange-100 text-orange-700 border border-orange-200/60';
+                    periodColorClass = 'bg-orange-100 text-orange-700';
                 }
-                let periodBadge = `<span class="${periodColorClass} text-[11px] px-2 py-0.5 rounded-md font-extrabold shadow-2xs">${item.maxParkingPeriod}</span>`;
+                let periodBadge = `<span class="${periodColorClass} text-[10px] px-1.5 py-0.2 rounded font-bold">${item.maxParkingPeriod}</span>`;
 
                 const cardBorderAndBg = isAvailable 
                     ? 'border-2 border-green-500 bg-green-50/15 shadow-sm ring-1 ring-green-400/20' 
                     : 'border border-gray-200/80 bg-white shadow-2xs';
 
                 const cardHtml = `
-                    <div class="rounded-2xl transition overflow-hidden ${cardBorderAndBg} ${!isUsable ? 'opacity-75' : ''} flex flex-col justify-between relative">
-                        ${isAvailable ? '<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-green-500"></div>' : ''}
-                        <div class="p-3.5 sm:p-4 ${isAvailable ? 'pl-4.5' : ''}">
-                            <div class="mb-2 flex justify-between items-center gap-1">
-                                <span class="text-[11px] text-gray-400 font-medium truncate">
-                                    ${item.region} · ${item.district}
+                    <div class="rounded-xl transition overflow-hidden ${cardBorderAndBg} ${!isUsable ? 'opacity-75' : ''} flex flex-col justify-between relative text-xs">
+                        ${isAvailable ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>' : ''}
+                        <div class="p-2 sm:p-2.5 ${isAvailable ? 'pl-3' : ''}">
+                            <div class="mb-1 flex justify-between items-center gap-1">
+                                <span class="text-[9px] text-gray-400 truncate">
+                                    ${item.district}
                                 </span>
-                                <div class="flex gap-1.5 items-center shrink-0">
+                                <div class="flex gap-1 items-center shrink-0">
                                     ${periodBadge}
-                                    <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-base p-1 text-gray-400 hover:text-amber-500 transition" title="收藏街道">
+                                    <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-sm p-0.5 text-gray-400 hover:text-amber-500 transition" title="收藏街道">
                                         <i class="${isStreetFaved ? 'fa-solid fa-star text-amber-500' : 'fa-regular fa-star'}"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <p class="text-gray-900 text-sm font-bold mb-1 truncate"><i class="fa-solid fa-location-dot text-gray-400 text-xs mr-1"></i>${item.street}</p>
-                            <p class="text-gray-400 text-[10px] mb-3">柱號: ${item.poleId}</p>
+                            <p class="text-gray-900 text-xs font-bold mb-0.5 truncate"><i class="fa-solid fa-location-dot text-gray-400 text-[10px] mr-0.5"></i>${item.street}</p>
+                            <p class="text-gray-400 text-[9px] mb-1.5">柱: ${item.poleId}</p>
                             
-                            <div class="space-y-2 mb-2 text-sm text-gray-800 ${isAvailable ? 'bg-green-50/40 border-green-200/60' : 'bg-gray-50/80 border-gray-100'} p-3 rounded-xl border">
+                            <div class="space-y-1 mb-1.5 text-[11px] text-gray-800 ${isAvailable ? 'bg-green-50/40 border-green-200/60' : 'bg-gray-50/80 border-gray-100'} p-1.5 rounded-lg border">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-500 font-medium text-xs sm:text-sm">錶柱：</span><span>${meterText}</span>
+                                    <span class="text-gray-400 text-[10px]">錶柱:</span><span>${meterText}</span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-500 font-medium text-xs sm:text-sm">狀態：</span><span>${occText}</span>
+                                    <span class="text-gray-400 text-[10px]">狀態:</span><span>${occText}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="${isAvailable ? 'bg-green-50/20 border-green-100/60' : 'bg-gray-50/50 border-gray-100'} px-3.5 py-2.5 border-t flex justify-between items-center text-xs text-gray-500">
-                            <span class="text-[11px] text-gray-400"><i class="fa-solid fa-car-side mr-1"></i>${vehicleTypeDesc}</span>
-                            <a href="${mapsUrl}" target="_blank" class="text-blue-600 font-semibold flex items-center gap-1 bg-white border border-gray-200/80 shadow-2xs px-3.5 py-1.5 rounded-lg text-xs hover:bg-gray-50 active:scale-95 transition">
+                        <div class="${isAvailable ? 'bg-green-50/20 border-green-100/60' : 'bg-gray-50/50 border-gray-100'} px-2 py-1.5 border-t flex justify-end items-center text-[11px]">
+                            <a href="${mapsUrl}" target="_blank" class="text-blue-600 font-semibold flex items-center gap-0.5 bg-white border border-gray-200/80 shadow-2xs px-2 py-0.5 rounded text-[10px] hover:bg-gray-50 active:scale-95 transition">
                                 <i class="fa-solid fa-map-location-dot"></i> 導航
                             </a>
                         </div>
