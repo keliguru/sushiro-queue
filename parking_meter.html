@@ -64,6 +64,9 @@
                 <button id="fav-toggle-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
                     <i class="fa-solid fa-star text-amber-400"></i> <span id="fav-toggle-text">最愛</span>
                 </button>
+                <button id="reset-filter-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1" title="重設全部篩選">
+                    <i class="fa-solid fa-filter-circle-xmark text-rose-400"></i> <span>重設</span>
+                </button>
                 <button id="refresh-btn" class="bg-blue-600 hover:bg-blue-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
                     <i class="fa-solid fa-rotate" id="refresh-icon"></i> <span>更新</span>
                 </button>
@@ -114,7 +117,7 @@
             </div>
             
             <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5" id="region-filters">
-                <button class="region-filter-btn bg-blue-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm shadow-blue-500/20 transition">全部地區</button>
+                <button class="region-filter-btn bg-blue-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm shadow-blue-500/20 transition" data-region="ALL">全部地區</button>
                 <button class="region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition" data-region="HONG KONG">香港島</button>
                 <button class="region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition" data-region="KOWLOON">九龍</button>
                 <button class="region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition" data-region="NEW TERRITORIES">新界</button>
@@ -198,8 +201,9 @@
         let currentPage = 1;         
 
         document.addEventListener('DOMContentLoaded', initPage);
-        document.addEventListener('visibilitychange', handleVisibilityChange); // 監聽分頁前景/背景狀態
+        document.addEventListener('visibilitychange', handleVisibilityChange);
         document.getElementById('refresh-btn').addEventListener('click', () => fetchAllData(true));
+        document.getElementById('reset-filter-btn').addEventListener('click', resetAllFilters); // 重設按鈕事件
         document.getElementById('search-input').addEventListener('input', handleSearch);
         document.getElementById('fav-toggle-btn').addEventListener('click', toggleFavoritesFilter);
         
@@ -232,6 +236,53 @@
                 console.log("⏰ 觸發每 5 分鐘自動更新...");
                 fetchAllData(false);
             }, 300000);
+        }
+
+        // 重設全部篩選功能
+        function resetAllFilters() {
+            currentRegion = 'ALL';
+            currentVehicleType = 'ALL';
+            currentSelectedStreet = 'ALL';
+            currentSearch = '';
+            showFavoritesOnly = false;
+
+            // 清空搜尋框
+            document.getElementById('search-input').value = '';
+
+            // 重設地區按鈕樣式
+            const regionButtons = document.querySelectorAll('.region-filter-btn');
+            regionButtons.forEach(b => {
+                const reg = b.getAttribute('data-region');
+                if (reg === 'ALL') {
+                    b.className = "region-filter-btn bg-blue-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm shadow-blue-500/20 transition";
+                } else {
+                    b.className = "region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition";
+                }
+            });
+
+            // 重設車型按鈕樣式
+            const vehicleButtons = document.querySelectorAll('.vehicle-filter-btn');
+            vehicleButtons.forEach(b => {
+                const veh = b.getAttribute('data-vehicle');
+                if (veh === 'ALL') {
+                    b.className = "vehicle-filter-btn bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm shadow-indigo-500/20 transition";
+                } else {
+                    b.className = "vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition";
+                }
+            });
+
+            // 重設最愛切換按鈕狀態
+            const favBtn = document.getElementById('fav-toggle-btn');
+            const favText = document.getElementById('fav-toggle-text');
+            favBtn.className = "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1";
+            favText.innerText = "最愛";
+
+            // 更新捷徑按鈕樣式
+            if (favStreets.length > 0) {
+                updateFavStreetButtonStyles();
+            }
+
+            prepareAndRenderInitialCards();
         }
 
         function openNotificationModal() {
