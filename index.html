@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>壽司郎分店即時排隊情況 (Sushiro Store List)</title>
     
-    <link rel="icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/sushiro-icon.png">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/sushiro-icon.png">
 	<meta property="og:type" content="website">
 	<meta property="og:title" content="壽司郎 Sushiro 分店即時狀況 & 排隊資訊查詢">
 	<meta property="og:description" content="全港壽司郎分店即時叫號與排隊人數快訊！支援 GPS 定位尋找最近分店，還能設定提早 10 號桌面通知，吃壽司再也不用苦苦現場等候。">
@@ -15,7 +15,13 @@
 	<meta name="twitter:title" content="壽司郎 Sushiro 分店即時狀況 & 排隊資訊查詢">
 	<meta name="twitter:description" content="全港壽司郎分店即時叫號與排隊人數快訊！">
 	
-	
+	<!-- iOS Safari 專用圖示（iOS 嚴格要求必須是 PNG，不支援 SVG） -->
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/sushiro-icon.png">
+
+	<!-- iOS 進階優化：讓加入主畫面的網頁看起來更像原生 App（隱藏網址列） -->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="壽司郎排隊">
 	
     <style>
         body {
