@@ -188,7 +188,7 @@
         let currentSelectedStreet = 'ALL'; 
         let currentSearch = '';
         let showFavoritesOnly = false;
-        let autoRefreshInterval = null; // 儲存每5分鐘自動更新的計時器
+        let autoRefreshInterval = null; 
         
         let favStreets = JSON.parse(localStorage.getItem(CACHE_KEY_FAV_STREETS)) || [];
         let notifySettings = JSON.parse(localStorage.getItem(CACHE_KEY_NOTIFY_SETTINGS)) || { enabled: false, streets: [] };
@@ -198,6 +198,7 @@
         let currentPage = 1;         
 
         document.addEventListener('DOMContentLoaded', initPage);
+        document.addEventListener('visibilitychange', handleVisibilityChange); // 監聽分頁前景/背景狀態
         document.getElementById('refresh-btn').addEventListener('click', () => fetchAllData(true));
         document.getElementById('search-input').addEventListener('input', handleSearch);
         document.getElementById('fav-toggle-btn').addEventListener('click', toggleFavoritesFilter);
@@ -217,9 +218,16 @@
             await fetchAllData(false);
         }
 
+        function handleVisibilityChange() {
+            if (document.visibilityState === 'visible') {
+                console.log("👀 網頁回到前景，立即檢查最新車位狀態...");
+                fetchAllData(false);
+                startAutoRefreshTimer();
+            }
+        }
+
         function startAutoRefreshTimer() {
             if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-            // 每 5 分鐘自動背景更新一次 (5 * 60 * 1000 毫秒 = 300,000 毫秒)
             autoRefreshInterval = setInterval(() => {
                 console.log("⏰ 觸發每 5 分鐘自動更新...");
                 fetchAllData(false);
@@ -337,7 +345,6 @@
         }
 
         async function fetchAllData(isManualClick = false) {
-            // 背景自動更新不顯示全螢幕 loading 畫面
             if (isManualClick || !rawInfoData) {
                 toggleLoading(true);
                 updateProgress(5, "準備連接政府資料庫...");
@@ -426,7 +433,7 @@
                     renderFavStreetButtons();
                     prepareAndRenderInitialCards();
                     toggleLoading(false);
-                    startAutoRefreshTimer(); // 每次載入成功後重設 5 分鐘計時器
+                    startAutoRefreshTimer(); 
                 }, 300);
 
             } catch (error) {
