@@ -18,100 +18,104 @@
             100% { transform: rotate(360deg); }
         }
         ::-webkit-scrollbar {
-            height: 4px;
-            width: 4px;
+            height: 3px;
+            width: 3px;
         }
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
         }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans antialiased">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased pb-12">
 
     <nav class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-3 py-2.5 flex flex-wrap justify-between items-center gap-2">
-            <h1 class="text-base sm:text-xl font-bold flex items-center gap-2">
-                <i class="fa-solid fa-square-p text-yellow-400"></i> 香港實時智能錶位
+        <div class="max-w-7xl mx-auto px-3 py-2 flex justify-between items-center gap-1">
+            <h1 class="text-sm sm:text-lg font-bold flex items-center gap-1.5 truncate">
+                <i class="fa-solid fa-square-p text-yellow-400"></i> <span class="truncate">香港智能錶位</span>
             </h1>
-            <div class="flex items-center gap-1.5 flex-wrap">
-                <button id="notify-auth-btn" class="bg-emerald-700 hover:bg-emerald-800 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1 hidden">
-                    <i class="fa-solid fa-bell"></i> 啟用通知
+            <div class="flex items-center gap-1 shrink-0">
+                <button id="notify-auth-btn" class="bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg text-xs transition flex items-center gap-1 hidden">
+                    <i class="fa-solid fa-bell"></i>
                 </button>
-                <button id="fav-toggle-btn" class="bg-slate-700 hover:bg-slate-800 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
+                <button id="fav-toggle-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
                     <i class="fa-solid fa-star text-amber-400"></i> <span id="fav-toggle-text">最愛</span>
                 </button>
-                <button id="refresh-btn" class="bg-blue-600 hover:bg-blue-700 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm transition flex items-center gap-1">
+                <button id="refresh-btn" class="bg-blue-600 hover:bg-blue-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
                     <i class="fa-solid fa-rotate" id="refresh-icon"></i> <span>更新</span>
                 </button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <main class="max-w-7xl mx-auto px-2.5 sm:px-4 py-3 sm:py-6">
         
-        <div class="bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-4 flex flex-col gap-3">
-            <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
-                <div class="w-full md:w-1/3 relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </span>
-                    <input type="text" id="search-input" placeholder="搜尋 ID、街道、地區..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                
-                <div class="w-full md:w-auto flex gap-1.5 overflow-x-auto pb-1 md:pb-0" id="region-filters">
-                    <button class="region-filter-btn bg-blue-600 text-white px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap" data-region="ALL">全部地區</button>
-                    <button class="region-filter-btn bg-gray-200 text-gray-700 hover:bg-gray-300 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap" data-region="HONG KONG">香港島</button>
-                    <button class="region-filter-btn bg-gray-200 text-gray-700 hover:bg-gray-300 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap" data-region="KOWLOON">九龍</button>
-                    <button class="region-filter-btn bg-gray-200 text-gray-700 hover:bg-gray-300 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap" data-region="NEW TERRITORIES">新界</button>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 mb-3 flex flex-col gap-2.5">
+            <div class="relative w-full">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                </span>
+                <input type="text" id="search-input" placeholder="搜尋 ID、街道、地區..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+            </div>
+            
+            <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5" id="region-filters">
+                <button class="region-filter-btn bg-blue-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm shadow-blue-500/20 transition">全部地區</button>
+                <button class="region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition" data-region="HONG KONG">香港島</button>
+                <button class="region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition" data-region="KOWLOON">九龍</button>
+                <button class="region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition" data-region="NEW TERRITORIES">新界</button>
+            </div>
+
+            <div class="flex items-center gap-2 pt-2 border-t border-gray-100 overflow-x-auto no-scrollbar">
+                <span class="text-[11px] text-gray-400 shrink-0 font-medium"><i class="fa-solid fa-car-side"></i> 車型:</span>
+                <div id="vehicle-filters" class="flex gap-1.5">
+                    <button class="vehicle-filter-btn bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm shadow-indigo-500/20 transition" data-vehicle="ALL">全部</button>
+                    <button class="vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-vehicle="A">一般</button>
+                    <button class="vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-vehicle="G">貨車</button>
+                    <button class="vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-vehicle="C">巴士</button>
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-100 items-center">
-                <span class="text-xs text-gray-400 self-center"><i class="fa-solid fa-car-side"></i> 車型:</span>
-                <div id="vehicle-filters" class="flex flex-wrap gap-1.5 overflow-x-auto">
-                    <button class="vehicle-filter-btn bg-indigo-600 text-white px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition" data-vehicle="ALL">全部車型</button>
-                    <button class="vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition" data-vehicle="A">一般</button>
-                    <button class="vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition" data-vehicle="G">貨車</button>
-                    <button class="vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition" data-vehicle="C">巴士</button>
-                </div>
-            </div>
-
-            <div id="fav-street-buttons-container" class="flex flex-wrap gap-2 pt-2 border-t border-gray-100 hidden">
-                <span class="text-xs text-gray-400 self-center"><i class="fa-solid fa-tags"></i> 捷徑:</span>
-                <div id="fav-street-btns" class="flex flex-wrap gap-1.5 items-center"></div>
+            <div id="fav-street-buttons-container" class="flex items-center gap-2 pt-2 border-t border-gray-100 hidden overflow-x-auto no-scrollbar">
+                <span class="text-[11px] text-gray-400 shrink-0 font-medium"><i class="fa-solid fa-tags"></i> 捷徑:</span>
+                <div id="fav-street-btns" class="flex gap-1.5 items-center"></div>
             </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 text-xs text-gray-500 gap-1 px-1">
+        <div class="flex justify-between items-center mb-3 text-[11px] text-gray-500 px-1">
             <div>
-                <p>對時: <span id="update-time" class="font-medium text-gray-700">未載入</span></p>
-                <p id="cache-status-text" class="text-blue-500 mt-0.5">💡 每次皆即時下載最新數據</p>
+                <span class="inline-block">對時: <span id="update-time" class="font-medium text-gray-700">未載入</span></span>
             </div>
-            <p class="text-xs sm:text-sm">符合錶位：<span id="displayed-count" class="font-semibold text-slate-800">0</span> / <span id="total-count" class="font-semibold text-blue-600">0</span></p>
+            <p class="text-xs">符合錶位：<span id="displayed-count" class="font-bold text-slate-800">0</span> / <span id="total-count" class="font-bold text-blue-600">0</span></p>
         </div>
 
-        <div id="loading-view" class="flex flex-col items-center justify-center py-16">
+        <div id="loading-view" class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
             <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 mb-3"></div>
             <p id="loading-text" class="text-gray-500 text-xs sm:text-sm text-center px-4 mb-3">正在初始化...</p>
-            <div class="w-full max-w-xs bg-gray-200 rounded-full h-2.5 overflow-hidden border border-gray-300">
+            <div class="w-full max-w-xs bg-gray-100 rounded-full h-2.5 overflow-hidden border border-gray-200">
                 <div id="download-progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
-            <p id="progress-percent" class="text-[11px] text-gray-400 mt-1">0%</p>
+            <p id="progress-percent" class="text-[11px] text-gray-400 mt-1.5">0%</p>
         </div>
 
-        <div id="parking-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 hidden">
+        <div id="parking-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 hidden">
         </div>
 
-        <div id="infinite-scroll-trigger" class="w-full text-center py-6 text-xs sm:text-sm text-gray-400 hidden">
+        <div id="infinite-scroll-trigger" class="w-full text-center py-5 text-xs text-gray-400 hidden">
             <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> 正在載入更多車位...
         </div>
-        <div id="all-loaded-text" class="w-full text-center py-6 text-xs sm:text-sm text-gray-400 hidden">
+        <div id="all-loaded-text" class="w-full text-center py-5 text-xs text-gray-400 hidden">
             已經看完全部符合條件的車位 🎉
         </div>
     </main>
 
-    <footer class="bg-gray-800 text-gray-400 text-center py-5 mt-8 text-xs">
+    <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-6 text-[11px]">
         <p>© 2026 香港實時錶位. 資料來源：DATA.GOV.HK (運輸署)</p>
     </footer>
 
@@ -185,7 +189,6 @@
         }
 
         async function fetchWithProgress(targetUrl, description, startPct, endPct) {
-            // 嘗試直接抓取
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 4000);
@@ -200,7 +203,6 @@
                 console.warn(`直連失敗，切換代理下載 ${description}...`);
             }
 
-            // 輪流透過 Proxy 抓取
             for (let i = 0; i < PROXIES.length; i++) {
                 const proxyUrl = `${PROXIES[i]}${encodeURIComponent(targetUrl)}`;
                 try {
@@ -226,11 +228,9 @@
             updateProgress(5, "準備連接政府資料庫...");
 
             try {
-                // 1. 下載基本錶位清單 (佔進度 5% ~ 50%)
                 const infoRes = await fetchWithProgress(SPACE_INFO_URL, '基本錶位清單', 10, 50);
                 rawInfoData = Papa.parse(infoRes, { header: false, skipEmptyLines: true }).data;
 
-                // 2. 下載實時動態狀態 (佔進度 50% ~ 90%)
                 const statusRes = await fetchWithProgress(STATUS_URL, '實時動態狀態', 55, 90);
                 const statusParsed = Papa.parse(statusRes, { header: false, skipEmptyLines: true }).data;
 
@@ -264,6 +264,16 @@
                     else if(row[2] === 'NEW TERRITORIES') displayRegion = '新界';
                     else if(row[2] === 'KOWLOON') displayRegion = '九龍';
 
+                    let rawPeriod = (row[20] || '').trim();
+                    let formattedPeriod = rawPeriod || '未明';
+                    if (rawPeriod === '120' || rawPeriod.includes('120')) {
+                        formattedPeriod = '2小時';
+                    } else if (rawPeriod === '60' || rawPeriod.includes('60')) {
+                        formattedPeriod = '1小時';
+                    } else if (rawPeriod === '30' || rawPeriod.includes('30')) {
+                        formattedPeriod = '30分鐘';
+                    }
+
                     const item = {
                         id: spaceId,
                         poleId: row[0],                                                                                                                                                                                                                                                                                                                                 
@@ -274,7 +284,7 @@
                         latitude: row[17],                                                                                                                                                                                                                                                                                          
                         longitude: row[18],                                                                                                                                                                                                                                                                                         
                         vehicleType: (row[19] || 'A').trim(),                                                                                                                                                                                                           
-                        maxParkingPeriod: row[20] || '未明',              
+                        maxParkingPeriod: formattedPeriod,              
                         meterStatus: liveStatus.meterStatus,       
                         occupancyStatus: liveStatus.occupancyStatus
                     };
@@ -317,7 +327,7 @@
 
             const allFavActive = currentSelectedStreet === 'ALL' && !showFavoritesOnly;
             const allBtn = document.createElement('button');
-            allBtn.className = `px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap shadow-sm ${allFavActive ? 'bg-blue-600 text-white font-bold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`;
+            allBtn.className = `px-2.5 py-1 text-xs rounded-lg font-semibold transition whitespace-nowrap shadow-sm ${allFavActive ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-250'}`;
             allBtn.innerText = "全部";
             allBtn.addEventListener('click', () => {
                 currentSelectedStreet = 'ALL';
@@ -334,7 +344,7 @@
                 const btn = document.createElement('button');
                 btn.setAttribute('data-street', street);
                 const isActive = currentSelectedStreet === street;
-                btn.className = `street-filter-btn px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1 ${isActive ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+                btn.className = `street-filter-btn px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1 ${isActive ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
                 btn.innerHTML = `<i class="fa-solid fa-star text-amber-400"></i> ${street}`;
                 
                 btn.addEventListener('click', () => {
@@ -353,14 +363,14 @@
             const allFavActive = currentSelectedStreet === 'ALL' && !showFavoritesOnly;
 
             if (allFavActive) {
-                if(allBtn) allBtn.className = "px-2.5 py-1 text-xs rounded-lg font-bold transition whitespace-nowrap bg-blue-600 text-white";
+                if(allBtn) allBtn.className = "px-2.5 py-1 text-xs rounded-lg font-semibold transition whitespace-nowrap bg-blue-600 text-white";
                 btns.forEach(b => b.className = "street-filter-btn px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200");
             } else {
-                if(allBtn) allBtn.className = "px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap bg-gray-200 text-gray-700 hover:bg-gray-300";
+                if(allBtn) allBtn.className = "px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-gray-200";
                 btns.forEach(b => {
                     const s = b.getAttribute('data-street');
                     b.className = (s === currentSelectedStreet) 
-                        ? "street-filter-btn px-2.5 py-1 text-xs rounded-lg font-bold transition whitespace-nowrap flex items-center gap-1 bg-amber-500 text-slate-950"
+                        ? "street-filter-btn px-2.5 py-1 text-xs font-bold transition whitespace-nowrap flex items-center gap-1 bg-amber-500 text-slate-950 shadow-sm"
                         : "street-filter-btn px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200";
                 });
             }
@@ -403,7 +413,7 @@
             document.getElementById('total-count').innerText = filteredDataGlobal.length;
 
             if (filteredDataGlobal.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-sm">找不到符合條件的錶位</div>`;
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400 text-xs bg-white rounded-2xl border border-gray-100">找不到符合條件的錶位</div>`;
                 document.getElementById('displayed-count').innerText = "0";
                 document.getElementById('infinite-scroll-trigger').classList.add('hidden');
                 document.getElementById('all-loaded-text').classList.add('hidden');
@@ -426,64 +436,74 @@
                 let isAvailable = isUsable && item.occupancyStatus === 'V';
                 const isStreetFaved = favStreets.includes(item.street);
 
+                // 將「已佔用」文字大小與粗細調整得跟「有空位」一樣 (font-black text-base)
                 if (!isUsable) {
-                    occText = '<i class="fa-solid fa-ban text-gray-400"></i> 暫停服務';
+                    occText = '<i class="fa-solid fa-ban text-gray-400"></i> <span class="font-bold text-sm">暫停服務</span>';
                 } else if (item.occupancyStatus === 'V') {
-                    occText = '<i class="fa-solid fa-circle-check text-green-600 font-bold"></i> <span class="text-green-700 font-extrabold">有空位</span>';
+                    occText = '<i class="fa-solid fa-circle-check text-green-600 font-bold"></i> <span class="text-green-700 font-black text-base">有空位</span>';
                 } else if (item.occupancyStatus === 'O') {
-                    occText = '<i class="fa-solid fa-car text-rose-500"></i> 已佔用';
+                    occText = '<i class="fa-solid fa-car text-rose-500"></i> <span class="text-rose-600 font-black text-base">已佔用</span>';
                 } else {
                     occText = '未知';
                 }
 
                 if (item.meterStatus === 'N') {
-                    meterText = '<i class="fa-solid fa-check text-blue-500"></i> 正常';
+                    meterText = '<i class="fa-solid fa-check text-blue-500"></i> <span class="font-bold text-sm text-gray-900">正常</span>';
                 } else if (item.meterStatus === 'NU') {
-                    meterText = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> 暫停';
+                    meterText = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> <span class="font-bold text-sm text-amber-600">暫停</span>';
                 }
 
-                let vehicleTypeDesc = item.vehicleType === 'G' ? '貨車專用' : (item.vehicleType === 'C' ? '巴士專用' : '一般車輛');
+                let vehicleTypeDesc = item.vehicleType === 'G' ? '貨車' : (item.vehicleType === 'C' ? '巴士' : '一般車輛');
                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
 
-                let periodBadge = `<span class="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded font-bold">${item.maxParkingPeriod}</span>`;
+                // 根據不同時限賦予不同顏色標籤 (2小時: 紫色, 1小時: 藍色, 30分鐘: 橘色)
+                let periodColorClass = 'bg-gray-100 text-gray-700';
+                if (item.maxParkingPeriod === '2小時') {
+                    periodColorClass = 'bg-purple-100 text-purple-700 border border-purple-200/60';
+                } else if (item.maxParkingPeriod === '1小時') {
+                    periodColorClass = 'bg-blue-100 text-blue-700 border border-blue-200/60';
+                } else if (item.maxParkingPeriod === '30分鐘') {
+                    periodColorClass = 'bg-orange-100 text-orange-700 border border-orange-200/60';
+                }
+                let periodBadge = `<span class="${periodColorClass} text-[11px] px-2 py-0.5 rounded-md font-extrabold shadow-2xs">${item.maxParkingPeriod}</span>`;
 
                 const cardBorderAndBg = isAvailable 
-                    ? 'border-2 border-green-500 bg-green-50/20 shadow-md ring-1 ring-green-400/30' 
-                    : 'border border-gray-200 bg-white shadow-sm';
+                    ? 'border-2 border-green-500 bg-green-50/15 shadow-sm ring-1 ring-green-400/20' 
+                    : 'border border-gray-200/80 bg-white shadow-2xs';
 
                 const cardHtml = `
-                    <div class="rounded-xl transition overflow-hidden ${cardBorderAndBg} ${!isUsable ? 'opacity-75' : ''} flex flex-col justify-between relative">
+                    <div class="rounded-2xl transition overflow-hidden ${cardBorderAndBg} ${!isUsable ? 'opacity-75' : ''} flex flex-col justify-between relative">
                         ${isAvailable ? '<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-green-500"></div>' : ''}
-                        <div class="p-4 ${isAvailable ? 'pl-4.5' : ''}">
-                            <div class="mb-2.5 flex justify-between items-center gap-1">
-                                <span class="text-[11px] text-gray-500 font-medium">
+                        <div class="p-3.5 sm:p-4 ${isAvailable ? 'pl-4.5' : ''}">
+                            <div class="mb-2 flex justify-between items-center gap-1">
+                                <span class="text-[11px] text-gray-400 font-medium truncate">
                                     ${item.region} · ${item.district}
                                 </span>
-                                <div class="flex gap-1.5 items-center">
+                                <div class="flex gap-1.5 items-center shrink-0">
                                     ${periodBadge}
-                                    <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-base p-1" title="收藏街道">
-                                        <i class="${isStreetFaved ? 'fa-solid fa-star text-amber-500' : 'fa-regular fa-star text-gray-400'}"></i>
+                                    <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-base p-1 text-gray-400 hover:text-amber-500 transition" title="收藏街道">
+                                        <i class="${isStreetFaved ? 'fa-solid fa-star text-amber-500' : 'fa-regular fa-star'}"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <h3 class="text-xl font-bold text-gray-900 tracking-tight mb-1">${item.id}</h3>
-                            <p class="text-gray-700 font-medium text-xs mb-1 truncate"><i class="fa-solid fa-location-dot text-gray-400 text-xs mr-1"></i>${item.street}</p>
-                            <p class="text-gray-400 text-[11px] mb-3">柱號: ${item.poleId}</p>
+                            <h3 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight mb-1">${item.id}</h3>
+                            <p class="text-gray-900 text-sm font-bold mb-1 truncate"><i class="fa-solid fa-location-dot text-gray-400 text-xs mr-1"></i>${item.street}</p>
+                            <p class="text-gray-400 text-[10px] mb-3">柱號: ${item.poleId}</p>
                             
-                            <div class="space-y-1.5 mb-3 text-xs text-gray-600 ${isAvailable ? 'bg-green-50/50 border-green-200' : 'bg-gray-50 border-gray-100'} p-2.5 rounded-lg border">
+                            <div class="space-y-2 mb-2 text-sm text-gray-800 ${isAvailable ? 'bg-green-50/40 border-green-200/60' : 'bg-gray-50/80 border-gray-100'} p-3 rounded-xl border">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-400">錶柱：</span><span class="font-medium">${meterText}</span>
+                                    <span class="text-gray-500 font-medium text-xs sm:text-sm">錶柱：</span><span>${meterText}</span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-400">狀態：</span><span class="font-medium">${occText}</span>
+                                    <span class="text-gray-500 font-medium text-xs sm:text-sm">狀態：</span><span>${occText}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="${isAvailable ? 'bg-green-50/30 border-green-100' : 'bg-gray-50/50 border-gray-100'} px-4 py-2 border-t flex justify-between items-center text-xs text-gray-500">
-                            <span class="text-[11px]"><i class="fa-solid fa-car-side mr-1"></i>${vehicleTypeDesc}</span>
-                            <a href="${mapsUrl}" target="_blank" class="text-blue-600 font-medium flex items-center gap-1 bg-white border border-gray-200 shadow-sm px-2.5 py-1 rounded-md text-xs hover:bg-gray-50">
+                        <div class="${isAvailable ? 'bg-green-50/20 border-green-100/60' : 'bg-gray-50/50 border-gray-100'} px-3.5 py-2.5 border-t flex justify-between items-center text-xs text-gray-500">
+                            <span class="text-[11px] text-gray-400"><i class="fa-solid fa-car-side mr-1"></i>${vehicleTypeDesc}</span>
+                            <a href="${mapsUrl}" target="_blank" class="text-blue-600 font-semibold flex items-center gap-1 bg-white border border-gray-200/80 shadow-2xs px-3.5 py-1.5 rounded-lg text-xs hover:bg-gray-50 active:scale-95 transition">
                                 <i class="fa-solid fa-map-location-dot"></i> 導航
                             </a>
                         </div>
@@ -535,11 +555,11 @@
             const btn = document.getElementById('fav-toggle-btn');
             const text = document.getElementById('fav-toggle-text');
             if (showFavoritesOnly) {
-                btn.className = "bg-amber-500 hover:bg-amber-600 text-slate-900 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1 font-bold";
+                btn.className = "bg-amber-500 text-slate-900 border border-amber-400 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1 font-bold shadow-sm";
                 text.innerText = "全部";
                 currentSelectedStreet = 'ALL';
             } else {
-                btn.className = "bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1";
+                btn.className = "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1";
                 text.innerText = "最愛";
             }
             if(favStreets.length > 0) updateFavStreetButtonStyles();
@@ -556,11 +576,11 @@
             buttons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     buttons.forEach(b => {
-                        b.classList.remove('bg-blue-600', 'text-white');
-                        b.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                        b.classList.remove('bg-blue-600', 'text-white', 'shadow-sm', 'shadow-blue-500/20');
+                        b.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
                     });
-                    e.target.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                    e.target.classList.add('bg-blue-600', 'text-white');
+                    e.target.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+                    e.target.classList.add('bg-blue-600', 'text-white', 'shadow-sm', 'shadow-blue-500/20');
                     currentRegion = e.target.getAttribute('data-region');
                     prepareAndRenderInitialCards();
                 });
@@ -572,11 +592,11 @@
             buttons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     buttons.forEach(b => {
-                        b.classList.remove('bg-indigo-600', 'text-white');
+                        b.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm', 'shadow-indigo-500/20');
                         b.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
                     });
                     e.target.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
-                    e.target.classList.add('bg-indigo-600', 'text-white');
+                    e.target.classList.add('bg-indigo-600', 'text-white', 'shadow-sm', 'shadow-indigo-500/20');
                     currentVehicleType = e.target.getAttribute('data-vehicle');
                     prepareAndRenderInitialCards();
                 });
