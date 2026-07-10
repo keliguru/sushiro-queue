@@ -36,13 +36,10 @@
             </h1>
             <div class="flex items-center gap-1.5 flex-wrap">
                 <button id="notify-auth-btn" class="bg-emerald-700 hover:bg-emerald-800 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1 hidden">
-                    <i class="fa-solid fa-bell"></i> <span class="hidden sm:inline">啟用</span>通知
+                    <i class="fa-solid fa-bell"></i> 啟用通知
                 </button>
                 <button id="fav-toggle-btn" class="bg-slate-700 hover:bg-slate-800 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
                     <i class="fa-solid fa-star text-amber-400"></i> <span id="fav-toggle-text">最愛</span>
-                </button>
-                <button id="clear-cache-btn" class="bg-slate-700 hover:bg-slate-800 px-2.5 py-1.5 rounded-lg text-xs transition" title="清除快取">
-                    <i class="fa-solid fa-trash-can"></i>
                 </button>
                 <button id="refresh-btn" class="bg-blue-600 hover:bg-blue-700 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm transition flex items-center gap-1">
                     <i class="fa-solid fa-rotate" id="refresh-icon"></i> <span>更新</span>
@@ -89,14 +86,18 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 text-xs text-gray-500 gap-1 px-1">
             <div>
                 <p>對時: <span id="update-time" class="font-medium text-gray-700">未載入</span></p>
-                <p id="cache-status-text" class="text-blue-500 mt-0.5"></p>
+                <p id="cache-status-text" class="text-blue-500 mt-0.5">💡 每次皆即時下載最新數據</p>
             </div>
             <p class="text-xs sm:text-sm">符合錶位：<span id="displayed-count" class="font-semibold text-slate-800">0</span> / <span id="total-count" class="font-semibold text-blue-600">0</span></p>
         </div>
 
         <div id="loading-view" class="flex flex-col items-center justify-center py-16">
             <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 mb-3"></div>
-            <p id="loading-text" class="text-gray-500 text-xs sm:text-sm text-center px-4">正在透過代理讀取全港智能錶位數據...</p>
+            <p id="loading-text" class="text-gray-500 text-xs sm:text-sm text-center px-4 mb-3">正在初始化...</p>
+            <div class="w-full max-w-xs bg-gray-200 rounded-full h-2.5 overflow-hidden border border-gray-300">
+                <div id="download-progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="progress-percent" class="text-[11px] text-gray-400 mt-1">0%</p>
         </div>
 
         <div id="parking-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 hidden">
@@ -119,13 +120,11 @@
         const STATUS_URL = 'https://resource.data.one.gov.hk/td/psiparkingspaces/occupancystatus/occupancystatus.csv';
 
         const PROXIES = [
-            ''
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?'
         ];
 
-        const CACHE_KEY_INFO = 'hk_parking_info_csv';
-        const CACHE_KEY_TIME = 'hk_parking_info_time';
         const CACHE_KEY_FAV_STREETS = 'hk_parking_fav_streets'; 
-        const CACHE_EXPIRE_TIME = 86400000; 
 
         let rawInfoData = null;   
         let parkingData = [];     
@@ -142,8 +141,7 @@
         let currentPage = 1;         
 
         document.addEventListener('DOMContentLoaded', initPage);
-        document.getElementById('refresh-btn').addEventListener('click', () => fetchLiveStatus(true));
-        document.getElementById('clear-cache-btn').addEventListener('click', clearCache);
+        document.getElementById('refresh-btn').addEventListener('click', () => fetchAllData(true));
         document.getElementById('search-input').addEventListener('input', handleSearch);
         document.getElementById('fav-toggle-btn').addEventListener('click', toggleFavoritesFilter);
         document.getElementById('notify-auth-btn').addEventListener('click', requestNotificationPermission);
@@ -154,23 +152,8 @@
         setupVehicleFilters();
 
         async function initPage() {
-            toggleLoading(true);
             checkNotificationSupport();
-            try {
-                alert("start loadbase")
-                await loadBaseInfo(); 
-                alert("pass loadbase")
-                await fetchLiveStatus(); 
-                alert("pass live status")
-                renderFavStreetButtons(); 
-                alert("alert pass button")
-            } catch (err) {
-                console.error(err);
-                alert(err)
-                alert("初始化失敗，行動網路連線較慢或被攔截，請點擊「更新狀態」或「清除快取」重試。");
-            } finally {
-                toggleLoading(false);
-            }
+            await fetchAllData(false);
         }
 
         function checkNotificationSupport() {
@@ -192,71 +175,66 @@
             }
         }
 
-        async function fetchWithProxy(targetUrl, description) {
+        function updateProgress(percent, text) {
+            const bar = document.getElementById('download-progress-bar');
+            const txt = document.getElementById('loading-text');
+            const pct = document.getElementById('progress-percent');
+            if (bar) bar.style.width = `${percent}%`;
+            if (txt && text) txt.innerText = text;
+            if (pct) pct.innerText = `${percent}%`;
+        }
+
+        async function fetchWithProgress(targetUrl, description, startPct, endPct) {
+            // 嘗試直接抓取
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 6000);
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                updateProgress(startPct, `正在下載 ${description} (直連)...`);
                 const response = await fetch(targetUrl, { signal: controller.signal });
                 clearTimeout(timeoutId);
-                if (response.ok) return await response.text();
+                if (response.ok) {
+                    updateProgress(endPct, `${description} 下載完成`);
+                    return await response.text();
+                }
             } catch (e) {
                 console.warn(`直連失敗，切換代理下載 ${description}...`);
             }
 
+            // 輪流透過 Proxy 抓取
             for (let i = 0; i < PROXIES.length; i++) {
                 const proxyUrl = `${PROXIES[i]}${encodeURIComponent(targetUrl)}`;
                 try {
-                    const el = document.getElementById('loading-text');
-                    if(el) el.innerText = `正在透過行動代理 [${i+1}] 下載 ${description}...`;
-                    
+                    updateProgress(startPct + Math.floor((endPct - startPct) / 2), `正在下載 ${description} (通道 ${i+1})...`);
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    const timeoutId = setTimeout(() => controller.abort(), 6000);
                     const response = await fetch(proxyUrl, { signal: controller.signal });
                     clearTimeout(timeoutId);
                     
-                    if (response.ok) return await response.text();
+                    if (response.ok) {
+                        updateProgress(endPct, `${description} 下載完成`);
+                        return await response.text();
+                    }
                 } catch (err) {
-                    console.error(`Proxy [${i}] 失敗`, err);
+                    console.error(`通道 [${i}] 失敗`, err);
                 }
             }
             throw new Error(`無法獲取 ${description} 資料。`);
         }
 
-        async function loadBaseInfo() {
-            const cachedInfo = localStorage.getItem(CACHE_KEY_INFO);
-            const cachedTime = localStorage.getItem(CACHE_KEY_TIME);
-            const now = Date.now();
-
-            if (cachedInfo && cachedTime && (now - cachedTime < CACHE_EXPIRE_TIME)) {
-                const statusEl = document.getElementById('cache-status-text');
-                if(statusEl) statusEl.innerText = "💡 基本數據來自快取";
-                rawInfoData = Papa.parse(cachedInfo, { header: false, skipEmptyLines: true }).data;
-                return;
-            }
-            alert("start get api")
-
-            const infoRes = await fetchWithProxy(SPACE_INFO_URL, '基本錶位清單');
-            alert("finish get api")
-            
-            //localStorage.setItem(CACHE_KEY_INFO, infoRes);
-            localStorage.setItem(CACHE_KEY_TIME, now.toString());
-
-            alert("after localstorage")
-            const statusEl = document.getElementById('cache-status-text');
-            if(statusEl) statusEl.innerText = "💡 基本數據已更新";
-            rawInfoData = Papa.parse(infoRes, { header: false, skipEmptyLines: true }).data;
-        }
-
-        async function fetchLiveStatus(isManualClick = false) {
-            if (isManualClick) {
-                toggleLoading(true);
-                const textEl = document.getElementById('loading-text');
-                if(textEl) textEl.innerText = "正在獲取最新官方實時狀態...";
-            }
+        async function fetchAllData(isManualClick = false) {
+            toggleLoading(true);
+            updateProgress(5, "準備連接政府資料庫...");
 
             try {
-                const statusRes = await fetchWithProxy(STATUS_URL, '實時動態狀態');
+                // 1. 下載基本錶位清單 (佔進度 5% ~ 50%)
+                const infoRes = await fetchWithProgress(SPACE_INFO_URL, '基本錶位清單', 10, 50);
+                rawInfoData = Papa.parse(infoRes, { header: false, skipEmptyLines: true }).data;
+
+                // 2. 下載實時動態狀態 (佔進度 50% ~ 90%)
+                const statusRes = await fetchWithProgress(STATUS_URL, '實時動態狀態', 55, 90);
                 const statusParsed = Papa.parse(statusRes, { header: false, skipEmptyLines: true }).data;
+
+                updateProgress(95, "正在整合與解析數據...");
 
                 const statusMap = new Map();
                 statusParsed.forEach((row, index) => {
@@ -311,13 +289,16 @@
                 const timeEl = document.getElementById('update-time');
                 if(timeEl) timeEl.innerText = new Date().toLocaleTimeString();
                 
-                prepareAndRenderInitialCards();
+                updateProgress(100, "載入完成！");
+                setTimeout(() => {
+                    renderFavStreetButtons();
+                    prepareAndRenderInitialCards();
+                    toggleLoading(false);
+                }, 300);
 
             } catch (error) {
                 console.error(error);
-                alert("無法獲取實時狀態資訊，請點擊更新按鈕再試。");
-            } finally {
-                if (isManualClick) toggleLoading(false);
+                document.getElementById('loading-text').innerHTML = `⚠️ 無法連線至數據來源或下載超時。<br><button onclick="fetchAllData(true)" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs">重試</button>`;
             }
         }
 
@@ -466,7 +447,6 @@
 
                 let periodBadge = `<span class="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded font-bold">${item.maxParkingPeriod}</span>`;
 
-                // 若為「有空位」則賦予明顯的綠色粗邊框與微綠底色，其餘維持簡約白底
                 const cardBorderAndBg = isAvailable 
                     ? 'border-2 border-green-500 bg-green-50/20 shadow-md ring-1 ring-green-400/30' 
                     : 'border border-gray-200 bg-white shadow-sm';
@@ -564,13 +544,6 @@
             }
             if(favStreets.length > 0) updateFavStreetButtonStyles();
             prepareAndRenderInitialCards();
-        }
-
-        function clearCache() {
-            localStorage.removeItem(CACHE_KEY_INFO);
-            localStorage.removeItem(CACHE_KEY_TIME);
-            alert("快取已清除！");
-            window.location.reload();
         }
 
         function handleSearch(e) {
