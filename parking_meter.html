@@ -188,6 +188,7 @@
         let currentSelectedStreet = 'ALL'; 
         let currentSearch = '';
         let showFavoritesOnly = false;
+        let autoRefreshInterval = null; // 儲存每5分鐘自動更新的計時器
         
         let favStreets = JSON.parse(localStorage.getItem(CACHE_KEY_FAV_STREETS)) || [];
         let notifySettings = JSON.parse(localStorage.getItem(CACHE_KEY_NOTIFY_SETTINGS)) || { enabled: false, streets: [] };
@@ -214,6 +215,15 @@
         async function initPage() {
             updateNotifyIconStyle();
             await fetchAllData(false);
+        }
+
+        function startAutoRefreshTimer() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            // 每 5 分鐘自動背景更新一次 (5 * 60 * 1000 毫秒 = 300,000 毫秒)
+            autoRefreshInterval = setInterval(() => {
+                console.log("⏰ 觸發每 5 分鐘自動更新...");
+                fetchAllData(false);
+            }, 300000);
         }
 
         function openNotificationModal() {
@@ -276,7 +286,6 @@
             closeNotificationModal();
         }
 
-        // 優化小鈴鐺樣式
         function updateNotifyIconStyle() {
             const icon = document.getElementById('notify-icon-status');
             if (notifySettings.enabled && notifySettings.streets.length > 0) {
@@ -328,8 +337,11 @@
         }
 
         async function fetchAllData(isManualClick = false) {
-            toggleLoading(true);
-            updateProgress(5, "準備連接政府資料庫...");
+            // 背景自動更新不顯示全螢幕 loading 畫面
+            if (isManualClick || !rawInfoData) {
+                toggleLoading(true);
+                updateProgress(5, "準備連接政府資料庫...");
+            }
 
             try {
                 const infoRes = await fetchWithProgress(SPACE_INFO_URL, '基本錶位清單', 10, 50);
@@ -338,7 +350,9 @@
                 const statusRes = await fetchWithProgress(STATUS_URL, '實時動態狀態', 55, 90);
                 const statusParsed = Papa.parse(statusRes, { header: false, skipEmptyLines: true }).data;
 
-                updateProgress(95, "正在整合與解析數據...");
+                if (isManualClick || !rawInfoData) {
+                    updateProgress(95, "正在整合與解析數據...");
+                }
 
                 const statusMap = new Map();
                 statusParsed.forEach((row, index) => {
@@ -404,16 +418,24 @@
                 const timeEl = document.getElementById('update-time');
                 if(timeEl) timeEl.innerText = new Date().toLocaleTimeString();
                 
-                updateProgress(100, "載入完成！");
+                if (isManualClick || !rawInfoData) {
+                    updateProgress(100, "載入完成！");
+                }
+
                 setTimeout(() => {
                     renderFavStreetButtons();
                     prepareAndRenderInitialCards();
                     toggleLoading(false);
+                    startAutoRefreshTimer(); // 每次載入成功後重設 5 分鐘計時器
                 }, 300);
 
             } catch (error) {
                 console.error(error);
-                document.getElementById('loading-text').innerHTML = `⚠️ 無法連線至數據來源。<br><button onclick="fetchAllData(true)" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs">重試</button>`;
+                const loadingText = document.getElementById('loading-text');
+                if (loadingText) {
+                    loadingText.innerHTML = `⚠️ 無法連線至數據來源。<br><button onclick="fetchAllData(true)" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs">重試</button>`;
+                }
+                toggleLoading(false);
             }
         }
 
@@ -527,7 +549,6 @@
             const container = document.getElementById('parking-list');
             container.innerHTML = ''; 
 
-            // 1. 先執行 Filter 過濾
             filteredDataGlobal = parkingData.filter(item => {
                 const matchRegion = (currentRegion === 'ALL' || item.regionCode === currentRegion);
                 const matchVehicle = (currentVehicleType === 'ALL' || item.vehicleType === currentVehicleType);
@@ -544,7 +565,6 @@
                 return matchRegion && matchVehicle && matchSearch && matchFav;
             });
 
-            // ⭐️ 【核心功能】即時計算目前篩選結果中，「有空位」的加總數目 ⭐️
             let currentFilterAvailableCount = 0;
             filteredDataGlobal.forEach(item => {
                 if (item.meterStatus === 'N' && item.occupancyStatus === 'V') {
@@ -553,7 +573,6 @@
             });
             document.getElementById('available-count').innerText = currentFilterAvailableCount;
 
-            // 2. 排序
             filteredDataGlobal.sort((a, b) => {
                 const aFav = favStreets.includes(a.street) ? 1 : 0;
                 const bFav = favStreets.includes(b.street) ? 1 : 0;
