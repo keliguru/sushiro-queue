@@ -240,6 +240,8 @@
             
             localStorage.setItem(CACHE_KEY_INFO, infoRes);
             localStorage.setItem(CACHE_KEY_TIME, now.toString());
+
+            alert("after localstorage")
             const statusEl = document.getElementById('cache-status-text');
             if(statusEl) statusEl.innerText = "💡 基本數據已更新";
             rawInfoData = Papa.parse(infoRes, { header: false, skipEmptyLines: true }).data;
