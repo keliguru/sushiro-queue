@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>壽司郎分店即時排隊情況 (Sushiro Store List)</title>
+    
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/sushiro-icon.png">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="壽司郎 Sushiro 分店即時狀況 & 排隊資訊查詢">
+	<meta property="og:description" content="全港壽司郎分店即時叫號與排隊人數快訊！支援 GPS 定位尋找最近分店，還能設定提早 10 號桌面通知，吃壽司再也不用苦苦現場等候。">
+	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/sushiro-icon.png"> <meta property="og:url" content="https://你的網址.com/">
+
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="壽司郎 Sushiro 分店即時狀況 & 排隊資訊查詢">
+	<meta name="twitter:description" content="全港壽司郎分店即時叫號與排隊人數快訊！">
+	
+	<!-- iOS Safari 專用圖示（iOS 嚴格要求必須是 PNG，不支援 SVG） -->
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/sushiro-icon.png">
+
+	<!-- iOS 進階優化：讓加入主畫面的網頁看起來更像原生 App（隱藏網址列） -->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="壽司郎排隊">
+	
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #d11c1c;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .select-input {
+            padding: 8px 12px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            background-color: #fff;
+        }
+        .select-input:focus {
+            border-color: #d11c1c;
+        }
+        .btn {
+            background-color: #d11c1c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background-color: #a81414;
+        }
+        .btn-geo {
+            background-color: #2b6cb0;
+        }
+        .btn-geo:hover {
+            background-color: #2b529a;
+        }
+        .status {
+            font-size: 14px;
+            color: #666;
+            flex-grow: 1;
+            text-align: right;
+        }
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .status {
+                text-align: left;
+            }
+        }
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .store-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-top: 4px solid #d11c1c;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .store-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .store-name-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .store-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #111;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .fav-btn {
+            cursor: pointer;
+            font-size: 22px;
+            filter: grayscale(100%);
+            transition: transform 0.1s ease, filter 0.2s;
+            user-select: none;
+        }
+        .fav-btn.active {
+            filter: grayscale(0%);
+        }
+        .fav-btn:hover {
+            transform: scale(1.2);
+        }
+        .fav-badge {
+            background-color: #feebc8;
+            color: #c05621;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .store-info {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .store-info strong {
+            color: #333;
+        }
+        .queue-box {
+            background-color: #fff5f5;
+            border: 1px solid #feb2b2;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .queue-title {
+            font-weight: bold;
+            color: #c53030;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed #feb2b2;
+            padding-bottom: 6px;
+        }
+        .queue-detail {
+            color: #4a5568;
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+        
+        .notify-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            border-top: 1px dashed #feb2b2;
+            padding-top: 10px;
+            gap: 6px;
+        }
+        .num-input {
+            width: 85px;
+            padding: 5px 8px;
+            font-size: 13px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            outline: none;
+        }
+        .num-input:focus {
+            border-color: #d11c1c;
+        }
+        .btn-notify {
+            background-color: #edf2f7;
+            border: 1px solid #cbd5e0;
+            padding: 5px 10px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #4a5568;
+            transition: all 0.2s;
+            flex-grow: 1;
+            font-weight: 500;
+        }
+        .btn-notify.active {
+            background-color: #fed7d7;
+            border-color: #feb2b2;
+            color: #9b2c2c;
+            font-weight: bold;
+        }
+
+        .error-msg {
+            color: #d11c1c;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 20px;
+        }
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            padding: 20px;
+            grid-column: 1 / -1;
+        }
+        .text-muted {
+            color: #a0aec0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍣 壽司郎 Sushiro 分店即時狀況 & 排隊資訊</h1>
+    
+    <div class="controls">
+        <div class="filter-group">
+            <button class="btn" onclick="fetchStoreList(true)">手動更新</button>
+            <button class="btn btn-geo" onclick="getNearbyStores()">📍 附近分店</button>
+            
+            <select id="regionFilter" class="select-input" onchange="filterAndRenderStores()">
+                <option value="all">全部地區 (全港分店)</option>
+                <optgroup label="香港島">
+                    <option value="central-western">中西區</option>
+                    <option value="wan-chai">灣仔區</option>
+                    <option value="eastern">東區</option>
+                    <option value="southern">南區</option>
+                </optgroup>
+                <optgroup label="九龍">
+                    <option value="yau-tsim-mong">油尖旺區</option>
+                    <option value="sham-shui-po">深水埗區</option>
+                    <option value="kowloon-city">九龍城區</option>
+                    <option value="wong-tai-sin">黃大仙區</option>
+                    <option value="kwun-tong">觀塘區</option>
+                </optgroup>
+                <optgroup label="新界">
+                    <option value="kwai-tsing">葵青區</option>
+                    <option value="tsuen-wan">荃灣區</option>
+                    <option value="tuen-mun">屯門區</option>
+                    <option value="yuen-long">元朗區</option>
+                    <option value="north">北區</option>
+                    <option value="tai-po">大埔區</option>
+                    <option value="sha-tin">沙田區</option>
+                    <option value="sai-kung">西貢區</option>
+                    <option value="islands">離島區</option>
+                </optgroup>
+            </select>
+
+            <select id="sortFilter" class="select-input" onchange="filterAndRenderStores()">
+                <option value="smart">智能推薦 (最愛優先)</option>
+                <option value="queue-asc">時間最快 (排隊最少)</option>
+                <option value="distance-asc" id="optDistance" disabled>距離最近 (需開啟定位)</option>
+            </select>
+
+            <!-- 🔄 修改：自動更新頻率選項更改為 1m, 5m, 15m, 30m -->
+            <select id="intervalFilter" class="select-input" onchange="changeRefreshInterval()">
+                <option value="60000" selected>⏱️ 每 1 分鐘更新 (預設)</option>
+                <option value="300000">⏱️ 每 5 分鐘更新</option>
+                <option value="900000">⏱️ 每 15 分鐘更新</option>
+                <option value="1800000">⏱️ 每 30 分鐘更新</option>
+                <option value="manual">🚫 停用自動更新</option>
+            </select>
+        </div>
+        <div class="status" id="statusLog">點擊按鈕獲取最新分店資料...</div>
+    </div>
+
+    <div id="errorMessage" style="display: none;"></div>
+    
+    <div class="store-grid" id="storeContainer"></div>
+</div>
+
+<script>
+    const proxyUrl = 'https://cors.freehi.workers.dev/?';
+    const storeApiUrl = proxyUrl + 'https://sushipass.sushiro.com.hk/api/2.0/info/storelist?latitude=22&longitude=114&numresults=50&region=HK';
+    const queueApiBaseUrl = proxyUrl + 'https://sushipass.sushiro.com.hk/api/2.0/remote/groupqueues?region=HK&storeid=';
+
+    let currentFetchedStores = [];
+    let lastFetchTime = 0;
+    const COOLDOWN_MS = 5000; 
+    let userLocation = null; 
+    let refreshTimer = null; 
+
+    const backupData = [
+        { store_id: 10, store_name: "元朗廣場店", address: "新界元朗青山公路249-251號元朗廣場3樓341-348號舖", business_hours: "10:30-22:00", waitingGroup: 0, latitude: 22.445, longitude: 114.023 },
+        { store_id: 8, store_name: "旺角瓊華中心店", address: "九龍旺角彌敦道628號瓊華中心地庫", business_hours: "10:30-22:00", waitingGroup: 21, latitude: 22.318, longitude: 114.170 },
+        { store_id: 9, store_name: "屯門市廣場店", address: "新界屯門屯順街1號屯門市廣場1期22192號舖", business_hours: "10:30-22:00", waitingGroup: 15, latitude: 22.392, longitude: 113.976 }
+    ];
+
+    const districtKeywords = {
+        'central-western': ['中西區', '中環', '上環', '西環', '堅尼地城', '石塘咀', '西營盤', '金鐘'],
+        'wan-chai': ['灣仔', '銅鑼灣', '跑馬地', '天后', '大坑'],
+        'eastern': ['東區', '北角', '鰂魚涌', '太古', '筲箕灣', '柴灣', '西灣河', '杏花邨'],
+        'southern': ['南區', '香港仔', '鴨脷洲', '黃竹坑', '赤柱', '淺水灣', '置富', '華富'],
+        'yau-tsim-mong': ['油尖旺', '旺角', '油麻地', '尖沙咀', '大角咀', '佐敦', '太子', '奧運'],
+        'sham-shui-po': ['深水埗', '長沙灣', '荔枝角', '石礜尾', '美孚', '昂船洲', '又一村'],
+        'kowloon-city': ['九龍城', '紅磡', '土瓜灣', '何文田', '九龍塘', '黃埔', '啟德'],
+        'wong-tai-sin': ['黃大仙', '新蒲崗', '鑽石山', '慈雲山', '樂富', '牛池灣'],
+        'kwun-tong': ['觀塘', '牛頭角', '九龍灣', '藍田', '油塘', '秀茂坪'],
+        'kwai-tsing': ['葵青', '葵湧', '青衣', '葵芳', '葵興'],
+        'tsuen-wan': ['荃灣', '深井', '馬灣'],
+        'tuen-mun': ['屯門', '藍地', '黃金海岸'],
+        'yuen-long': ['元朗', '天水圍', '朗屏', '錦田', '新田'],
+        'north': ['北區', '上水', '粉嶺', '沙頭角', '打鼓嶺'],
+        'tai-po': ['大埔', '太和', '白石角'],
+        'sha-tin': ['沙田', '大圍', '馬鞍山', '火炭', '石門'],
+        'sai-kung': ['西貢', '將軍澳', '坑口', '寶琳', '調景嶺'],
+        'islands': ['離島', '東涌', '大嶼山', '長洲', '南丫島', '坪洲', '赤鱲角']
+    };
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    function getNearbyStores() {
+        if (!navigator.geolocation) {
+            alert('您的瀏覽器不支援定位功能。');
+            return;
+        }
+        document.getElementById('statusLog').textContent = '正在獲取您的 GPS 位置...';
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+                document.getElementById('optDistance').disabled = false;
+                document.getElementById('sortFilter').value = 'distance-asc';
+                document.getElementById('regionFilter').value = 'all'; 
+                filterAndRenderStores();
+            },
+            (error) => {
+                alert('無法取得定位，請確認是否已允許網頁存取位置權限。');
+                document.getElementById('statusLog').textContent = '定位失敗。';
+            }
+        );
+    }
+
+    function changeRefreshInterval() {
+        const intervalValue = document.getElementById('intervalFilter').value;
+        if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+        localStorage.setItem('sushiro_refresh_interval', intervalValue);
+        if (intervalValue === 'manual') {
+            document.getElementById('statusLog').textContent = '已停用自動更新，轉為純手動模式。';
+            return;
+        }
+        const ms = Number(intervalValue);
+        refreshTimer = setInterval(() => { fetchStoreList(false); }, ms);
+        
+        // 介面文字轉化為更易讀的分鐘單位
+        const mins = ms / 60000;
+        document.getElementById('statusLog').textContent = `更新頻率已成功變更為每 ${mins} 分鐘自動同步一次。`;
+    }
+
+    async function fetchStoreList(isManual = false) {
+        const container = document.getElementById('storeContainer');
+        const statusLog = document.getElementById('statusLog');
+        const errorDiv = document.getElementById('errorMessage');
+        
+        if (isManual) {
+            const now = Date.now();
+            if (now - lastFetchTime < COOLDOWN_MS) {
+                const remaining = Math.ceil((COOLDOWN_MS - (now - lastFetchTime)) / 1000);
+                statusLog.textContent = `更新太頻繁！請稍候 ${remaining} 秒再試。`;
+                return;
+            }
+            lastFetchTime = now;
+        }
+        
+        if (container.innerHTML === "" || isManual) {
+            container.innerHTML = '<div class="loading">載入中分店清單...</div>';
+        }
+        errorDiv.style.display = 'none';
+
+        try {
+            const response = await fetch(storeApiUrl);
+            if (!response.ok) throw new Error(`HTTP 錯誤！`);
+            const data = await response.json();
+            let stores = data.stores || data.data || (Array.isArray(data) ? data : []);
+            currentFetchedStores = stores;
+            filterAndRenderStores();
+        } catch (error) {
+            console.error('API 請求失敗:', error);
+            statusLog.textContent = 'API 讀取失敗，已載入備用資料。';
+            errorDiv.innerHTML = `<div class="error-msg"><strong>API 連線失敗：</strong>已切換至備用數據。</div>`;
+            errorDiv.style.display = 'block';
+            currentFetchedStores = backupData;
+            filterAndRenderStores(true);
+        }
+    }
+
+    function filterAndRenderStores(isMock = false) {
+        const filterValue = document.getElementById('regionFilter').value;
+        const sortValue = document.getElementById('sortFilter').value;
+        
+        localStorage.setItem('sushiro_last_region', filterValue);
+        
+        let filteredStores = currentFetchedStores.filter(store => {
+            if (filterValue === 'all') return true;
+            const address = store.address || '';
+            const keywords = districtKeywords[filterValue];
+            if (!keywords) return true;
+            return keywords.some(keyword => address.includes(keyword));
+        });
+
+        const favorites = JSON.parse(localStorage.getItem('sushiro_fav_stores')) || [];
+        
+        filteredStores.sort((a, b) => {
+            const idA = Number(a.store_id || a.id);
+            const idB = Number(b.store_id || b.id);
+            const isFavA = favorites.includes(idA) ? 1 : 0;
+            const isFavB = favorites.includes(idB) ? 1 : 0;
+            if (isFavA !== isFavB) return isFavB - isFavA;
+            
+            if (sortValue === 'queue-asc') {
+                return (a.waitingGroup !== undefined ? Number(a.waitingGroup) : 0) - (b.waitingGroup !== undefined ? Number(b.waitingGroup) : 0);
+            } else if (sortValue === 'distance-asc' && userLocation) {
+                const latA = a.latitude || a.lat;
+                const lonA = a.longitude || a.lng;
+                const latB = b.latitude || b.lat;
+                const lonB = b.longitude || b.lng;
+                a.calculatedDistance = (latA && lonA) ? calculateDistance(userLocation.lat, userLocation.lng, latA, lonA) : 999;
+                b.calculatedDistance = (latB && lonB) ? calculateDistance(userLocation.lat, userLocation.lng, latB, lonB) : 999;
+                return a.calculatedDistance - b.calculatedDistance;
+            } else {
+                return (b.waitingGroup !== undefined ? Number(b.waitingGroup) : 0) - (a.waitingGroup !== undefined ? Number(a.waitingGroup) : 0);
+            }
+        });
+
+        renderStores(filteredStores);
+
+        if (filteredStores.length === 0) {
+            document.getElementById('storeContainer').innerHTML = '<div class="loading">當前行政區暫無分店資料。請切換其他地區瀏覽。</div>';
+            return;
+        }
+        fetchAndRenderQueues(filteredStores, isMock);
+    }
+
+    function renderStores(stores) {
+        const container = document.getElementById('storeContainer');
+        container.innerHTML = '';
+        
+        const favorites = JSON.parse(localStorage.getItem('sushiro_fav_stores')) || [];
+        const myNumbers = JSON.parse(localStorage.getItem('sushiro_my_numbers')) || {};
+
+        stores.forEach(store => {
+            const storeId = store.store_id || store.id || '';
+            const name = store.store_name || store.name || '未知分店';
+            const address = store.address || '未提供地址';
+            const hours = store.business_hours || '10:30 - 22:00';
+            const waitingGroup = store.waitingGroup !== undefined ? Number(store.waitingGroup) : 0;
+
+            const isFav = favorites.includes(Number(storeId));
+            const favBadge = isFav ? '<span class="fav-badge">★ 已收藏</span>' : '';
+            const savedNumber = myNumbers[storeId]; 
+
+            const distanceInfo = (store.calculatedDistance !== undefined && store.calculatedDistance !== 999) 
+                ? `<div class="store-info"><strong>📍 距離：</strong>約 ${store.calculatedDistance.toFixed(2)} 公里</div>` 
+                : '';
+
+            const card = document.createElement('div');
+            card.className = 'store-card';
+            card.innerHTML = `
+                <div>
+                    <div class="store-name-container">
+                        <div class="store-name">${name}${favBadge}</div>
+                        <span class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${storeId}, event)">⭐</span>
+                    </div>
+                    ${distanceInfo}
+                    <div class="store-info"><strong>地址：</strong>${address}</div>
+                    <div class="store-info"><strong>營業時間：</strong>${hours}</div>
+                </div>
+                <div class="queue-box">
+                    <div class="queue-title">排隊情況：<span>${waitingGroup} 組在等待</span></div>
+                    
+                    <div id="store-queue-section-${storeId}" data-waiting-group="${waitingGroup}">
+                        <div class="queue-detail">現在叫號：<span class="text-muted">載入中...</span></div>
+                        <div class="queue-detail">最新出票（估計）：<span class="text-muted">載入中...</span></div>
+                    </div>
+                    
+                    <div class="notify-container">
+                        <input type="number" id="notify-num-${storeId}" class="num-input" placeholder="我的號碼" value="${savedNumber || ''}" ${savedNumber ? 'disabled' : ''}>
+                        <button class="btn-notify ${savedNumber ? 'active' : ''}" onclick="toggleNumberNotification(${storeId}, '${name}', event)">
+                            ${savedNumber ? `🔕 取消 (${savedNumber}號)` : '🔔 提早10號通知'}
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function toggleFavorite(storeId, event) {
+        if (event) event.stopPropagation();
+        let favorites = JSON.parse(localStorage.getItem('sushiro_fav_stores')) || [];
+        const idNum = Number(storeId);
+        const index = favorites.indexOf(idNum);
+        if (index > -1) { favorites.splice(index, 1); } else { favorites.push(idNum); }
+        localStorage.setItem('sushiro_fav_stores', JSON.stringify(favorites));
+        filterAndRenderStores(currentFetchedStores === backupData);
+    }
+
+    function toggleNumberNotification(storeId, storeName, event) {
+        if (event) event.stopPropagation();
+        if (!("Notification" in window)) { alert("您的瀏覽器不支援桌面通知功能。"); return; }
+        if (Notification.permission === "denied") { alert("請至瀏覽器設定中重新允許此網頁的通知功能。"); return; }
+
+        if (Notification.permission !== "granted") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") executeToggleNotification(storeId, storeName);
+            });
+        } else {
+            executeToggleNotification(storeId, storeName);
+        }
+    }
+
+    function executeToggleNotification(storeId, storeName) {
+        let myNumbers = JSON.parse(localStorage.getItem('sushiro_my_numbers')) || {};
+        const inputEl = document.getElementById(`notify-num-${storeId}`);
+        
+        if (myNumbers[storeId]) {
+            delete myNumbers[storeId];
+            localStorage.setItem('sushiro_my_numbers', JSON.stringify(myNumbers));
+            alert(`已取消「${storeName}」的到號通知。`);
+        } else {
+            const numValue = parseInt(inputEl.value);
+            if (!numValue || numValue <= 0) {
+                alert("請先輸入正確的排隊客單號碼！");
+                return;
+            }
+            myNumbers[storeId] = numValue;
+            localStorage.setItem('sushiro_my_numbers', JSON.stringify(myNumbers));
+            
+            // 🔄 修改：提示文字修正為提早10個號碼
+            alert(`已成功設定「${storeName}」到號追蹤！\n系統將在背景監測。當現場叫號達到或超過 ${numValue - 10} 號時（即提早 10 個號碼），會立刻跳出桌面通知！\n請保持此網頁開啟。`);
+        }
+        filterAndRenderStores(currentFetchedStores === backupData);
+    }
+
+    // 🔄 修改：核心邏輯更改為提早 10 個號碼通知 (Calling >= Target - 10)
+    function checkSingleStoreNotification(storeId, storeName, currentCallingNumber) {
+        if (!("Notification" in window) || Notification.permission !== "granted") return;
+        
+        let myNumbers = JSON.parse(localStorage.getItem('sushiro_my_numbers')) || {};
+        const targetNumber = myNumbers[storeId];
+        
+        if (targetNumber) {
+            const triggerNumber = targetNumber - 10; // 計算觸發門檻值
+            
+            if (currentCallingNumber >= triggerNumber) {
+                const remaining = targetNumber - currentCallingNumber;
+                
+                new Notification(`🍣 壽司郎【即將到號】提醒！`, {
+                    body: `「${storeName}」目前已叫號至 ${currentCallingNumber} 號！您註冊的是 ${targetNumber} 號（距離您還剩約 ${remaining > 0 ? remaining : 0} 個號碼），請立刻返回分店準備就座！`,
+                    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22><text y=%22.9em%22 font-size=%2290%22>🍣</text></svg>'
+                });
+                
+                // 觸發通知後移除，防止重複洗版
+                delete myNumbers[storeId];
+                localStorage.setItem('sushiro_my_numbers', JSON.stringify(myNumbers));
+                
+                setTimeout(() => { filterAndRenderStores(currentFetchedStores === backupData); }, 1000);
+            }
+        }
+    }
+
+    async function fetchAndRenderQueues(stores, isMock = false) {
+        for (const store of stores) {
+            const storeId = store.store_id || store.id;
+            const sectionElement = document.getElementById(`store-queue-section-${storeId}`);
+            if (!sectionElement || !storeId) continue;
+
+            const waitingGroup = Number(sectionElement.getAttribute('data-waiting-group')) || 0;
+
+            if (isMock) {
+                setTimeout(() => {
+                    const currentSection = document.getElementById(`store-queue-section-${storeId}`);
+                    if (!currentSection) return;
+                    const mockCalling = 125;
+                    currentSection.innerHTML = `
+                        <div class="queue-detail">現在叫號：<strong>${mockCalling} 號</strong></div>
+                        <div class="queue-detail">最新出票（估計）：<strong>${mockCalling + waitingGroup} 號</strong></div>
+                    `;
+                    checkSingleStoreNotification(storeId, store.store_name || store.name, mockCalling);
+                }, Math.random() * 200);
+                continue;
+            }
+
+            try {
+                const res = await fetch(queueApiBaseUrl + storeId);
+                const queueData = await res.json();
+                const rootData = queueData.data || queueData;
+                const boothQueue = rootData.boothQueue || [];
+
+                const checkSection = document.getElementById(`store-queue-section-${storeId}`);
+                if (checkSection) {
+                    if (boothQueue.length > 0) {
+                        const firstNumber = Number(boothQueue[0]); 
+                        const calculatedLatest = firstNumber + waitingGroup;
+                        
+                        checkSection.innerHTML = `
+                            <div class="queue-detail">現在叫號：<strong>${firstNumber} 號</strong></div>
+                            <div class="queue-detail">最新出票（估計）：<strong>${calculatedLatest} 號</strong></div>
+                        `;
+                        
+                        checkSingleStoreNotification(storeId, store.store_name || store.name, firstNumber);
+                    } else {
+                        checkSection.innerHTML = `
+                            <div class="queue-detail">現在叫號：<strong>-</strong></div>
+                            <div class="queue-detail">最新出票（估計）：<strong>-</strong></div>
+                        `;
+                    }
+                }
+            } catch (err) {
+                const errorSection = document.getElementById(`store-queue-section-${storeId}`);
+                if (errorSection) {
+                    errorSection.innerHTML = `<div class="queue-detail" style="color:#e53e3e;">⚠️ 無法獲取現場詳細號碼</div>`;
+                }
+            }
+        }
+    }
+
+    window.onload = () => {
+        const savedRegion = localStorage.getItem('sushiro_last_region');
+        if (savedRegion) { document.getElementById('regionFilter').value = savedRegion; }
+        
+        const savedInterval = localStorage.getItem('sushiro_refresh_interval');
+        if (savedInterval) { document.getElementById('intervalFilter').value = savedInterval; }
+        
+        fetchStoreList();
+        changeRefreshInterval();
+    };
+</script>
+
+</body>
+</html>

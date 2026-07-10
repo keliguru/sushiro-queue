@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數碼港實時交通到站提示</title>
+	
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/cyberport_bus_board-icon.png">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="數碼港實時交通到站提示">
+	<meta property="og:description" content="數碼港實時交通到站提示">
+	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/cyberport_bus_board-icon.png"> <meta property="og:url" content="https://你的網址.com/">
+
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="數碼港實時交通到站提示">
+	<meta name="twitter:description" content="數碼港實時交通到站提示">
+	
+	<!-- iOS Safari 專用圖示（iOS 嚴格要求必須是 PNG，不支援 SVG） -->
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/cyberport_bus_board-icon.png">
+
+	<!-- iOS 進階優化：讓加入主畫面的網頁看起來更像原生 App（隱藏網址列） -->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="數碼港實時交通到站提示">
+	
+	
+    <style>
+        :root {
+            --cyberport-blue: #0054a6;
+            --ctb-yellow: #ffcc00;
+            --ctb-blue: #003399;
+            --kmb-red: #e60012;
+            --gmb-green: #008751;
+            --dark-gray: #222222;
+            --light-bg: #f8f9fa;
+            --text-main: #111111;
+            --text-sub: #555555;
+            --urgent-red: #d63031;
+            --star-gold: #f39c12;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--light-bg);
+            margin: 0;
+            padding: 15px;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            background-color: var(--kmb-red);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        header h1 { margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
+        header p { margin: 6px 0 0 0; font-size: 0.85rem; opacity: 0.9; }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: white;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .controls-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 6px;
+            background-color: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 100%;
+            background-color: var(--cyberport-blue);
+            transition: width 1s linear;
+        }
+
+        button {
+            background-color: var(--cyberport-blue);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        button:hover { opacity: 0.9; }
+        button.secondary { background-color: #636e72; }
+        button.secondary.active { background-color: var(--star-gold); }
+
+        .last-update { font-size: 0.9rem; color: var(--text-sub); font-weight: 500; }
+
+        .category-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin: 24px 0 12px 0;
+            padding-left: 10px;
+            border-left: 5px solid var(--dark-gray);
+        }
+        .category-gmb { border-left-color: var(--gmb-green); color: var(--gmb-green); }
+        .category-ctb { border-left-color: var(--ctb-blue); color: var(--ctb-blue); }
+        .category-kmb { border-left-color: var(--kmb-red); color: var(--kmb-red); }
+
+        .route-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 14px;
+        }
+
+        .route-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #e0e0e0;
+            border-top: 5px solid #ccc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        .route-card.gmb { border-top-color: var(--gmb-green); }
+        .route-card.ctb { border-top-color: var(--ctb-yellow); }
+        .route-card.kmb { border-top-color: var(--kmb-red); }
+
+        .route-card.card-urgent {
+            border: 2px solid var(--urgent-red) !important;
+            border-top: 5px solid var(--urgent-red) !important;
+            box-shadow: 0 0 12px rgba(214, 48, 49, 0.3);
+            animation: card-blink 1.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes card-blink {
+            from { background-color: white; }
+            to { background-color: #fff5f5; }
+        }
+
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .route-title-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .star-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            color: #ccc;
+            line-height: 1;
+            transition: transform 0.2s;
+        }
+        .star-btn:hover { transform: scale(1.2); opacity: 1; }
+        .star-btn.favorited { color: var(--star-gold); }
+
+        .route-name { font-size: 1.6rem; font-weight: 900; font-family: 'Arial Black', sans-serif; }
+        .gmb .route-name { color: var(--gmb-green); }
+        .ctb .route-name { color: var(--ctb-blue); }
+        .kmb .route-name { color: var(--kmb-red); }
+        .route-card.card-urgent .route-name { color: var(--urgent-red) !important; }
+        
+        .route-dir { font-size: 0.9rem; color: var(--text-main); font-weight: bold; text-align: right; max-width: 60%; }
+
+        .eta-list { list-style: none; padding: 0; margin: 0; }
+        .eta-item-container {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 10px 0;
+        }
+        .eta-item-container:last-child { border-bottom: none; }
+        
+        .eta-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .eta-label { color: var(--text-sub); font-weight: bold; font-size: 0.95rem; }
+        .eta-time-group { text-align: right; }
+        
+        .eta-time { 
+            font-size: 1.4rem; 
+            font-weight: 800; 
+            color: #222; 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .eta-time.urgent { 
+            color: var(--urgent-red); 
+            animation: blink 1.2s infinite alternate; 
+        }
+        
+        .eta-actual-time { font-size: 0.8rem; color: #777; margin-top: 2px; font-weight: 600; }
+        .eta-remarks { font-size: 0.8rem; color: #ff7675; margin-top: 4px; text-align: left; font-weight: bold; }
+
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
+        .loading { text-align: center; color: #888; font-style: italic; padding: 10px 0; font-weight: bold; }
+        .status-container { text-align: right; margin-top: 8px; }
+        
+        .status-tag { 
+            font-size: 0.7rem; 
+            font-weight: bold; 
+            padding: 3px 10px; 
+            border-radius: 12px; 
+        }
+        .tag-cache { background: #ffeaa7; color: #d63031; }
+        .tag-demo { background: #dfe6e9; color: #2d3436; }
+        .tag-live { background: #e1f5fe; color: #0288d1; border: 1px solid #b3e5fc; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>數碼港專用 實時到站提示</h1>
+        <p>Cyberport Real-time Transport ETA (Favorite Boost)</p>
+    </header>
+
+    <div class="controls">
+        <div class="controls-row">
+            <div class="controls-buttons">
+                <button id="refreshBtn">手動刷新</button>
+                <button id="filterFavBtn" class="secondary">★ 只看最愛</button>
+            </div>
+            <div class="last-update" id="lastUpdate">最後更新: 未更新</div>
+        </div>
+        <div class="timer-bar-container">
+            <div class="timer-bar" id="timerBar"></div>
+        </div>
+    </div>
+
+    <div class="category-title category-gmb" id="title-gmb">專線小巴 (GMB)</div>
+    <div class="route-grid" id="gmb-container"></div>
+
+    <div class="category-title category-ctb" id="title-ctb">城巴 (CTB)</div>
+    <div class="route-grid" id="ctb-container"></div>
+
+    <div class="category-title category-kmb" id="title-kmb">九巴 (KMB)</div>
+    <div class="route-grid" id="kmb-container"></div>
+
+    <script>
+        const TRANSPORT_CONFIG = {
+            refreshIntervalSec: 60,
+            cacheKeyPrefix: 'cache_eta_',
+            lastUpdateKey: 'cyberport_last_update',
+            favStorageKey: 'cyberport_favorites',
+            labels: ['下班車', '第二班', '第三班'],
+            proxies: [
+                'https://cors.freehi.workers.dev/?',
+                'https://api.allorigins.win/raw?url=',
+                'https://cors-anywhere.herokuapp.com/'
+            ],
+            routes: {
+                gmb: [
+                    { id: 'gmb-58-2', route: '58', routeId: '2002580', routeSeq: '2', stopSeq: '7', dir: '經數碼港 往堅尼地城', type: 'gmb' }, 
+                    { id: 'gmb-58-1', route: '58', routeId: '2002580', routeSeq: '1', stopSeq: '7', dir: '經數碼港 往香港仔', type: 'gmb' }, 
+                    { id: 'gmb-69X-1', route: '69X', routeId: '2000511', routeSeq: '1', stopSeq: '1', dir: '往 銅鑼灣 (駱克道)', type: 'gmb' },
+                    { id: 'gmb-69X-2', route: '69X', routeId: '2000511', routeSeq: '2', stopSeq: '1', dir: '往 數碼港', type: 'gmb' },
+                    { id: 'gmb-69A-1', route: '69A', routeId: '2000819', routeSeq: '1', stopSeq: '1', dir: '往 香港仔 (經黃竹坑)', type: 'gmb' },
+                    { id: 'gmb-69-1', route: '69', routeId: '2000410', routeSeq: '1', stopSeq: '1', dir: '往 鰂魚涌 (海康街)', type: 'gmb' }
+                ],
+                ctb: [
+                    { id: 'ctb-30X', route: '30X', stopId: '002392', dir: 'O', labelDir: '往 金鐘 - 港鐵 C 出口', type: 'ctb' }, 
+                    { id: 'ctb-33X', route: '33X', stopId: '002392', dir: 'O', labelDir: '往 筲箕灣', type: 'ctb' },
+                    { id: 'ctb-73', route: '73', stopId: '002392', dir: 'O', labelDir: '往 赤柱監獄', type: 'ctb' },
+                    { id: 'ctb-970', route: '970', stopId: '002392', dir: 'O', labelDir: '往 蘇屋 / 旺角(弼街)', type: 'ctb' },
+                    { id: 'ctb-42C', route: '42C', stopId: '002392', dir: 'O', labelDir: '往 北角碼頭', type: 'ctb' }
+                ],
+                kmb: [
+                    { id: 'kmb-107P', route: '107P', stopId: '1B41827EB0497A78', serviceType: '1', dir: '往 海逸豪園', type: 'kmb' } 
+                ]
+            }
+        };
+
+        let currentProxyIdx = 0;
+        let countdownSeconds = TRANSPORT_CONFIG.refreshIntervalSec;
+        let countdownTimer = null;
+        let onlyShowFavorites = false;
+
+        function getFavorites() {
+            const favs = localStorage.getItem(TRANSPORT_CONFIG.favStorageKey);
+            return favs ? JSON.parse(favs) : [];
+        }
+
+        function toggleFavorite(routeId) {
+            let favs = getFavorites();
+            if (favs.includes(routeId)) {
+                favs = favs.filter(id => id !== routeId);
+            } else {
+                favs.push(routeId);
+            }
+            localStorage.setItem(TRANSPORT_CONFIG.favStorageKey, JSON.stringify(favs));
+            initContainers();
+            updateAllETA();
+        }
+
+        function sortRoutes(routesArray) {
+            const favs = getFavorites();
+            return [...routesArray].sort((a, b) => {
+                const aFav = favs.includes(a.id) ? 1 : 0;
+                const bFav = favs.includes(b.id) ? 1 : 0;
+                return bFav - aFav; // 置頂最愛
+            });
+        }
+
+        function initContainers() {
+            initSection('gmb-container', sortRoutes(TRANSPORT_CONFIG.routes.gmb), 'gmb', 'title-gmb');
+            initSection('ctb-container', sortRoutes(TRANSPORT_CONFIG.routes.ctb), 'ctb', 'title-ctb');
+            initSection('kmb-container', sortRoutes(TRANSPORT_CONFIG.routes.kmb), 'kmb', 'title-kmb');
+        }
+
+        function initSection(containerId, routes, type, titleId) {
+            const container = document.getElementById(containerId);
+            const titleElement = document.getElementById(titleId);
+            container.innerHTML = '';
+            
+            const favs = getFavorites();
+            let visibleCount = 0;
+
+            routes.forEach((r) => {
+                const isFav = favs.includes(r.id);
+                if (onlyShowFavorites && !isFav) return;
+
+                visibleCount++;
+                const card = document.createElement('div');
+                card.className = `route-card ${type}`;
+                card.id = `card-${r.id}`;
+                
+                const displayDir = r.labelDir || r.dir;
+                card.innerHTML = `
+                    <div class="route-header">
+                        <div class="route-title-area">
+                            <button class="star-btn ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${r.id}')">${isFav ? '★' : '☆'}</button>
+                            <span class="route-name">${r.route}</span>
+                        </div>
+                        <span class="route-dir">${displayDir}</span>
+                    </div>
+                    <div class="eta-list" id="eta-${r.id}">
+                        <div class="loading">載入中...</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            if (visibleCount === 0) {
+                titleElement.classList.add('hidden');
+                container.classList.add('hidden');
+            } else {
+                titleElement.classList.remove('hidden');
+                container.classList.remove('hidden');
+            }
+        }
+
+        async function smartFetch(targetUrl) {
+            let lastErr = null;
+            const proxies = TRANSPORT_CONFIG.proxies;
+            for (let i = 0; i < proxies.length; i++) {
+                let idx = (currentProxyIdx + i) % proxies.length;
+                let pUrl = proxies[idx];
+                try {
+                    let requestUrl = pUrl.includes('allorigins') ? pUrl + encodeURIComponent(targetUrl) : pUrl + targetUrl;
+                    const res = await fetch(requestUrl, { method: 'GET' });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    currentProxyIdx = idx; 
+                    return data;
+                } catch (err) {
+                    lastErr = err;
+                }
+            }
+            throw lastErr;
+        }
+
+        function updateCardUrgentState(elementId, isUrgent) {
+            const cardId = elementId.replace('eta-', 'card-');
+            const cardElement = document.getElementById(cardId);
+            if (cardElement) {
+                if (isUrgent) {
+                    cardElement.classList.add('card-urgent');
+                } else {
+                    cardElement.classList.remove('card-urgent');
+                }
+            }
+        }
+
+        function renderETA(elementId, htmlContent, status = 'live', hasUrgentBus = false) {
+            const container = document.getElementById(elementId);
+            let tagHtml = '';
+            if (status === 'cache') tagHtml = '<span class="status-tag tag-cache">歷史緩存</span>';
+            if (status === 'demo') tagHtml = '<span class="status-tag tag-demo">網絡故障/模擬</span>';
+            if (status === 'live') tagHtml = '<span class="status-tag tag-live">實時資料</span>';
+
+            if(container && htmlContent) {
+                container.innerHTML = htmlContent + `<div class="status-container">${tagHtml}</div>`;
+                if(status === 'live') {
+                    localStorage.setItem(`${TRANSPORT_CONFIG.cacheKeyPrefix}${elementId}`, htmlContent);
+                }
+                updateCardUrgentState(elementId, hasUrgentBus);
+            }
+        }
+
+        function handleFetchFailure(elementId) {
+            const cachedHtml = localStorage.getItem(`${TRANSPORT_CONFIG.cacheKeyPrefix}${elementId}`);
+            if(cachedHtml) {
+                renderETA(elementId, cachedHtml, 'cache', false);
+            } else {
+                const randomMin1 = Math.floor(Math.random() * 5) + 3;
+                const randomMin2 = randomMin1 + Math.floor(Math.random() * 10) + 7;
+                const urgentClass = randomMin1 <= 3 ? 'urgent' : '';
+                const isUrgentCard = randomMin1 < 5;
+                
+                const time1 = formatTime(new Date(Date.now() + randomMin1 * 60000));
+                const time2 = formatTime(new Date(Date.now() + randomMin2 * 60000));
+
+                const demoHtml = `
+                    <div class="eta-item-container">
+                        <div class="eta-item">
+                            <span class="eta-label">下班車</span>
+                            <div class="eta-time-group">
+                                <div class="eta-time ${urgentClass}">${randomMin1} 分鐘</div>
+                                <div class="eta-actual-time">${time1}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eta-item-container">
+                        <div class="eta-item">
+                            <span class="eta-label">第二班</span>
+                            <div class="eta-time-group">
+                                <div class="eta-time">${randomMin2} 分鐘</div>
+                                <div class="eta-actual-time">${time2}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                renderETA(elementId, demoHtml, 'demo', isUrgentCard);
+            }
+        }
+
+        function formatTime(dateObj) {
+            return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        }
+
+        async function fetchGMB(r) {
+            const elementId = `eta-${r.id}`;
+            if (!document.getElementById(elementId)) return;
+            try {
+                const targetUrl = `https://data.etagmb.gov.hk/eta/route-stop/${r.routeId}/${r.routeSeq}/${r.stopSeq}`;
+                const data = await smartFetch(targetUrl);
+                let etaHtml = '';
+                let isUrgentCard = false;
+                
+                if(data.data && data.data.enabled && data.data.eta) {
+                    const sortedEta = data.data.eta.sort((a, b) => a.eta_seq - b.eta_seq).slice(0, 3);
+                    const nowTimestamp = Date.now();
+
+                    sortedEta.forEach((e, idx) => {
+                        const min = Math.max(0, e.diff);
+                        const urgentClass = min <= 3 ? 'urgent' : '';
+                        if (idx === 0 && min < 5) isUrgentCard = true;
+
+                        const label = TRANSPORT_CONFIG.labels[idx] || `${idx + 1} 班`;
+                        let remarksHtml = e.remarks_tc ? `<div class="eta-remarks">${e.remarks_tc}</div>` : '';
+                        const actualTimeStr = formatTime(new Date(nowTimestamp + (e.diff * 60 * 1000)));
+                        
+                        etaHtml += `
+                            <div class="eta-item-container">
+                                <div class="eta-item">
+                                    <span class="eta-label">${label}</span>
+                                    <div class="eta-time-group">
+                                        <div class="eta-time ${urgentClass}">${min} 分鐘</div>
+                                        <div class="eta-actual-time">${actualTimeStr}</div>
+                                    </div>
+                                </div>
+                                ${remarksHtml}
+                            </div>`;
+                    });
+                } else if (data.data && data.data.enabled === false) {
+                    etaHtml = `<div class="loading">${data.data.description_tc || '到站預報暫停'}</div>`;
+                }
+                renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo', isUrgentCard);
+            } catch (err) {
+                handleFetchFailure(elementId);
+            }
+        }
+
+        async function fetchCTB(r) {
+            const elementId = `eta-${r.id}`;
+            if (!document.getElementById(elementId)) return;
+            try {
+                const targetUrl = `https://rt.data.gov.hk/v1/transport/citybus-nwfb/eta/CTB/${r.stopId}/${r.route}`;
+                const data = await smartFetch(targetUrl);
+                let etaHtml = '';
+                let isUrgentCard = false;
+                
+                if (data.data && data.data.length > 0) {
+                    const filteredData = data.data.filter(item => item.dir === r.dir && item.eta);
+                    filteredData.slice(0, 3).forEach((item, idx) => {
+                        const etaDate = new Date(item.eta);
+                        const min = Math.max(0, Math.round((etaDate - new Date()) / 60000));
+                        const urgentClass = min <= 3 ? 'urgent' : '';
+                        if (idx === 0 && min < 5) isUrgentCard = true;
+
+                        const label = TRANSPORT_CONFIG.labels[idx] || `${idx + 1} 班`;
+                        etaHtml += `
+                            <div class="eta-item-container">
+                                <div class="eta-item">
+                                    <span class="eta-label">${label}</span>
+                                    <div class="eta-time-group">
+                                        <div class="eta-time ${urgentClass}">${min} 分鐘</div>
+                                        <div class="eta-actual-time">${formatTime(etaDate)}</div>
+                                    </div>
+                                </div>
+                            </div>`;
+                    });
+                }
+                renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo', isUrgentCard);
+            } catch (err) {
+                handleFetchFailure(elementId);
+            }
+        }
+
+        async function fetchKMB(r) {
+            const elementId = `eta-${r.id}`;
+            if (!document.getElementById(elementId)) return;
+            try {
+                const targetUrl = `https://data.etabus.gov.hk/v1/transport/kmb/eta/${r.stopId}/${r.route}/${r.serviceType}`;
+                const data = await smartFetch(targetUrl);
+                let etaHtml = '';
+                let isUrgentCard = false;
+                
+                if (data.data && data.data.length > 0) {
+                    let count = 0;
+                    data.data.forEach((item) => {
+                        if(item.eta && count < 3) {
+                            const etaDate = new Date(item.eta);
+                            const min = Math.max(0, Math.round((etaDate - new Date(item.data_timestamp)) / 60000));
+                            const urgentClass = min <= 3 ? 'urgent' : '';
+                            if (count === 0 && min < 5) isUrgentCard = true;
+
+                            etaHtml += `
+                                <div class="eta-item-container">
+                                    <div class="eta-item">
+                                        <span class="eta-label">${TRANSPORT_CONFIG.labels[count]}</span>
+                                        <div class="eta-time-group">
+                                            <div class="eta-time ${urgentClass}">${min} 分鐘</div>
+                                            <div class="eta-actual-time">${formatTime(etaDate)}</div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                            count++;
+                        }
+                    });
+                }
+                renderETA(elementId, etaHtml || '<div class="loading">暫無班次</div>', etaHtml ? 'live' : 'demo', isUrgentCard);
+            } catch (err) {
+                handleFetchFailure(elementId);
+            }
+        }
+
+        async function updateAllETA() {
+            resetCountdown();
+            const timeStr = formatTime(new Date());
+            localStorage.setItem(TRANSPORT_CONFIG.lastUpdateKey, timeStr);
+            document.getElementById('lastUpdate').innerText = `最後更新: ${timeStr}`;
+
+            const allRoutes = [
+                ...TRANSPORT_CONFIG.routes.gmb,
+                ...TRANSPORT_CONFIG.routes.ctb,
+                ...TRANSPORT_CONFIG.routes.kmb
+            ];
+
+            const tasks = allRoutes.map(r => {
+                if (r.type === 'gmb') return fetchGMB(r);
+                if (r.type === 'ctb') return fetchCTB(r);
+                if (r.type === 'kmb') return fetchKMB(r);
+            });
+
+            await Promise.all(tasks);
+        }
+
+        function startCountdown() {
+            if(countdownTimer) clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                countdownSeconds--;
+                document.getElementById('timerBar').style.width = `${(countdownSeconds / TRANSPORT_CONFIG.refreshIntervalSec) * 100}%`;
+                if (countdownSeconds <= 0) updateAllETA();
+            }, 1000);
+        }
+
+        function resetCountdown() {
+            countdownSeconds = TRANSPORT_CONFIG.refreshIntervalSec;
+            document.getElementById('timerBar').style.width = '100%';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initContainers();
+            
+            const savedTime = localStorage.getItem(TRANSPORT_CONFIG.lastUpdateKey);
+            if(savedTime) document.getElementById('lastUpdate').innerText = `上次留存時間: ${savedTime}`;
+
+            updateAllETA();
+            startCountdown();
+
+            document.getElementById('refreshBtn').addEventListener('click', updateAllETA);
+            
+            const filterBtn = document.getElementById('filterFavBtn');
+            filterBtn.addEventListener('click', () => {
+                onlyShowFavorites = !onlyShowFavorites;
+                filterBtn.classList.toggle('active', onlyShowFavorites);
+                filterBtn.innerText = onlyShowFavorites ? '★ 顯示全部' : '★ 只看最愛';
+                initContainers();
+                updateAllETA();
+            });
+        });
+    </script>
+</body>
+</html>
