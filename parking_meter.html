@@ -15,15 +15,11 @@
 	<meta name="twitter:title" content="香港智能錶位實時導航">
 	<meta name="twitter:description" content="香港智能錶位實時導航">
 	
-	<!-- iOS Safari 專用圖示（iOS 嚴格要求必須是 PNG，不支援 SVG） -->
-	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
+	<link class="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
 
-	<!-- iOS 進階優化：讓加入主畫面的網頁看起來更像原生 App（隱藏網址列） -->
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="default">
 	<meta name="apple-mobile-web-app-title" content="香港智能錶位實時導航">
-	
-	
 	
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -62,8 +58,8 @@
                 <i class="fa-solid fa-square-p text-yellow-400"></i> <span class="truncate">香港智能錶位</span>
             </h1>
             <div class="flex items-center gap-1 shrink-0">
-                <button id="notify-auth-btn" class="bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg text-xs transition flex items-center gap-1 hidden">
-                    <i class="fa-solid fa-bell"></i>
+                <button id="notify-config-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
+                    <i class="fa-solid fa-bell text-emerald-400" id="notify-icon-status"></i> <span>通知</span>
                 </button>
                 <button id="fav-toggle-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
                     <i class="fa-solid fa-star text-amber-400"></i> <span id="fav-toggle-text">最愛</span>
@@ -74,6 +70,38 @@
             </div>
         </div>
     </nav>
+
+    <div id="notification-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-xl border border-gray-100 flex flex-col max-h-[80vh]">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h2 class="font-black text-lg text-slate-950 flex items-center gap-2">
+                    <i class="fa-solid fa-bell text-emerald-500"></i> 車位狀態通知設定
+                </h2>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-4 flex-1">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div>
+                        <p class="text-sm font-bold text-gray-900">啟用狀態變更通知</p>
+                        <p class="text-[11px] text-gray-400">當所選街道之車位狀態改變時發出通知</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="notify-master-switch" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider"><i class="fa-solid fa-map-signs mr-1"></i> 選擇接收通知的街道 (從最愛同步)</p>
+                    <div id="notify-street-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <p class="text-xs text-gray-400 italic py-2">尚未新增任何最愛街道。請先在地圖卡片中收藏街道。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 bg-gray-50 border-t border-gray-100 rounded-b-2xl text-right">
+                <button id="save-modal-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition">完成設定</button>
+            </div>
+        </div>
+    </div>
 
     <main class="max-w-7xl mx-auto px-2.5 sm:px-4 py-3 sm:py-6">
         
@@ -109,8 +137,9 @@
         </div>
 
         <div class="flex justify-between items-center mb-3 text-[11px] text-gray-500 px-1">
-            <div>
+            <div class="flex items-center gap-3">
                 <span class="inline-block">對時: <span id="update-time" class="font-medium text-gray-700">未載入</span></span>
+                <span class="bg-green-100 text-green-700 font-extrabold px-2 py-0.5 rounded-sm">篩選有空位: <span id="available-count">0</span></span>
             </div>
             <p class="text-xs">符合錶位：<span id="displayed-count" class="font-bold text-slate-800">0</span> / <span id="total-count" class="font-bold text-blue-600">0</span></p>
         </div>
@@ -149,9 +178,11 @@
         ];
 
         const CACHE_KEY_FAV_STREETS = 'hk_parking_fav_streets'; 
+        const CACHE_KEY_NOTIFY_SETTINGS = 'hk_parking_notify_settings';
 
         let rawInfoData = null;   
         let parkingData = [];     
+        let oldParkingStatusMap = new Map(); 
         let currentRegion = 'ALL';
         let currentVehicleType = 'ALL';
         let currentSelectedStreet = 'ALL'; 
@@ -159,6 +190,7 @@
         let showFavoritesOnly = false;
         
         let favStreets = JSON.parse(localStorage.getItem(CACHE_KEY_FAV_STREETS)) || [];
+        let notifySettings = JSON.parse(localStorage.getItem(CACHE_KEY_NOTIFY_SETTINGS)) || { enabled: false, streets: [] };
 
         let filteredDataGlobal = []; 
         let itemsPerPage = 30;       
@@ -168,7 +200,11 @@
         document.getElementById('refresh-btn').addEventListener('click', () => fetchAllData(true));
         document.getElementById('search-input').addEventListener('input', handleSearch);
         document.getElementById('fav-toggle-btn').addEventListener('click', toggleFavoritesFilter);
-        document.getElementById('notify-auth-btn').addEventListener('click', requestNotificationPermission);
+        
+        document.getElementById('notify-config-btn').addEventListener('click', openNotificationModal);
+        document.getElementById('close-modal-btn').addEventListener('click', closeNotificationModal);
+        document.getElementById('save-modal-btn').addEventListener('click', saveNotificationSettings);
+        document.getElementById('notify-master-switch').addEventListener('change', handleMasterSwitchChange);
         
         window.addEventListener('scroll', handleWindowScroll);
         
@@ -176,26 +212,79 @@
         setupVehicleFilters();
 
         async function initPage() {
-            checkNotificationSupport();
+            updateNotifyIconStyle();
             await fetchAllData(false);
         }
 
-        function checkNotificationSupport() {
-            if ('Notification' in window) {
-                const authBtn = document.getElementById('notify-auth-btn');
-                if (Notification.permission !== 'granted') {
-                    authBtn.classList.remove('hidden');
-                }
+        function openNotificationModal() {
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission().then(permission => {
+                    if (permission !== 'granted') {
+                        alert('⚠️ 您拒絕了系統通知權限，將無法收到即時車位通知。');
+                    }
+                });
+            }
+            document.getElementById('notify-master-switch').checked = notifySettings.enabled;
+            renderNotifyStreetOptions();
+            document.getElementById('notification-modal').classList.remove('hidden');
+        }
+
+        function closeNotificationModal() {
+            document.getElementById('notification-modal').classList.add('hidden');
+        }
+
+        function handleMasterSwitchChange(e) {
+            if (e.target.checked && 'Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission().then(perm => {
+                    if (perm !== 'granted') {
+                        e.target.checked = false;
+                        alert('⚠️ 須先允許瀏覽器通知權限才能啟用此功能。');
+                    }
+                });
             }
         }
 
-        async function requestNotificationPermission() {
-            if ('Notification' in window) {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    alert('🔔 通知功能已成功啟用！');
-                    document.getElementById('notify-auth-btn').classList.add('hidden');
-                }
+        function renderNotifyStreetOptions() {
+            const container = document.getElementById('notify-street-list');
+            if (favStreets.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 italic py-2">尚未新增任何最愛街道。請先在地圖卡片中收藏街道。</p>`;
+                return;
+            }
+            container.innerHTML = '';
+            favStreets.forEach(street => {
+                const isChecked = notifySettings.streets.includes(street);
+                const wrapper = document.createElement('label');
+                wrapper.className = "flex items-center gap-2.5 p-2 hover:bg-gray-50 rounded-lg text-xs cursor-pointer transition border border-transparent hover:border-gray-100";
+                wrapper.innerHTML = `
+                    <input type="checkbox" data-street="${street}" ${isChecked ? 'checked' : ''} class="notify-street-checkbox rounded text-emerald-500 focus:ring-emerald-400 h-4 w-4 border-gray-300">
+                    <span class="text-gray-700 font-medium"><i class="fa-solid fa-star text-amber-400 text-[10px] mr-1"></i>${street}</span>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+        function saveNotificationSettings() {
+            const masterSwitch = document.getElementById('notify-master-switch').checked;
+            const checkboxes = document.querySelectorAll('.notify-street-checkbox');
+            const selectedStreets = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) selectedStreets.push(cb.getAttribute('data-street'));
+            });
+            notifySettings = { enabled: masterSwitch, streets: selectedStreets };
+            localStorage.setItem(CACHE_KEY_NOTIFY_SETTINGS, JSON.stringify(notifySettings));
+            updateNotifyIconStyle();
+            closeNotificationModal();
+        }
+
+        // 優化小鈴鐺樣式
+        function updateNotifyIconStyle() {
+            const icon = document.getElementById('notify-icon-status');
+            if (notifySettings.enabled && notifySettings.streets.length > 0) {
+                icon.className = "fa-solid fa-bell text-emerald-400 animate-bounce";
+            } else if (notifySettings.enabled) {
+                icon.className = "fa-solid fa-bell text-yellow-400";
+            } else {
+                icon.className = "fa-solid fa-bell-slash text-gray-400";
             }
         }
 
@@ -219,9 +308,7 @@
                     updateProgress(endPct, `${description} 下載完成`);
                     return await response.text();
                 }
-            } catch (e) {
-                console.warn(`直連失敗，切換代理下載 ${description}...`);
-            }
+            } catch (e) {}
 
             for (let i = 0; i < PROXIES.length; i++) {
                 const proxyUrl = `${PROXIES[i]}${encodeURIComponent(targetUrl)}`;
@@ -231,14 +318,11 @@
                     const timeoutId = setTimeout(() => controller.abort(), 6000);
                     const response = await fetch(proxyUrl, { signal: controller.signal });
                     clearTimeout(timeoutId);
-                    
                     if (response.ok) {
                         updateProgress(endPct, `${description} 下載完成`);
                         return await response.text();
                     }
-                } catch (err) {
-                    console.error(`通道 [${i}] 失敗`, err);
-                }
+                } catch (err) {}
             }
             throw new Error(`無法獲取 ${description} 資料。`);
         }
@@ -268,9 +352,14 @@
                     }
                 });
 
-                parkingData = [];
-                let currentFavSpaces = []; 
+                if (parkingData.length > 0) {
+                    oldParkingStatusMap.clear();
+                    parkingData.forEach(p => {
+                        oldParkingStatusMap.set(p.id, { occ: p.occupancyStatus, meter: p.meterStatus });
+                    });
+                }
 
+                parkingData = [];
                 rawInfoData.forEach((row, index) => {
                     if (index === 0) return; 
                     const spaceId = row[1]; 
@@ -294,7 +383,7 @@
                         formattedPeriod = '30分鐘';
                     }
 
-                    const item = {
+                    parkingData.push({
                         id: spaceId,
                         poleId: row[0],                                                                                                                                                                                                                                                                                                                                 
                         regionCode: (row[2] || '').trim(),                                                                                      
@@ -307,14 +396,10 @@
                         maxParkingPeriod: formattedPeriod,              
                         meterStatus: liveStatus.meterStatus,       
                         occupancyStatus: liveStatus.occupancyStatus
-                    };
-
-                    parkingData.push(item);
-
-                    if (favStreets.includes(streetName)) {
-                        currentFavSpaces.push(item);
-                    }
+                    });
                 });
+
+                checkStatusChangesAndNotify();
 
                 const timeEl = document.getElementById('update-time');
                 if(timeEl) timeEl.innerText = new Date().toLocaleTimeString();
@@ -328,20 +413,62 @@
 
             } catch (error) {
                 console.error(error);
-                document.getElementById('loading-text').innerHTML = `⚠️ 無法連線至數據來源或下載超時。<br><button onclick="fetchAllData(true)" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs">重試</button>`;
+                document.getElementById('loading-text').innerHTML = `⚠️ 無法連線至數據來源。<br><button onclick="fetchAllData(true)" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs">重試</button>`;
+            }
+        }
+
+        function checkStatusChangesAndNotify() {
+            if (!notifySettings.enabled || notifySettings.streets.length === 0 || oldParkingStatusMap.size === 0) return;
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+            let notificationText = '';
+            let changesCount = 0;
+
+            parkingData.forEach(item => {
+                if (!notifySettings.streets.includes(item.street)) return;
+                const oldStatus = oldParkingStatusMap.get(item.id);
+                if (!oldStatus) return;
+
+                if (oldStatus.occ !== item.occupancyStatus || oldStatus.meter !== item.meterStatus) {
+                    changesCount++;
+                    let statusDesc = '';
+                    if (item.meterStatus !== 'N') {
+                        statusDesc = '暫停服務';
+                    } else if (item.occupancyStatus === 'V') {
+                        statusDesc = '有空位 🟢';
+                    } else if (item.occupancyStatus === 'O') {
+                        statusDesc = '已佔用 🔴';
+                    } else {
+                        statusDesc = '未知';
+                    }
+
+                    if (changesCount <= 3) {
+                        notificationText += `【${item.street}】錶位 ${item.id} ➔ ${statusDesc}\n`;
+                    }
+                }
+            });
+
+            if (changesCount > 0) {
+                if (changesCount > 3) {
+                    notificationText = `您關注的街道有 ${changesCount} 個車位狀態更新，請進入網頁查看細節。`;
+                }
+                new Notification('🚗 香港智能錶位：狀態變更通知', {
+                    body: notificationText,
+                    icon: 'https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png',
+                    tag: 'parking-status-change',
+                    renotify: true
+                });
             }
         }
 
         function renderFavStreetButtons() {
             const container = document.getElementById('fav-street-buttons-container');
             const btnsDiv = document.getElementById('fav-street-btns');
-            
             if (favStreets.length === 0) {
                 container.classList.add('hidden');
                 currentSelectedStreet = 'ALL';
                 return;
             }
-
             container.classList.remove('hidden');
             btnsDiv.innerHTML = '';
 
@@ -366,7 +493,6 @@
                 const isActive = currentSelectedStreet === street;
                 btn.className = `street-filter-btn px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1 ${isActive ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
                 btn.innerHTML = `<i class="fa-solid fa-star text-amber-400"></i> ${street}`;
-                
                 btn.addEventListener('click', () => {
                     currentSelectedStreet = (currentSelectedStreet === street) ? 'ALL' : street;
                     updateFavStreetButtonStyles();
@@ -401,6 +527,7 @@
             const container = document.getElementById('parking-list');
             container.innerHTML = ''; 
 
+            // 1. 先執行 Filter 過濾
             filteredDataGlobal = parkingData.filter(item => {
                 const matchRegion = (currentRegion === 'ALL' || item.regionCode === currentRegion);
                 const matchVehicle = (currentVehicleType === 'ALL' || item.vehicleType === currentVehicleType);
@@ -417,6 +544,16 @@
                 return matchRegion && matchVehicle && matchSearch && matchFav;
             });
 
+            // ⭐️ 【核心功能】即時計算目前篩選結果中，「有空位」的加總數目 ⭐️
+            let currentFilterAvailableCount = 0;
+            filteredDataGlobal.forEach(item => {
+                if (item.meterStatus === 'N' && item.occupancyStatus === 'V') {
+                    currentFilterAvailableCount++;
+                }
+            });
+            document.getElementById('available-count').innerText = currentFilterAvailableCount;
+
+            // 2. 排序
             filteredDataGlobal.sort((a, b) => {
                 const aFav = favStreets.includes(a.street) ? 1 : 0;
                 const bFav = favStreets.includes(b.street) ? 1 : 0;
@@ -456,7 +593,6 @@
                 let isAvailable = isUsable && item.occupancyStatus === 'V';
                 const isStreetFaved = favStreets.includes(item.street);
 
-                // 將「已佔用」文字大小與粗細調整得跟「有空位」一樣 (font-black text-base)
                 if (!isUsable) {
                     occText = '<i class="fa-solid fa-ban text-gray-400"></i> <span class="font-bold text-sm">暫停服務</span>';
                 } else if (item.occupancyStatus === 'V') {
@@ -476,7 +612,6 @@
                 let vehicleTypeDesc = item.vehicleType === 'G' ? '貨車' : (item.vehicleType === 'C' ? '巴士' : '一般車輛');
                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
 
-                // 根據不同時限賦予不同顏色標籤 (2小時: 紫色, 1小時: 藍色, 30分鐘: 橘色)
                 let periodColorClass = 'bg-gray-100 text-gray-700';
                 if (item.maxParkingPeriod === '2小時') {
                     periodColorClass = 'bg-purple-100 text-purple-700 border border-purple-200/60';
@@ -562,10 +697,14 @@
             if (index > -1) {
                 favStreets.splice(index, 1); 
                 if (currentSelectedStreet === street) currentSelectedStreet = 'ALL';
+                const notifyIdx = notifySettings.streets.indexOf(street);
+                if (notifyIdx > -1) notifySettings.streets.splice(notifyIdx, 1);
             } else {
                 favStreets.push(street);     
             }
             localStorage.setItem(CACHE_KEY_FAV_STREETS, JSON.stringify(favStreets));
+            localStorage.setItem(CACHE_KEY_NOTIFY_SETTINGS, JSON.stringify(notifySettings));
+            updateNotifyIconStyle();
             renderFavStreetButtons(); 
             prepareAndRenderInitialCards();
         }
