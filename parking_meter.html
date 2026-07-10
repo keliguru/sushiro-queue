@@ -157,6 +157,7 @@
             toggleLoading(true);
             checkNotificationSupport();
             try {
+                alert("start loadbase")
                 await loadBaseInfo(); 
                 alert("pass loadbase")
                 await fetchLiveStatus(); 
@@ -232,8 +233,11 @@
                 rawInfoData = Papa.parse(cachedInfo, { header: false, skipEmptyLines: true }).data;
                 return;
             }
+            alert("start get api")
 
             const infoRes = await fetchWithProxy(SPACE_INFO_URL, '基本錶位清單');
+            alert("finish get api")
+            
             localStorage.setItem(CACHE_KEY_INFO, infoRes);
             localStorage.setItem(CACHE_KEY_TIME, now.toString());
             const statusEl = document.getElementById('cache-status-text');
