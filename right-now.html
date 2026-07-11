@@ -1842,25 +1842,7 @@
 
 
 
-    function exportProfiles() {
-
-        if (Object.keys(profiles).length === 0) { alert('目前沒有基地設定可導出！'); return; }
-
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profiles, null, 2));
-
-        const downloadAnchor = document.createElement('a');
-
-        downloadAnchor.setAttribute("href", dataStr);
-
-        downloadAnchor.setAttribute("download", `toy_transport_backup_${Date.now()}.json`);
-
-        document.body.appendChild(downloadAnchor);
-
-        downloadAnchor.click();
-
-        downloadAnchor.remove();
-
-    }
+ function exportProfiles() {        if (Object.keys(profiles).length === 0) { alert('目前沒有基地設定可導出！'); return; }                // 修正：改用 Blob 以支援大檔案與行動裝置下載        const jsonString = JSON.stringify(profiles, null, 2);        const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });        const dataUrl = URL.createObjectURL(blob);                const downloadAnchor = document.createElement('a');        downloadAnchor.setAttribute("href", dataUrl);        downloadAnchor.setAttribute("download", `toy_transport_backup_${Date.now()}.json`);                document.body.appendChild(downloadAnchor);        downloadAnchor.click();                // 釋放記憶體與移除暫存節點        URL.revokeObjectURL(dataUrl);        downloadAnchor.remove();    }
 
 
 
