@@ -622,6 +622,8 @@
         const stopSelect = document.getElementById('stopSelect');
         const stopValue = stopSelect.options[stopSelect.selectedIndex]?.value || '';
         const stopName = stopSelect.options[stopSelect.selectedIndex]?.text || '';
+        const region = document.getElementById('regionSelect').value;
+        
         if (!route) { alert('請填寫正確路線編號！'); return; }
         if (!stopValue) { alert('請選擇有效的站點！'); return; }
         
@@ -646,7 +648,7 @@
             return;
         }
 
-        const elementObj = { company, route, direction, stopValue, stopName, routeId, vSeq };
+        const elementObj = { company, route, direction, stopValue, stopName, routeId, vSeq, region };
         profiles[currentProfileId].elements.push(JSON.stringify(elementObj));
         saveToStorage(); renderElements();
     }
@@ -898,7 +900,7 @@
 
                     cardHtml += `</ul>
                             <div style="padding: 10px; background: #fafafa; border-top: 2px dashed #cbd5e1; border-radius: 0 0 12px 12px; text-align: center;">
-                                <button class="btn-primary" style="width: 100%; border-radius: 8px; font-size: 0.95rem; background-color: #fffdf4;" onclick="viewFullRoute('${target.company}', '${target.route}', '${target.direction}', '${target.stopValue}', '${target.routeId || ''}')">
+                                <button class="btn-primary" style="width: 100%; border-radius: 8px; font-size: 0.95rem; background-color: #fffdf4;" onclick="viewFullRoute('${target.company}', '${target.route}', '${target.direction}', '${target.stopValue}', '${target.routeId || ''}', '${target.region || ''}')">
                                     🗺️ 展開全線車站時間
                                 </button>
                             </div>
@@ -991,7 +993,7 @@
         document.getElementById('arrivalContainerCard').style.display = 'block';
     }
 
-    async function viewFullRoute(company, route, direction, targetStopId, routeId) {
+    async function viewFullRoute(company, route, direction, targetStopId, routeId, region) {
         document.getElementById('arrivalContainerCard').style.display = 'none';
         document.getElementById('fullRouteContainerCard').style.display = 'block';
         const container = document.getElementById('full-route-bus-container');
@@ -1004,16 +1006,23 @@
             let stopList = [];
             let etaData = [];
 
-            if (company === 'MIB') {
+			if (company === 'MIB') {
                 const targetGroupId = direction === 'outbound' ? 1 : 2;
-                const stopRes = await fetch(`${baseUrlMib}/route-stop/${routeId}/${targetGroupId}`);
+                const activeRegion = region || 'KLN';
+                const routeRes = await fetch(`${baseUrlMib}/route/${activeRegion}/${route}`);
+                const routeJson = await routeRes.json();
+                const mibRouteData = routeJson.data?.find(item => parseInt(item.group_id) === targetGroupId) || routeJson.data?.[0];
+                
+                if (!mibRouteData) throw new Error(`找不到小巴路線 ${route} 的方向資料`);
+                const actualRouteId = mibRouteData.route_id;
+
+                const stopRes = await fetch(`${baseUrlMib}/route-stop/${actualRouteId}/${targetGroupId}`);
                 const stopJson = await stopRes.json();
                 stopList = stopJson.data?.route_stops || [];
                 
-                const etaRes = await fetch(`${baseUrlMib}/eta/route/${routeId}`);
+                const etaRes = await fetch(`${baseUrlMib}/eta/route/${actualRouteId}`);
                 const etaJson = await etaRes.json();
                 etaData = etaJson.data || [];
-                
             } else if (company === 'KMB') {
                 const kmbDir = direction === 'outbound' ? 'outbound' : 'inbound';
                 const stopRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`);
