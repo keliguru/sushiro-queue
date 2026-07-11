@@ -1,885 +1,2778 @@
 <!DOCTYPE html>
+
+
 <html lang="zh-Hant">
+
+
 <head>
+
+
     <meta charset="UTF-8">
+
+
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>香港智能錶位實時</title>
+
+
+    <title>F1 PARKING // 香港智能錶位實時動態</title>
+
+
 	
+
+
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
+
+
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
+
+
 	<meta property="og:type" content="website">
-	<meta property="og:title" content="香港智能錶位實時">
-	<meta property="og:description" content="香港智能錶位實時">
+
+
+	<meta property="og:title" content="F1 PARKING // 香港智能錶位實時">
+
+
+	<meta property="og:description" content="香港智能錶位實時賽事級儀表板">
+
+
 	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png"> 
 
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="default">
-	<meta name="apple-mobile-web-app-title" content="香港智能錶位實時">
-	
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <style>
-        .loader {
-            border-top-color: #3b82f6;
-            animation: spinner 1.5s linear infinite;
-        }
-        @keyframes spinner {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        ::-webkit-scrollbar {
-            height: 3px;
-            width: 3px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased pb-12">
 
-    <nav class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-3 py-2 flex justify-between items-center gap-1">
-            <h1 class="text-sm sm:text-lg font-bold flex items-center gap-1.5 truncate">
-                <i class="fa-solid fa-square-p text-yellow-400"></i> <span class="truncate">香港智能錶位</span>
-            </h1>
-            <div class="flex items-center gap-1 shrink-0">
-                <button id="notify-config-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
-                    <i class="fa-solid fa-bell text-emerald-400" id="notify-icon-status"></i> <span>通知</span>
+
+
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+
+
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+
+	<meta name="apple-mobile-web-app-title" content="F1 PARKING">
+
+
+	
+
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+
+    <style>
+
+
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+
+        
+
+
+        .f1-font {
+
+
+            font-family: 'Orbitron', sans-serif;
+
+
+        }
+
+
+        .loader {
+
+
+            border-top-color: #ef4444;
+
+
+            animation: spinner 1s linear infinite;
+
+
+        }
+
+
+        @keyframes spinner {
+
+
+            0% { transform: rotate(0deg); }
+
+
+            100% { transform: rotate(360deg); }
+
+
+        }
+
+
+        ::-webkit-scrollbar {
+
+
+            height: 6px;
+
+
+            width: 6px;
+
+
+        }
+
+
+        ::-webkit-scrollbar-thumb {
+
+
+            background: #ef4444;
+
+
+            border-radius: 3px;
+
+
+        }
+
+
+        .no-scrollbar::-webkit-scrollbar {
+
+
+            display: none;
+
+
+        }
+
+
+        .no-scrollbar {
+
+
+            -ms-overflow-style: none;
+
+
+            scrollbar-width: none;
+
+
+        }
+
+
+        /* 白天版格子旗緞帶裝飾 */
+
+
+        .checkered-pattern {
+
+
+            background-image: linear-gradient(45deg, #e4e4e7 25%, transparent 25%), 
+
+
+                              linear-gradient(-45deg, #e4e4e7 25%, transparent 25%), 
+
+
+                              linear-gradient(45deg, transparent 75%, #e4e4e7 75%), 
+
+
+                              linear-gradient(-45deg, transparent 75%, #e4e4e7 75%);
+
+
+            background-size: 10px 10px;
+
+
+            background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+
+
+            background-color: #f4f4f5;
+
+
+        }
+
+
+    </style>
+
+
+</head>
+
+
+<body class="bg-zinc-50 text-zinc-900 font-sans antialiased pb-12">
+
+
+
+
+
+    <!-- 頂部賽事導航列（針對手機優化為雙層佈局） -->
+
+
+    <nav class="bg-white border-b-2 border-red-600 shadow-md sticky top-0 z-50">
+
+
+        <div class="max-w-7xl mx-auto px-3 py-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+
+
+            
+
+
+            <!-- 第一層：標題與更新按鈕 -->
+
+
+            <div class="flex justify-between items-center w-full sm:w-auto">
+
+
+                <h1 class="text-base sm:text-lg font-black italic tracking-wider flex items-center gap-2 text-zinc-900 f1-font">
+
+
+                    <i class="fa-solid fa-flag-checkered text-red-600 animate-pulse"></i> 
+
+
+                    <span class="text-red-600">F1</span><span class="text-zinc-800">PARKING</span>
+
+
+                </h1>
+
+
+                <!-- 手機版右側直覺刷新鈕 -->
+
+
+                <button id="refresh-btn-mobile" class="sm:hidden bg-red-600 hover:bg-red-700 text-white font-black px-4 py-2 rounded text-[11px] tracking-wider uppercase shadow-sm flex items-center gap-1 active:scale-95 transition-all">
+
+
+                    <i class="fa-solid fa-rotate" id="refresh-icon-mobile"></i> <span>PURSUE</span>
+
+
                 </button>
-                <button id="fav-toggle-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
-                    <i class="fa-solid fa-star text-amber-400"></i> <span id="fav-toggle-text">最愛</span>
-                </button>
-                <button id="reset-filter-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1" title="重設全部篩選">
-                    <i class="fa-solid fa-filter-circle-xmark text-rose-400"></i> <span>重設</span>
-                </button>
-                <button id="refresh-btn" class="bg-blue-600 hover:bg-blue-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
-                    <i class="fa-solid fa-rotate" id="refresh-icon"></i> <span>更新</span>
-                </button>
+
+
             </div>
+
+
+            
+
+
+            <!-- 第二層：核心控制台（手機版自動轉為三格大按鈕，極易點擊） -->
+
+
+            <div class="grid grid-cols-3 sm:flex items-center gap-1.5 w-full sm:w-auto f1-font">
+
+
+                <button id="notify-config-btn" class="justify-center bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-800 px-2.5 py-2.5 sm:py-1.5 rounded text-[11px] font-bold transition flex items-center gap-1">
+
+
+                    <i class="fa-solid fa-bell text-emerald-600" id="notify-icon-status"></i> <span>RADIO</span>
+
+
+                </button>
+
+
+                <button id="fav-toggle-btn" class="justify-center bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-800 px-2.5 py-2.5 sm:py-1.5 rounded text-[11px] font-bold transition flex items-center gap-1">
+
+
+                    <i class="fa-solid fa-star text-amber-500"></i> <span id="fav-toggle-text">GRID</span>
+
+
+                </button>
+
+
+                <button id="reset-filter-btn" class="justify-center bg-zinc-100 hover:bg-red-50 border border-zinc-300 text-red-600 px-2.5 py-2.5 sm:py-1.5 rounded text-[11px] font-bold transition flex items-center gap-1" title="重設全部篩選">
+
+
+                    <i class="fa-solid fa-gauge-high"></i> <span>BOX BOX</span>
+
+
+                </button>
+
+
+                <!-- 桌面版顯示的刷新鈕 -->
+
+
+                <button id="refresh-btn" class="hidden sm:flex bg-red-600 hover:bg-red-700 text-white font-black px-4 py-1.5 rounded text-[11px] transition items-center gap-1 tracking-wider uppercase shadow-md shadow-red-600/20">
+
+
+                    <i class="fa-solid fa-rotate" id="refresh-icon"></i> <span>PURSUE</span>
+
+
+                </button>
+
+
+            </div>
+
+
+            
+
+
         </div>
+
+
     </nav>
 
-    <div id="notification-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-xl border border-gray-100 flex flex-col max-h-[80vh]">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-                <h2 class="font-black text-lg text-slate-950 flex items-center gap-2">
-                    <i class="fa-solid fa-bell text-emerald-500"></i> 車位狀態通知設定
+
+
+
+
+    <!-- 賽事無線電通知設定面板 -->
+
+
+    <div id="notification-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+
+
+        <div class="bg-white rounded border border-zinc-200 max-w-md w-full shadow-2xl flex flex-col max-h-[80vh]">
+
+
+            <div class="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
+
+
+                <h2 class="font-black text-sm text-zinc-800 flex items-center gap-2 uppercase tracking-widest f1-font">
+
+
+                    <i class="fa-solid fa-tower-broadcast text-red-600"></i> PIT-TO-CAR RADIO CONFIG
+
+
                 </h2>
-                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+
+
+                <button id="close-modal-btn" class="text-zinc-400 hover:text-red-600 transition p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+
+
             </div>
+
+
             <div class="p-4 overflow-y-auto space-y-4 flex-1">
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+
+
+                <div class="flex justify-between items-center p-3 bg-zinc-50 rounded border border-zinc-200">
+
+
                     <div>
-                        <p class="text-sm font-bold text-gray-900">啟用狀態變更通知</p>
-                        <p class="text-[11px] text-gray-400">當所選街道之車位狀態改變時發出通知</p>
+
+
+                        <p class="text-xs font-bold text-zinc-800 uppercase tracking-wider">開啟車位隊列空缺通知</p>
+
+
+                        <p class="text-[11px] text-zinc-500">當追蹤街道狀態變更時，即時觸發安全車訊號</p>
+
+
                     </div>
+
+
                     <label class="relative inline-flex items-center cursor-pointer">
+
+
                         <input type="checkbox" id="notify-master-switch" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+
+
+                        <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+
+
                     </label>
+
+
                 </div>
+
+
                 <div>
-                    <p class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider"><i class="fa-solid fa-map-signs mr-1"></i> 選擇接收通知的街道 (從最愛同步)</p>
+
+
+                    <p class="text-[11px] font-black text-zinc-500 mb-2 uppercase tracking-wider f1-font"><i class="fa-solid fa-map-signs mr-1 text-red-600"></i> SECTOR SELECTION (SYNCED FROM GRID)</p>
+
+
                     <div id="notify-street-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        <p class="text-xs text-gray-400 italic py-2">尚未新增任何最愛街道。請先在地圖卡片中收藏街道。</p>
+
+
+                        <p class="text-xs text-zinc-400 italic py-2">尚未排位任何最愛街道。請先在下方看板中收藏。</p>
+
+
                     </div>
+
+
                 </div>
+
+
             </div>
-            <div class="p-3 bg-gray-50 border-t border-gray-100 rounded-b-2xl text-right">
-                <button id="save-modal-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition">完成設定</button>
+
+
+            <div class="p-3 bg-zinc-50 border-t border-zinc-200 rounded-b text-right">
+
+
+                <button id="save-modal-btn" class="bg-red-600 hover:bg-red-700 text-white font-black text-[11px] px-4 py-2 rounded uppercase tracking-wider transition f1-font">CONFIRM</button>
+
+
             </div>
+
+
         </div>
+
+
     </div>
 
+
+
+
+
+    <!-- 主數據控制台 -->
+
+
     <main class="max-w-7xl mx-auto px-2.5 sm:px-4 py-3 sm:py-6">
+
+
         
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 mb-3 flex flex-col gap-2.5">
-            <div class="relative w-full">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
-                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
-                </span>
-                <input type="text" id="search-input" placeholder="搜尋街道、地區..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
-            </div>
+
+
+        <!-- 賽事篩選面板 -->
+
+
+        <div class="bg-white border border-zinc-200 p-3 mb-4 flex flex-col gap-3 relative shadow-sm">
+
+
+            <div class="absolute top-0 left-0 w-full h-[3px] checkered-pattern"></div>
+
+
             
+
+
+            <div class="relative w-full mt-1">
+
+
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-400">
+
+
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+
+
+                </span>
+
+
+                <input type="text" id="search-input" placeholder="搜尋賽道（街道、地區）..." class="w-full pl-10 pr-4 py-2.5 sm:py-2 text-xs bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 rounded focus:outline-none focus:border-red-500 transition f1-font">
+
+
+            </div>
+
+
+            
+
+
+            <!-- 分區選擇 -->
+
+
             <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5" id="region-filters">
-                <button class="region-filter-btn bg-blue-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm shadow-blue-500/20 transition" data-region="ALL">全部地區</button>
-                <button class="region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition" data-region="HONG KONG">香港島</button>
-                <button class="region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition" data-region="KOWLOON">九龍</button>
-                <button class="region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition" data-region="NEW TERRITORIES">新界</button>
+
+
+                <button class="region-filter-btn bg-red-600 text-white px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font" data-region="ALL">ALL SECTORS</button>
+
+
+                <button class="region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-region="HONG KONG">香港島</button>
+
+
+                <button class="region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-region="KOWLOON">九龍</button>
+
+
+                <button class="region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-region="NEW TERRITORIES">新界</button>
+
+
             </div>
 
-            <div class="flex items-center gap-2 pt-2 border-t border-gray-100 overflow-x-auto no-scrollbar">
-                <span class="text-[11px] text-gray-400 shrink-0 font-medium"><i class="fa-solid fa-car-side"></i> 車型:</span>
+
+
+
+
+            <!-- 車型戰術分類 -->
+
+
+            <div class="flex items-center gap-2 pt-2 border-t border-zinc-100 overflow-x-auto no-scrollbar">
+
+
+                <span class="text-[10px] text-zinc-400 shrink-0 font-black uppercase tracking-widest f1-font"><i class="fa-solid fa-car text-red-600"></i> CLASS:</span>
+
+
                 <div id="vehicle-filters" class="flex gap-1.5">
-                    <button class="vehicle-filter-btn bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm shadow-indigo-500/20 transition" data-vehicle="ALL">全部</button>
-                    <button class="vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-vehicle="A">一般</button>
-                    <button class="vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-vehicle="G">貨車</button>
-                    <button class="vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-vehicle="C">巴士</button>
+
+
+                    <button class="vehicle-filter-btn bg-yellow-400 text-zinc-900 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font" data-vehicle="ALL">全部</button>
+
+
+                    <button class="vehicle-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-vehicle="A">一般</button>
+
+
+                    <button class="vehicle-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-vehicle="G">貨車</button>
+
+
+                    <button class="vehicle-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-vehicle="C">巴士</button>
+
+
                 </div>
+
+
             </div>
 
-            <!-- 時限篩選按鈕列 -->
-            <div class="flex items-center gap-2 pt-2 border-t border-gray-100 overflow-x-auto no-scrollbar">
-                <span class="text-[11px] text-gray-400 shrink-0 font-medium"><i class="fa-solid fa-clock"></i> 時限:</span>
+
+
+
+
+            <!-- 停留限時戰術 -->
+
+
+            <div class="flex items-center gap-2 pt-2 border-t border-zinc-100 overflow-x-auto no-scrollbar">
+
+
+                <span class="text-[10px] text-zinc-400 shrink-0 font-black uppercase tracking-widest f1-font"><i class="fa-solid fa-stopwatch text-red-600"></i> STINT:</span>
+
+
                 <div id="period-filters" class="flex gap-1.5">
-                    <button class="period-filter-btn bg-purple-600 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm shadow-purple-500/20 transition" data-period="ALL">全部</button>
-                    <button class="period-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-period="30分鐘">30分鐘</button>
-                    <button class="period-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-period="1小時">1小時</button>
-                    <button class="period-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition" data-period="2小時">2小時</button>
+
+
+                    <button class="period-filter-btn bg-orange-600 text-white px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font" data-period="ALL">全部</button>
+
+
+                    <button class="period-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-period="30分鐘">30 Mins</button>
+
+
+                    <button class="period-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-period="1小時">1 Hour</button>
+
+
+                    <button class="period-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-period="2小時">2 Hours</button>
+
+
                 </div>
+
+
             </div>
 
-            <div id="fav-street-buttons-container" class="flex items-center gap-2 pt-2 border-t border-gray-100 hidden overflow-x-auto no-scrollbar">
-                <span class="text-[11px] text-gray-400 shrink-0 font-medium"><i class="fa-solid fa-tags"></i> 捷徑:</span>
-                <div id="fav-street-btns" class="flex gap-1.5 items-center"></div>
+
+
+
+
+            <!-- 最愛捷徑 -->
+
+
+            <div id="fav-street-buttons-container" class="flex items-center gap-2 pt-2 border-t border-zinc-100 hidden overflow-x-auto no-scrollbar">
+
+
+                <span class="text-[10px] text-zinc-400 shrink-0 font-black uppercase tracking-widest f1-font"><i class="fa-solid fa-thumbtack text-amber-500"></i> HOT LAP:</span>
+
+
+                <div id="fav-street-btns" class="flex gap-1.5 items-center bg-white"></div>
+
+
             </div>
+
+
         </div>
 
-        <div class="flex justify-between items-center mb-3 text-[11px] text-gray-500 px-1">
-            <div class="flex items-center gap-3">
-                <span class="inline-block">對時: <span id="update-time" class="font-medium text-gray-700">未載入</span></span>
-                <span class="bg-green-100 text-green-700 font-extrabold px-2 py-0.5 rounded-sm">篩選有空位: <span id="available-count">0</span></span>
+
+
+
+
+        <!-- 數據看板狀態列 -->
+
+
+        <div class="flex justify-between items-center mb-3 text-[10px] uppercase tracking-wider text-zinc-500 px-1 f1-font font-bold">
+
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+
+
+                <span>TELEMETRY SYNC: <span id="update-time" class="text-zinc-900 font-bold">OFFLINE</span></span>
+
+
+                <span class="bg-emerald-50 text-emerald-600 border border-emerald-200 font-black px-2 py-0.5 rounded w-max animate-pulse"><i class="fa-solid fa-circle text-[7px] mr-1"></i>PIT OPEN: <span id="available-count">0</span></span>
+
+
             </div>
-            <p class="text-xs">符合錶位：<span id="displayed-count" class="font-bold text-slate-800">0</span> / <span id="total-count" class="font-bold text-blue-600">0</span></p>
+
+
+            <p class="text-right">TRACK UNITS: <span id="displayed-count" class="font-black text-red-600">0</span> / <span id="total-count" class="font-black text-zinc-500">0</span></p>
+
+
         </div>
 
-        <div id="loading-view" class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
-            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 mb-3"></div>
-            <p id="loading-text" class="text-gray-500 text-xs sm:text-sm text-center px-4 mb-3">正在初始化...</p>
-            <div class="w-full max-w-xs bg-gray-100 rounded-full h-2.5 overflow-hidden border border-gray-200">
-                <div id="download-progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+
+
+
+
+        <!-- 數據下載載入視窗 -->
+
+
+        <div id="loading-view" class="flex flex-col items-center justify-center py-16 bg-white border border-zinc-200 rounded shadow-sm">
+
+
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-zinc-200 h-10 w-10 mb-4"></div>
+
+
+            <p id="loading-text" class="text-zinc-500 text-xs text-center px-4 mb-3 tracking-widest uppercase font-black f1-font">CALIBRATING SYSTEM...</p>
+
+
+            <div class="w-full max-w-xs bg-zinc-100 rounded-full h-1.5 overflow-hidden border border-zinc-200">
+
+
+                <div id="download-progress-bar" class="bg-red-600 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+
+
             </div>
-            <p id="progress-percent" class="text-[11px] text-gray-400 mt-1.5">0%</p>
+
+
+            <p id="progress-percent" class="text-[10px] font-bold text-zinc-400 mt-1.5 f1-font">0%</p>
+
+
         </div>
 
-        <div id="parking-list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 hidden">
+
+
+
+
+        <!-- 錶位即時網格 -->
+
+
+        <div id="parking-list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 hidden">
+
+
         </div>
 
-        <div id="infinite-scroll-trigger" class="w-full text-center py-5 text-xs text-gray-400 hidden">
-            <i class="fa-solid fa-circle-notch animate-spin mr-1"></i> 正在載入更多車位...
+
+
+
+
+        <!-- 分頁加載提示 -->
+
+
+        <div id="infinite-scroll-trigger" class="w-full text-center py-5 text-xs text-zinc-400 font-bold tracking-widest uppercase f1-font hidden">
+
+
+            <i class="fa-solid fa-circle-notch animate-spin text-red-600 mr-1"></i> FETCHING DATA STREAM...
+
+
         </div>
-        <div id="all-loaded-text" class="w-full text-center py-5 text-xs text-gray-400 hidden">
-            已經看完全部符合條件的車位 🎉
+
+
+        <div id="all-loaded-text" class="w-full text-center py-5 text-xs text-zinc-400 font-bold tracking-widest uppercase f1-font hidden">
+
+
+            🏁 TELEMETRY STREAM COMPLETED 🏁
+
+
         </div>
+
+
     </main>
 
-    <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-6 text-[11px]">
-        <p>© 2026 香港實時錶位. 資料來源：DATA.GOV.HK (運輸署)</p>
+
+
+
+
+    <!-- 底部資訊宣告 -->
+
+
+    <footer class="bg-zinc-100 border-t border-zinc-200 text-zinc-400 text-center py-4 mt-8 text-[10px] tracking-wider font-bold uppercase f1-font">
+
+
+        <p>© 2026 F1 PARKING TELEMETRY // DATA SOURCE: DATA.GOV.HK</p>
+
+
     </footer>
 
+
+
+
+
     <script>
+
+
         const SPACE_INFO_URL = 'https://resource.data.one.gov.hk/td/psiparkingspaces/spaceinfo/parkingspaces.csv';
+
+
         const STATUS_URL = 'https://resource.data.one.gov.hk/td/psiparkingspaces/occupancystatus/occupancystatus.csv';
 
+
+
+
+
         const PROXIES = [
+
+
             'https://api.allorigins.win/raw?url=',
+
+
             'https://corsproxy.io/?'
+
+
         ];
 
+
+
+
+
         const CACHE_KEY_FAV_STREETS = 'hk_parking_fav_streets'; 
+
+
         const CACHE_KEY_NOTIFY_SETTINGS = 'hk_parking_notify_settings';
 
+
+
+
+
         let rawInfoData = null;   
+
+
         let parkingData = [];     
+
+
         let oldParkingStatusMap = new Map(); 
+
+
         let currentRegion = 'ALL';
+
+
         let currentVehicleType = 'ALL';
-        let currentMaxPeriod = 'ALL'; // 時限篩選狀態
+
+
+        let currentMaxPeriod = 'ALL'; 
+
+
         let currentSelectedStreet = 'ALL'; 
+
+
         let currentSearch = '';
+
+
         let showFavoritesOnly = false;
+
+
         let autoRefreshInterval = null; 
+
+
         
+
+
         let favStreets = JSON.parse(localStorage.getItem(CACHE_KEY_FAV_STREETS)) || [];
+
+
         let notifySettings = JSON.parse(localStorage.getItem(CACHE_KEY_NOTIFY_SETTINGS)) || { enabled: false, streets: [] };
 
+
+
+
+
         let filteredDataGlobal = []; 
+
+
         let itemsPerPage = 50;       
+
+
         let currentPage = 1;         
 
+
+
+
+
         document.addEventListener('DOMContentLoaded', initPage);
+
+
         document.addEventListener('visibilitychange', handleVisibilityChange);
+
+
+        
+
+
+        // 同步綁定桌面與手機版的點擊事件
+
+
         document.getElementById('refresh-btn').addEventListener('click', () => fetchAllData(true));
+
+
+        document.getElementById('refresh-btn-mobile').addEventListener('click', () => fetchAllData(true));
+
+
+        
+
+
         document.getElementById('reset-filter-btn').addEventListener('click', resetAllFilters);
+
+
         document.getElementById('search-input').addEventListener('input', handleSearch);
+
+
         document.getElementById('fav-toggle-btn').addEventListener('click', toggleFavoritesFilter);
+
+
         
+
+
         document.getElementById('notify-config-btn').addEventListener('click', openNotificationModal);
+
+
         document.getElementById('close-modal-btn').addEventListener('click', closeNotificationModal);
+
+
         document.getElementById('save-modal-btn').addEventListener('click', saveNotificationSettings);
+
+
         document.getElementById('notify-master-switch').addEventListener('change', handleMasterSwitchChange);
+
+
         
+
+
         window.addEventListener('scroll', handleWindowScroll);
+
+
         
+
+
         setupRegionFilters();
+
+
         setupVehicleFilters();
-        setupPeriodFilters(); // 初始化時限篩選事件
+
+
+        setupPeriodFilters(); 
+
+
+
+
 
         async function initPage() {
+
+
             updateNotifyIconStyle();
+
+
             await fetchAllData(false);
+
+
         }
+
+
+
+
 
         function handleVisibilityChange() {
+
+
             if (document.visibilityState === 'visible') {
-                console.log("👀 網頁回到前景，立即檢查最新車位狀態...");
+
+
                 fetchAllData(false);
+
+
                 startAutoRefreshTimer();
+
+
             }
+
+
         }
+
+
+
+
 
         function startAutoRefreshTimer() {
+
+
             if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+
+
             autoRefreshInterval = setInterval(() => {
-                console.log("⏰ 觸發每 5 分鐘自動更新...");
+
+
                 fetchAllData(false);
+
+
             }, 300000);
+
+
         }
 
+
+
+
+
         function resetAllFilters() {
+
+
             currentRegion = 'ALL';
+
+
             currentVehicleType = 'ALL';
+
+
             currentMaxPeriod = 'ALL';
+
+
             currentSelectedStreet = 'ALL';
+
+
             currentSearch = '';
+
+
             showFavoritesOnly = false;
+
+
+
+
 
             document.getElementById('search-input').value = '';
 
+
+
+
+
             const regionButtons = document.querySelectorAll('.region-filter-btn');
+
+
             regionButtons.forEach(b => {
+
+
                 const reg = b.getAttribute('data-region');
+
+
                 if (reg === 'ALL') {
-                    b.className = "region-filter-btn bg-blue-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shadow-sm shadow-blue-500/20 transition";
+
+
+                    b.className = "region-filter-btn bg-red-600 text-white px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
+
+
                 } else {
-                    b.className = "region-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition";
+
+
+                    b.className = "region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
+
+
                 }
+
+
             });
+
+
+
+
 
             const vehicleButtons = document.querySelectorAll('.vehicle-filter-btn');
+
+
             vehicleButtons.forEach(b => {
+
+
                 const veh = b.getAttribute('data-vehicle');
+
+
                 if (veh === 'ALL') {
-                    b.className = "vehicle-filter-btn bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm shadow-indigo-500/20 transition";
+
+
+                    b.className = "vehicle-filter-btn bg-yellow-400 text-zinc-900 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
+
+
                 } else {
-                    b.className = "vehicle-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition";
+
+
+                    b.className = "vehicle-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
+
+
                 }
+
+
             });
+
+
+
+
 
             const periodButtons = document.querySelectorAll('.period-filter-btn');
+
+
             periodButtons.forEach(b => {
+
+
                 const per = b.getAttribute('data-period');
+
+
                 if (per === 'ALL') {
-                    b.className = "period-filter-btn bg-purple-600 text-white px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm shadow-purple-500/20 transition";
+
+
+                    b.className = "period-filter-btn bg-orange-600 text-white px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
+
+
                 } else {
-                    b.className = "period-filter-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition";
+
+
+                    b.className = "period-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
+
+
                 }
+
+
             });
+
+
+
+
 
             const favBtn = document.getElementById('fav-toggle-btn');
+
+
             const favText = document.getElementById('fav-toggle-text');
-            favBtn.className = "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1";
-            favText.innerText = "最愛";
+
+
+            favBtn.className = "justify-center bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-800 px-2.5 py-2.5 sm:py-1.5 rounded text-[11px] font-bold transition flex items-center gap-1";
+
+
+            favText.innerText = "GRID";
+
+
+
+
 
             if (favStreets.length > 0) {
+
+
                 updateFavStreetButtonStyles();
+
+
             }
+
+
+
+
 
             prepareAndRenderInitialCards();
+
+
         }
+
+
+
+
 
         function openNotificationModal() {
+
+
             if ('Notification' in window && Notification.permission !== 'granted') {
+
+
                 Notification.requestPermission().then(permission => {
+
+
                     if (permission !== 'granted') {
-                        alert('⚠️ 您拒絕了系統通知權限，將無法收到即時車位通知。');
+
+
+                        alert('⚠️ 您拒絕了系統通知權限，將無法接收動態廣播。');
+
+
                     }
+
+
                 });
+
+
             }
+
+
             document.getElementById('notify-master-switch').checked = notifySettings.enabled;
+
+
             renderNotifyStreetOptions();
+
+
             document.getElementById('notification-modal').classList.remove('hidden');
+
+
         }
+
+
+
+
 
         function closeNotificationModal() {
+
+
             document.getElementById('notification-modal').classList.add('hidden');
+
+
         }
+
+
+
+
 
         function handleMasterSwitchChange(e) {
+
+
             if (e.target.checked && 'Notification' in window && Notification.permission !== 'granted') {
+
+
                 Notification.requestPermission().then(perm => {
+
+
                     if (perm !== 'granted') {
+
+
                         e.target.checked = false;
-                        alert('⚠️ 須先允許瀏覽器通知權限才能啟用此功能。');
+
+
+                        alert('⚠️ 須先允許瀏覽器通知權限才能啟用廣播。');
+
+
                     }
+
+
                 });
+
+
             }
+
+
         }
+
+
+
+
 
         function renderNotifyStreetOptions() {
+
+
             const container = document.getElementById('notify-street-list');
+
+
             if (favStreets.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 italic py-2">尚未新增任何最愛街道。請先在地圖卡片中收藏街道。</p>`;
+
+
+                container.innerHTML = `<p class="text-xs text-zinc-400 italic py-2">尚未排位任何最愛街道。請先在下方看板中收藏。</p>`;
+
+
                 return;
+
+
             }
+
+
             container.innerHTML = '';
+
+
             favStreets.forEach(street => {
+
+
                 const isChecked = notifySettings.streets.includes(street);
+
+
                 const wrapper = document.createElement('label');
-                wrapper.className = "flex items-center gap-2.5 p-2 hover:bg-gray-50 rounded-lg text-xs cursor-pointer transition border border-transparent hover:border-gray-100";
+
+
+                wrapper.className = "flex items-center justify-between p-2 hover:bg-zinc-100 rounded text-xs cursor-pointer transition border border-transparent hover:border-zinc-200 bg-white shadow-sm";
+
+
                 wrapper.innerHTML = `
-                    <input type="checkbox" data-street="${street}" ${isChecked ? 'checked' : ''} class="notify-street-checkbox rounded text-emerald-500 focus:ring-emerald-400 h-4 w-4 border-gray-300">
-                    <span class="text-gray-700 font-medium"><i class="fa-solid fa-star text-amber-400 text-[10px] mr-1"></i>${street}</span>
+
+
+                    <span class="text-zinc-800 font-bold"><i class="fa-solid fa-star text-amber-500 text-[10px] mr-1.5"></i>${street}</span>
+
+
+                    <input type="checkbox" data-street="${street}" ${isChecked ? 'checked' : ''} class="notify-street-checkbox rounded bg-zinc-100 text-red-600 focus:ring-red-500 h-4 w-4 border-zinc-300">
+
+
                 `;
+
+
                 container.appendChild(wrapper);
+
+
             });
+
+
         }
+
+
+
+
 
         function saveNotificationSettings() {
+
+
             const masterSwitch = document.getElementById('notify-master-switch').checked;
+
+
             const checkboxes = document.querySelectorAll('.notify-street-checkbox');
+
+
             const selectedStreets = [];
+
+
             checkboxes.forEach(cb => {
+
+
                 if (cb.checked) selectedStreets.push(cb.getAttribute('data-street'));
+
+
             });
+
+
             notifySettings = { enabled: masterSwitch, streets: selectedStreets };
+
+
             localStorage.setItem(CACHE_KEY_NOTIFY_SETTINGS, JSON.stringify(notifySettings));
+
+
             updateNotifyIconStyle();
+
+
             closeNotificationModal();
+
+
         }
+
+
+
+
 
         function updateNotifyIconStyle() {
+
+
             const icon = document.getElementById('notify-icon-status');
+
+
             if (notifySettings.enabled && notifySettings.streets.length > 0) {
-                icon.className = "fa-solid fa-bell text-emerald-400 animate-bounce";
+
+
+                icon.className = "fa-solid fa-bell text-emerald-600 animate-bounce";
+
+
             } else if (notifySettings.enabled) {
-                icon.className = "fa-solid fa-bell text-yellow-400";
+
+
+                icon.className = "fa-solid fa-bell text-amber-500";
+
+
             } else {
-                icon.className = "fa-solid fa-bell-slash text-gray-400";
+
+
+                icon.className = "fa-solid fa-bell-slash text-zinc-400";
+
+
             }
+
+
         }
+
+
+
+
 
         function updateProgress(percent, text) {
+
+
             const bar = document.getElementById('download-progress-bar');
+
+
             const txt = document.getElementById('loading-text');
+
+
             const pct = document.getElementById('progress-percent');
+
+
             if (bar) bar.style.width = `${percent}%`;
-            if (txt && text) txt.innerText = text;
+
+
+            if (txt && text) txt.innerText = text.toUpperCase();
+
+
             if (pct) pct.innerText = `${percent}%`;
+
+
         }
+
+
+
+
 
         async function fetchWithProgress(targetUrl, description, startPct, endPct) {
+
+
             try {
+
+
                 const controller = new AbortController();
+
+
                 const timeoutId = setTimeout(() => controller.abort(), 4000);
-                updateProgress(startPct, `正在下載 ${description} (直連)...`);
+
+
+                updateProgress(startPct, `STREAMING ${description} (DIRECT)...`);
+
+
                 const response = await fetch(targetUrl, { signal: controller.signal });
+
+
                 clearTimeout(timeoutId);
+
+
                 if (response.ok) {
-                    updateProgress(endPct, `${description} 下載完成`);
+
+
+                    updateProgress(endPct, `${description} FEED LOADED`);
+
+
                     return await response.text();
+
+
                 }
+
+
             } catch (e) {}
 
+
+
+
+
             for (let i = 0; i < PROXIES.length; i++) {
+
+
                 const proxyUrl = `${PROXIES[i]}${encodeURIComponent(targetUrl)}`;
+
+
                 try {
-                    updateProgress(startPct + Math.floor((endPct - startPct) / 2), `正在下載 ${description} (通道 ${i+1})...`);
+
+
+                    updateProgress(startPct + Math.floor((endPct - startPct) / 2), `STREAMING ${description} (PROXY ${i+1})...`);
+
+
                     const controller = new AbortController();
+
+
                     const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+
                     const response = await fetch(proxyUrl, { signal: controller.signal });
+
+
                     clearTimeout(timeoutId);
+
+
                     if (response.ok) {
-                        updateProgress(endPct, `${description} 下載完成`);
+
+
+                        updateProgress(endPct, `${description} FEED LOADED`);
+
+
                         return await response.text();
+
+
                     }
+
+
                 } catch (err) {}
+
+
             }
-            throw new Error(`無法獲取 ${description} 資料。`);
+
+
+            throw new Error(`CRITICAL: FAILED TO FETCH ${description}`);
+
+
         }
 
+
+
+
+
         async function fetchAllData(isManualClick = false) {
+
+
             if (isManualClick || !rawInfoData) {
+
+
                 toggleLoading(true);
-                updateProgress(5, "準備連接政府資料庫...");
+
+
+                updateProgress(5, "CONNECTING TO HQ TELEMETRY...");
+
+
             }
 
+
+
+
+
             try {
-                const infoRes = await fetchWithProgress(SPACE_INFO_URL, '基本錶位清單', 10, 50);
+
+
+                const infoRes = await fetchWithProgress(SPACE_INFO_URL, 'TRACK INFO', 10, 50);
+
+
                 rawInfoData = Papa.parse(infoRes, { header: false, skipEmptyLines: true }).data;
 
-                const statusRes = await fetchWithProgress(STATUS_URL, '實時動態狀態', 55, 90);
+
+
+
+
+                const statusRes = await fetchWithProgress(STATUS_URL, 'LIVE STATUS', 55, 90);
+
+
                 const statusParsed = Papa.parse(statusRes, { header: false, skipEmptyLines: true }).data;
 
+
+
+
+
                 if (isManualClick || !rawInfoData) {
-                    updateProgress(95, "正在整合與解析數據...");
+
+
+                    updateProgress(95, "INTEGRATING METRICS MATRIX...");
+
+
                 }
+
+
+
+
 
                 const statusMap = new Map();
+
+
                 statusParsed.forEach((row, index) => {
+
+
                     if (index === 0) return; 
+
+
                     const spaceId = row[0];
+
+
                     if (spaceId) {
+
+
                         statusMap.set(spaceId.trim(), {
+
+
                             meterStatus: (row[1] || 'N').trim(),      
+
+
                             occupancyStatus: (row[2] || 'V').trim()  
+
+
                         });
+
+
                     }
+
+
                 });
+
+
+
+
 
                 if (parkingData.length > 0) {
+
+
                     oldParkingStatusMap.clear();
+
+
                     parkingData.forEach(p => {
+
+
                         oldParkingStatusMap.set(p.id, { occ: p.occupancyStatus, meter: p.meterStatus });
+
+
                     });
+
+
                 }
 
+
+
+
+
                 parkingData = [];
+
+
                 rawInfoData.forEach((row, index) => {
+
+
                     if (index === 0) return; 
+
+
                     const spaceId = row[1]; 
+
+
                     if (!spaceId || spaceId == "ParkingSpaceId") return;
 
+
+
+
+
                     const liveStatus = statusMap.get(spaceId.trim()) || { meterStatus: 'N', occupancyStatus: 'UNKNOWN' };
+
+
                     const streetName = (row[12] || row[11] || '未知街道').trim();
 
+
+
+
+
                     let displayRegion = '其他';
+
+
                     if(row[2] === 'HONG KONG') displayRegion = '港島';
+
+
                     else if(row[2] === 'NEW TERRITORIES') displayRegion = '新界';
+
+
                     else if(row[2] === 'KOWLOON') displayRegion = '九龍';
 
+
+
+
+
                     let rawPeriod = (row[20] || '').trim();
+
+
                     let formattedPeriod = rawPeriod || '未明';
+
+
                     if (rawPeriod === '120' || rawPeriod.includes('120')) {
+
+
                         formattedPeriod = '2小時';
+
+
                     } else if (rawPeriod === '60' || rawPeriod.includes('60')) {
+
+
                         formattedPeriod = '1小時';
+
+
                     } else if (rawPeriod === '30' || rawPeriod.includes('30')) {
+
+
                         formattedPeriod = '30分鐘';
+
+
                     }
 
+
+
+
+
                     parkingData.push({
+
+
                         id: spaceId,
+
+
                         poleId: row[0],                                                                                                                                                                                                                                                                                                                                 
+
+
                         regionCode: (row[2] || '').trim(),                                                                                      
+
+
                         region: displayRegion,                                                                                                                                                                                                        
+
+
                         district: row[6] || row[5] || '未知地區',                                                                                                                                                                                                         
+
+
                         street: streetName, 
+
+
                         latitude: row[17],                                                                                                                                                                                                                                                                                          
+
+
                         longitude: row[18],                                                                                                                                                                                                                                                                                         
+
+
                         vehicleType: (row[19] || 'A').trim(),                                                                                                                                                                                                           
+
+
                         maxParkingPeriod: formattedPeriod,              
+
+
                         meterStatus: liveStatus.meterStatus,       
+
+
                         occupancyStatus: liveStatus.occupancyStatus
+
+
                     });
+
+
                 });
+
+
+
+
 
                 checkStatusChangesAndNotify();
 
+
+
+
+
                 const timeEl = document.getElementById('update-time');
+
+
                 if(timeEl) timeEl.innerText = new Date().toLocaleTimeString();
+
+
                 
+
+
                 if (isManualClick || !rawInfoData) {
-                    updateProgress(100, "載入完成！");
+
+
+                    updateProgress(100, "SYSTEM GREEN!");
+
+
                 }
+
+
+
+
 
                 setTimeout(() => {
+
+
                     renderFavStreetButtons();
+
+
                     prepareAndRenderInitialCards();
+
+
                     toggleLoading(false);
+
+
                     startAutoRefreshTimer(); 
+
+
                 }, 300);
 
+
+
+
+
             } catch (error) {
+
+
                 console.error(error);
+
+
                 const loadingText = document.getElementById('loading-text');
+
+
                 if (loadingText) {
-                    loadingText.innerHTML = `⚠️ 無法連線至數據來源。<br><button onclick="fetchAllData(true)" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-xs">重試</button>`;
+
+
+                    loadingText.innerHTML = `⚠️ FEED DISCONNECTED.<br><button onclick="fetchAllData(true)" class="mt-2 bg-red-600 text-white font-bold px-3 py-1 rounded text-xs f1-font">RETRY</button>`;
+
+
                 }
+
+
                 toggleLoading(false);
+
+
             }
+
+
         }
+
+
+
+
 
         function checkStatusChangesAndNotify() {
+
+
             if (!notifySettings.enabled || notifySettings.streets.length === 0 || oldParkingStatusMap.size === 0) return;
+
+
             if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
+
+
+
+
             let notificationText = '';
+
+
             let changesCount = 0;
 
+
+
+
+
             parkingData.forEach(item => {
+
+
                 if (!notifySettings.streets.includes(item.street)) return;
+
+
                 const oldStatus = oldParkingStatusMap.get(item.id);
+
+
                 if (!oldStatus) return;
 
+
+
+
+
                 if (oldStatus.occ !== item.occupancyStatus || oldStatus.meter !== item.meterStatus) {
+
+
                     changesCount++;
+
+
                     let statusDesc = '';
+
+
                     if (item.meterStatus !== 'N') {
-                        statusDesc = '暫停服務';
+
+
+                        statusDesc = '暫停服務 🟡';
+
+
                     } else if (item.occupancyStatus === 'V') {
-                        statusDesc = '有空位 🟢';
+
+
+                        statusDesc = 'PIT OPEN / 有空位 🟢';
+
+
                     } else if (item.occupancyStatus === 'O') {
-                        statusDesc = '已佔用 🔴';
+
+
+                        statusDesc = 'OCCUPIED / 已佔用 🔴';
+
+
                     } else {
+
+
                         statusDesc = '未知';
+
+
                     }
+
+
+
+
 
                     if (changesCount <= 3) {
-                        notificationText += `【${item.street}】車位 ➔ ${statusDesc}\n`;
+
+
+                        notificationText += `【${item.street}】➔ ${statusDesc}\n`;
+
+
                     }
+
+
                 }
+
+
             });
+
+
+
+
 
             if (changesCount > 0) {
+
+
                 if (changesCount > 3) {
-                    notificationText = `您關注的街道有 ${changesCount} 個車位狀態更新，請進入網頁查看細節。`;
+
+
+                    notificationText = `您關注的賽道有 ${changesCount} 處空缺異動，立即切換至主戰術板。`;
+
+
                 }
-                new Notification('🚗 香港智能錶位：狀態變更通知', {
+
+
+                new Notification('🏎️ F1 PARKING // 安全車訊號廣播', {
+
+
                     body: notificationText,
+
+
                     icon: 'https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png',
+
+
                     tag: 'parking-status-change',
+
+
                     renotify: true
+
+
                 });
+
+
             }
+
+
         }
+
+
+
+
 
         function renderFavStreetButtons() {
+
+
             const container = document.getElementById('fav-street-buttons-container');
+
+
             const btnsDiv = document.getElementById('fav-street-btns');
+
+
             if (favStreets.length === 0) {
+
+
                 container.classList.add('hidden');
+
+
                 currentSelectedStreet = 'ALL';
+
+
                 return;
+
+
             }
+
+
             container.classList.remove('hidden');
+
+
             btnsDiv.innerHTML = '';
 
+
+
+
+
             const allFavActive = currentSelectedStreet === 'ALL' && !showFavoritesOnly;
+
+
             const allBtn = document.createElement('button');
-            allBtn.className = `px-2.5 py-1 text-xs rounded-lg font-semibold transition whitespace-nowrap shadow-sm ${allFavActive ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-250'}`;
-            allBtn.innerText = "全部";
+
+
+            allBtn.className = `px-2.5 py-1.5 text-[11px] rounded font-bold uppercase transition tracking-wider whitespace-nowrap f1-font shadow-sm ${allFavActive ? 'bg-red-600 text-white shadow-sm' : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'}`;
+
+
+            allBtn.innerText = "ALL";
+
+
             allBtn.addEventListener('click', () => {
+
+
                 currentSelectedStreet = 'ALL';
+
+
                 if (showFavoritesOnly) {
+
+
                     toggleFavoritesFilter(); 
+
+
                 } else {
+
+
                     updateFavStreetButtonStyles();
+
+
                     prepareAndRenderInitialCards();
+
+
                 }
+
+
             });
+
+
             btnsDiv.appendChild(allBtn);
 
+
+
+
+
             favStreets.forEach(street => {
+
+
                 const btn = document.createElement('button');
+
+
                 btn.setAttribute('data-street', street);
+
+
                 const isActive = currentSelectedStreet === street;
-                btn.className = `street-filter-btn px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1 ${isActive ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
-                btn.innerHTML = `<i class="fa-solid fa-star text-amber-400"></i> ${street}`;
+
+
+                btn.className = `street-filter-btn px-2.5 py-1.5 text-[11px] rounded transition whitespace-nowrap flex items-center gap-1 font-bold ${isActive ? 'bg-amber-400 text-black shadow-sm' : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'}`;
+
+
+                btn.innerHTML = `<i class="fa-solid fa-star text-amber-600/60 text-[10px]"></i> ${street}`;
+
+
                 btn.addEventListener('click', () => {
+
+
                     currentSelectedStreet = (currentSelectedStreet === street) ? 'ALL' : street;
+
+
                     updateFavStreetButtonStyles();
+
+
                     prepareAndRenderInitialCards();
+
+
                 });
+
+
                 btnsDiv.appendChild(btn);
+
+
             });
+
+
         }
+
+
+
+
 
         function updateFavStreetButtonStyles() {
+
+
             const btns = document.querySelectorAll('.street-filter-btn');
+
+
             const btnsContainer = document.getElementById('fav-street-btns');
+
+
             const allBtn = btnsContainer.children[0]; 
+
+
             const allFavActive = currentSelectedStreet === 'ALL' && !showFavoritesOnly;
 
+
+
+
+
             if (allFavActive) {
-                if(allBtn) allBtn.className = "px-2.5 py-1 text-xs rounded-lg font-semibold transition whitespace-nowrap bg-blue-600 text-white";
-                btns.forEach(b => b.className = "street-filter-btn px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200");
+
+
+                if(allBtn) allBtn.className = "px-2.5 py-1.5 text-[11px] rounded font-bold uppercase transition tracking-wider whitespace-nowrap bg-red-600 text-white shadow-sm f1-font";
+
+
+                btns.forEach(b => b.className = "street-filter-btn px-2.5 py-1.5 text-[11px] rounded font-bold transition whitespace-nowrap flex items-center gap-1 bg-zinc-200 text-zinc-700 hover:bg-zinc-300");
+
+
             } else {
-                if(allBtn) allBtn.className = "px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap bg-gray-100 text-gray-600 hover:bg-gray-200";
+
+
+                if(allBtn) allBtn.className = "px-2.5 py-1.5 text-[11px] rounded font-bold uppercase transition tracking-wider whitespace-nowrap bg-zinc-200 text-zinc-700 hover:bg-zinc-300 f1-font";
+
+
                 btns.forEach(b => {
+
+
                     const s = b.getAttribute('data-street');
+
+
                     b.className = (s === currentSelectedStreet) 
-                        ? "street-filter-btn px-2.5 py-1 text-xs font-bold transition whitespace-nowrap flex items-center gap-1 bg-amber-500 text-slate-950 shadow-sm"
-                        : "street-filter-btn px-2.5 py-1 text-xs rounded-lg font-medium transition whitespace-nowrap flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200";
+
+
+                        ? "street-filter-btn px-2.5 py-1.5 text-[11px] font-black transition whitespace-nowrap flex items-center gap-1 bg-amber-400 text-black shadow-sm"
+
+
+                        : "street-filter-btn px-2.5 py-1.5 text-[11px] rounded font-bold transition whitespace-nowrap flex items-center gap-1 bg-zinc-200 text-zinc-700 hover:bg-zinc-300";
+
+
                 });
+
+
             }
+
+
         }
 
+
+
+
+
         function prepareAndRenderInitialCards() {
+
+
             currentPage = 1; 
+
+
             const container = document.getElementById('parking-list');
+
+
             container.innerHTML = ''; 
 
+
+
+
+
             filteredDataGlobal = parkingData.filter(item => {
+
+
                 const matchRegion = (currentRegion === 'ALL' || item.regionCode === currentRegion);
+
+
                 const matchVehicle = (currentVehicleType === 'ALL' || item.vehicleType === currentVehicleType);
-                const matchPeriod = (currentMaxPeriod === 'ALL' || item.maxParkingPeriod === currentMaxPeriod); // 時限篩選邏輯
+
+
+                const matchPeriod = (currentMaxPeriod === 'ALL' || item.maxParkingPeriod === currentMaxPeriod); 
+
+
                 const matchSearch = (
+
+
                     item.id.toLowerCase().includes(currentSearch) ||
+
+
                     item.street.toLowerCase().includes(currentSearch) || 
+
+
                     item.district.toLowerCase().includes(currentSearch)
+
+
                 );
+
+
                 
+
+
                 let matchFav = true;
+
+
                 if (showFavoritesOnly) matchFav = favStreets.includes(item.street);
+
+
                 if (currentSelectedStreet !== 'ALL') matchFav = (item.street === currentSelectedStreet);
 
+
+
+
+
                 return matchRegion && matchVehicle && matchPeriod && matchSearch && matchFav;
+
+
             });
+
+
+
+
 
             let currentFilterAvailableCount = 0;
+
+
             filteredDataGlobal.forEach(item => {
+
+
                 if (item.meterStatus === 'N' && item.occupancyStatus === 'V') {
+
+
                     currentFilterAvailableCount++;
+
+
                 }
+
+
             });
+
+
             document.getElementById('available-count').innerText = currentFilterAvailableCount;
 
+
+
+
+
             filteredDataGlobal.sort((a, b) => {
+
+
                 const aFav = favStreets.includes(a.street) ? 1 : 0;
+
+
                 const bFav = favStreets.includes(b.street) ? 1 : 0;
+
+
                 if (aFav !== bFav) return bFav - aFav;
+
+
                 const getOrder = (item) => {
+
+
                     if (item.meterStatus !== 'N') return 3; 
+
+
                     if (item.occupancyStatus === 'V') return 1; 
+
+
                     if (item.occupancyStatus === 'O') return 2; 
+
+
                     return 4;
+
+
                 };
+
+
                 return getOrder(a) - getOrder(b);
+
+
             });
+
+
+
+
 
             document.getElementById('total-count').innerText = filteredDataGlobal.length;
 
+
+
+
+
             if (filteredDataGlobal.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400 text-xs bg-white rounded-2xl border border-gray-100">找不到符合條件的錶位</div>`;
+
+
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-zinc-400 text-xs font-bold uppercase tracking-widest bg-white border border-zinc-200 rounded f1-font">NO SECTORS MATCH THE CONFIGURATION</div>`;
+
+
                 document.getElementById('displayed-count').innerText = "0";
+
+
                 document.getElementById('infinite-scroll-trigger').classList.add('hidden');
+
+
                 document.getElementById('all-loaded-text').classList.add('hidden');
+
+
                 return;
+
+
             }
 
+
+
+
+
             appendCardsPage();
+
+
         }
 
+
+
+
+
         function appendCardsPage() {
+
+
             const container = document.getElementById('parking-list');
+
+
             const startIndex = (currentPage - 1) * itemsPerPage;
+
+
             const endIndex = Math.min(startIndex + itemsPerPage, filteredDataGlobal.length);
+
+
             const pageData = filteredDataGlobal.slice(startIndex, endIndex);
 
+
+
+
+
             pageData.forEach(item => {
+
+
                 let occText = '';
+
+
                 let meterText = '';
+
+
                 let isUsable = item.meterStatus === 'N'; 
+
+
                 let isAvailable = isUsable && item.occupancyStatus === 'V';
+
+
                 const isStreetFaved = favStreets.includes(item.street);
 
+
+
+
+
                 if (!isUsable) {
-                    occText = '<span class="font-bold text-xs text-gray-400">暫停</span>';
+
+
+                    occText = '<span class="font-black text-[11px] text-amber-600 uppercase tracking-wider italic"><i class="fa-solid fa-triangle-exclamation mr-1 animate-pulse"></i>SUSPEND</span>';
+
+
                 } else if (item.occupancyStatus === 'V') {
-                    occText = '<span class="text-green-700 font-extrabold text-xs">有空位</span>';
+
+
+                    occText = '<span class="text-emerald-600 font-black text-[11px] uppercase tracking-wider italic"><i class="fa-solid fa-circle-notch animate-spin text-[9px] mr-1"></i>PIT OPEN</span>';
+
+
                 } else if (item.occupancyStatus === 'O') {
-                    occText = '<span class="text-rose-600 font-extrabold text-xs">已佔用</span>';
+
+
+                    occText = '<span class="text-zinc-400 font-black text-[11px] uppercase tracking-wider italic">OCCUPIED</span>';
+
+
                 } else {
-                    occText = '未知';
+
+
+                    occText = 'UNKNOWN';
+
+
                 }
 
+
+
+
+
                 if (item.meterStatus === 'N') {
-                    meterText = '<span class="text-xs text-gray-800">正常</span>';
+
+
+                    meterText = '<span class="text-[11px] text-emerald-600 font-bold uppercase tracking-wider">LIVE</span>';
+
+
                 } else if (item.meterStatus === 'NU') {
-                    meterText = '<span class="text-xs text-amber-600 font-bold">暫停</span>';
+
+
+                    meterText = '<span class="text-[11px] text-amber-500 font-bold uppercase tracking-wider">BOXED</span>';
+
+
                 }
+
+
+
+
 
                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
 
-                let periodColorClass = 'bg-gray-100 text-gray-700';
+
+
+
+
+                let periodColorClass = 'bg-zinc-100 text-zinc-700 border-zinc-200';
+
+
                 if (item.maxParkingPeriod === '2小時') {
-                    periodColorClass = 'bg-purple-100 text-purple-700';
+
+
+                    periodColorClass = 'bg-red-50 text-red-600 border border-red-200';
+
+
                 } else if (item.maxParkingPeriod === '1小時') {
-                    periodColorClass = 'bg-blue-100 text-blue-700';
+
+
+                    periodColorClass = 'bg-orange-50 text-orange-600 border border-orange-200';
+
+
                 } else if (item.maxParkingPeriod === '30分鐘') {
-                    periodColorClass = 'bg-orange-100 text-orange-700';
+
+
+                    periodColorClass = 'bg-yellow-50 text-amber-700 border border-yellow-200';
+
+
                 }
-                let periodBadge = `<span class="${periodColorClass} text-[10px] px-1.5 py-0.2 rounded font-bold">${item.maxParkingPeriod}</span>`;
+
+
+                let periodBadge = `<span class="${periodColorClass} text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider f1-font">${item.maxParkingPeriod}</span>`;
+
+
+
+
 
                 const cardBorderAndBg = isAvailable 
-                    ? 'border-2 border-green-500 bg-green-50/15 shadow-sm ring-1 ring-green-400/20' 
-                    : 'border border-gray-200/80 bg-white shadow-2xs';
+
+
+                    ? 'border-2 border-emerald-500 bg-white shadow-md shadow-emerald-500/5 ring-1 ring-emerald-500/10' 
+
+
+                    : 'border border-zinc-200 bg-white shadow-sm';
+
+
+
+
 
                 const cardHtml = `
-                    <div class="rounded-xl transition overflow-hidden ${cardBorderAndBg} ${!isUsable ? 'opacity-75' : ''} flex flex-col justify-between relative text-xs">
-                        ${isAvailable ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>' : ''}
+
+
+                    <div class="rounded transition overflow-hidden ${cardBorderAndBg} ${!isUsable ? 'opacity-60' : ''} flex flex-col justify-between relative text-xs">
+
+
+                        ${isAvailable ? '<div class="absolute left-0 top-0 bottom-0 w-[4px] bg-emerald-500"></div>' : ''}
+
+
                         <div class="p-2 sm:p-2.5 ${isAvailable ? 'pl-3' : ''}">
+
+
                             <div class="mb-1 flex justify-between items-center gap-1">
-                                <span class="text-[9px] text-gray-400 truncate">
+
+
+                                <span class="text-[9px] uppercase tracking-wider text-zinc-400 font-bold f1-font truncate">
+
+
                                     ${item.district}
+
+
                                 </span>
+
+
                                 <div class="flex gap-1 items-center shrink-0">
+
+
                                     ${periodBadge}
-                                    <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-sm p-0.5 text-gray-400 hover:text-amber-500 transition" title="收藏街道">
+
+
+                                    <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-xs p-0.5 text-zinc-400 hover:text-amber-500 transition" title="收藏至 GRID">
+
+
                                         <i class="${isStreetFaved ? 'fa-solid fa-star text-amber-500' : 'fa-regular fa-star'}"></i>
+
+
                                     </button>
+
+
                                 </div>
+
+
                             </div>
 
-                            <p class="text-gray-900 text-xs font-bold mb-0.5 truncate"><i class="fa-solid fa-location-dot text-gray-400 text-[10px] mr-0.5"></i>${item.street}</p>
-                            <p class="text-gray-400 text-[9px] mb-1.5">柱: ${item.poleId}</p>
+
+
+
+
+                            <p class="text-zinc-900 text-xs font-black mb-0.5 truncate tracking-wide"><i class="fa-solid fa-location-crosshairs text-red-600 text-[10px] mr-1"></i>${item.street}</p>
+
+
+                            <p class="text-zinc-400 text-[9px] f1-font mb-2 font-bold uppercase">POLE ID: ${item.poleId}</p>
+
+
                             
-                            <div class="space-y-1 mb-1.5 text-[11px] text-gray-800 ${isAvailable ? 'bg-green-50/40 border-green-200/60' : 'bg-gray-50/80 border-gray-100'} p-1.5 rounded-lg border">
+
+
+                            <div class="space-y-1 mb-1.5 text-[11px] text-zinc-700 ${isAvailable ? 'bg-emerald-50/30 border-emerald-100' : 'bg-zinc-50 border-zinc-100'} p-1.5 border rounded">
+
+
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-400 text-[10px]">錶柱:</span><span>${meterText}</span>
+
+
+                                    <span class="text-zinc-400 text-[9px] font-bold uppercase f1-font">METRIC STATION:</span><span>${meterText}</span>
+
+
                                 </div>
+
+
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-400 text-[10px]">狀態:</span><span>${occText}</span>
+
+
+                                    <span class="text-zinc-400 text-[9px] font-bold uppercase f1-font">CIRCUIT STATUS:</span><span>${occText}</span>
+
+
                                 </div>
+
+
                             </div>
+
+
                         </div>
 
-                        <div class="${isAvailable ? 'bg-green-50/20 border-green-100/60' : 'bg-gray-50/50 border-gray-100'} px-2 py-1.5 border-t flex justify-end items-center text-[11px]">
-                            <a href="${mapsUrl}" target="_blank" class="text-blue-600 font-semibold flex items-center gap-0.5 bg-white border border-gray-200/80 shadow-2xs px-2 py-0.5 rounded text-[10px] hover:bg-gray-50 active:scale-95 transition">
-                                <i class="fa-solid fa-map-location-dot"></i> 導航
+
+
+
+
+                        <div class="bg-zinc-50 px-2 py-1.5 border-t border-zinc-100 flex justify-end items-center">
+
+
+                            <a href="${mapsUrl}" target="_blank" class="text-red-600 font-black tracking-widest uppercase flex items-center gap-1 bg-white border border-zinc-200 shadow-xs px-2.5 py-1 rounded text-[9px] hover:bg-red-600 hover:text-white transition active:scale-95 f1-font">
+
+
+                                <i class="fa-solid fa-crosshairs text-[8px]"></i> GPS NAV
+
+
                             </a>
+
+
                         </div>
+
+
                     </div>
+
+
                 `;
+
+
                 container.insertAdjacentHTML('beforeend', cardHtml);
+
+
             });
+
+
+
+
 
             document.getElementById('displayed-count').innerText = endIndex;
+
+
             const scrollTrigger = document.getElementById('infinite-scroll-trigger');
+
+
             const allLoadedText = document.getElementById('all-loaded-text');
+
+
             
+
+
             if (endIndex < filteredDataGlobal.length) {
+
+
                 scrollTrigger.classList.remove('hidden');
+
+
                 allLoadedText.classList.add('hidden');
+
+
             } else {
+
+
                 scrollTrigger.classList.add('hidden');
+
+
                 if (filteredDataGlobal.length > itemsPerPage) allLoadedText.classList.remove('hidden');
+
+
             }
+
+
         }
+
+
+
+
 
         function handleWindowScroll() {
+
+
             if (filteredDataGlobal.length === 0) return;
+
+
             const scrollTrigger = document.getElementById('infinite-scroll-trigger');
+
+
             if (scrollTrigger.classList.contains('hidden')) return; 
 
+
+
+
+
             if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 150) {
+
+
                 currentPage++;
+
+
                 appendCardsPage();
+
+
             }
+
+
         }
+
+
+
+
 
         window.toggleFavoriteStreet = function(encodedStreet) {
+
+
             const street = decodeURIComponent(encodedStreet);
+
+
             const index = favStreets.indexOf(street);
+
+
             if (index > -1) {
+
+
                 favStreets.splice(index, 1); 
+
+
                 if (currentSelectedStreet === street) currentSelectedStreet = 'ALL';
+
+
                 const notifyIdx = notifySettings.streets.indexOf(street);
+
+
                 if (notifyIdx > -1) notifySettings.streets.splice(notifyIdx, 1);
+
+
             } else {
+
+
                 favStreets.push(street);     
+
+
             }
+
+
             localStorage.setItem(CACHE_KEY_FAV_STREETS, JSON.stringify(favStreets));
+
+
             localStorage.setItem(CACHE_KEY_NOTIFY_SETTINGS, JSON.stringify(notifySettings));
+
+
             updateNotifyIconStyle();
+
+
             renderFavStreetButtons(); 
+
+
             prepareAndRenderInitialCards();
+
+
         }
+
+
+
+
 
         function toggleFavoritesFilter() {
+
+
             showFavoritesOnly = !showFavoritesOnly;
+
+
             const btn = document.getElementById('fav-toggle-btn');
+
+
             const text = document.getElementById('fav-toggle-text');
+
+
             if (showFavoritesOnly) {
-                btn.className = "bg-amber-500 text-slate-900 border border-amber-400 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1 font-bold shadow-sm";
-                text.innerText = "全部";
+
+
+                btn.className = "justify-center bg-amber-400 text-black border border-amber-400 px-2.5 py-2.5 sm:py-1.5 rounded text-[11px] font-black transition flex items-center gap-1 shadow-sm";
+
+
+                text.innerText = "ALL GRID";
+
+
                 currentSelectedStreet = 'ALL';
+
+
             } else {
-                btn.className = "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1";
-                text.innerText = "最愛";
+
+
+                btn.className = "justify-center bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-800 px-2.5 py-2.5 sm:py-1.5 rounded text-[11px] font-bold transition flex items-center gap-1";
+
+
+                text.innerText = "GRID";
+
+
             }
+
+
             if(favStreets.length > 0) updateFavStreetButtonStyles();
+
+
             prepareAndRenderInitialCards();
+
+
         }
+
+
+
+
 
         function handleSearch(e) {
+
+
             currentSearch = e.target.value.toLowerCase().trim();
+
+
             prepareAndRenderInitialCards();
+
+
         }
+
+
+
+
 
         function setupRegionFilters() {
+
+
             const buttons = document.querySelectorAll('.region-filter-btn');
+
+
             buttons.forEach(btn => {
+
+
                 btn.addEventListener('click', (e) => {
+
+
                     buttons.forEach(b => {
-                        b.classList.remove('bg-blue-600', 'text-white', 'shadow-sm', 'shadow-blue-500/20');
-                        b.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+
+
+                        b.className = "region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
+
+
                     });
-                    e.target.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
-                    e.target.classList.add('bg-blue-600', 'text-white', 'shadow-sm', 'shadow-blue-500/20');
+
+
+                    e.target.className = "region-filter-btn bg-red-600 text-white px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
+
+
                     currentRegion = e.target.getAttribute('data-region');
+
+
                     prepareAndRenderInitialCards();
+
+
                 });
+
+
             });
+
+
         }
+
+
+
+
 
         function setupVehicleFilters() {
+
+
             const buttons = document.querySelectorAll('.vehicle-filter-btn');
+
+
             buttons.forEach(btn => {
+
+
                 btn.addEventListener('click', (e) => {
+
+
                     buttons.forEach(b => {
-                        b.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm', 'shadow-indigo-500/20');
-                        b.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+
+
+                        b.className = "vehicle-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
+
+
                     });
-                    e.target.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
-                    e.target.classList.add('bg-indigo-600', 'text-white', 'shadow-sm', 'shadow-indigo-500/20');
+
+
+                    e.target.className = "vehicle-filter-btn bg-yellow-400 text-zinc-900 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
+
+
                     currentVehicleType = e.target.getAttribute('data-vehicle');
+
+
                     prepareAndRenderInitialCards();
+
+
                 });
+
+
             });
+
+
         }
+
+
+
+
 
         function setupPeriodFilters() {
+
+
             const buttons = document.querySelectorAll('.period-filter-btn');
+
+
             buttons.forEach(btn => {
+
+
                 btn.addEventListener('click', (e) => {
+
+
                     buttons.forEach(b => {
-                        b.classList.remove('bg-purple-600', 'text-white', 'shadow-sm', 'shadow-purple-500/20');
-                        b.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+
+
+                        b.className = "period-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
+
+
                     });
-                    e.target.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
-                    e.target.classList.add('bg-purple-600', 'text-white', 'shadow-sm', 'shadow-purple-500/20');
+
+
+                    e.target.className = "period-filter-btn bg-orange-600 text-white px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
+
+
                     currentMaxPeriod = e.target.getAttribute('data-period');
+
+
                     prepareAndRenderInitialCards();
+
+
                 });
+
+
             });
+
+
         }
 
+
+
+
+
         function toggleLoading(isLoading) {
+
+
             const loader = document.getElementById('loading-view');
+
+
             const list = document.getElementById('parking-list');
+
+
             const icon = document.getElementById('refresh-icon');
+
+
+            const iconMobile = document.getElementById('refresh-icon-mobile');
+
+
             if (isLoading) {
+
+
                 loader.classList.remove('hidden');
+
+
                 list.classList.add('hidden');
+
+
                 if(icon) icon.classList.add('fa-spin');
+
+
+                if(iconMobile) iconMobile.classList.add('fa-spin');
+
+
             } else {
+
+
                 loader.classList.add('hidden');
+
+
                 list.classList.remove('hidden');
+
+
                 if(icon) icon.classList.remove('fa-spin');
+
+
+                if(iconMobile) iconMobile.classList.remove('fa-spin');
+
+
             }
+
+
         }
+
+
     </script>
+
+
 </body>
+
+
 </html>
+
+
