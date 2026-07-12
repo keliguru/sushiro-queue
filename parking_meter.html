@@ -76,7 +76,7 @@
         }
         .f1-map-popup .leaflet-popup-content-wrapper {
             border-radius: 4px;
-            border: 2px solid #10b981; /* 改為代表 Open 的綠色邊框 */
+            border: 2px solid #10b981;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         .f1-map-popup .leaflet-popup-tip {
@@ -862,7 +862,13 @@
             });
             btnsDiv.appendChild(allBtn);
 
-            favStreets.forEach(street => {
+            // 預先篩選出目前真正有空車位的最愛街道
+            const streetsWithAvailableSpaces = favStreets.filter(street => {
+                return parkingData.some(item => item.street === street && item.meterStatus === 'N' && item.occupancyStatus === 'V');
+            });
+
+            // 使用篩選後的街道名稱來產生按鈕
+            streetsWithAvailableSpaces.forEach(street => {
                 const btn = document.createElement('button');
                 btn.setAttribute('data-street', street);
                 const isActive = currentSelectedStreet === street;
@@ -913,7 +919,10 @@
                 );
                 
                 let matchFav = true;
-                if (showFavoritesOnly) matchFav = favStreets.includes(item.street);
+                if (showFavoritesOnly) {
+                    // 當啟用 GRID 時，必須是在最愛清單中，且「儀錶正常運作 (N)」加上「車位空置 (V)」
+                    matchFav = favStreets.includes(item.street) && item.meterStatus === 'N' && item.occupancyStatus === 'V';
+                }
                 if (currentSelectedStreet !== 'ALL') matchFav = (item.street === currentSelectedStreet);
 
                 return matchRegion && matchVehicle && matchPeriod && matchSearch && matchFav;
