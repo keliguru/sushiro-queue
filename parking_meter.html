@@ -371,7 +371,14 @@
         }
 
         function initMap() {
-            mapInstance = L.map('map-view').setView([22.3193, 114.1694], 12);
+            // 設定香港的合理邊界範圍 (西南角, 東北角)
+            const hkBounds = L.latLngBounds(L.latLng(22.1, 113.8), L.latLng(22.6, 114.5));
+
+            mapInstance = L.map('map-view', {
+                maxBounds: hkBounds,           // 限制地圖拖曳在此邊界內
+                maxBoundsViscosity: 1.0,       // 完全鎖定，到達邊緣時無彈性
+                minZoom: 10                    // 限制最小縮放級別，防止縮得太小看到廣東省
+            }).setView([22.3193, 114.1694], 12);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> F1 PARKING',
@@ -425,12 +432,17 @@
             // 坐標精準分組，合併物理位置相同的多個錶位數據（防重疊視覺破壞）
             const locationMap = new Map();
             filteredDataGlobal.forEach(item => {
-                if (item.latitude && item.longitude) {
-                    const key = `${item.latitude}_${item.longitude}`;
+                const lat = parseFloat(item.latitude);
+                const lng = parseFloat(item.longitude);
+                
+                // 【新增防護】：嚴格驗證 GPS 坐標是否落在香港合理範圍內
+                // 排除 0,0 或是漂流到其他國家的異常開放數據
+                if (lat && lng && lat > 22.1 && lat < 22.6 && lng > 113.8 && lng < 114.5) {
+                    const key = `${lat}_${lng}`;
                     if (!locationMap.has(key)) {
                         locationMap.set(key, {
-                            latitude: parseFloat(item.latitude),
-                            longitude: parseFloat(item.longitude),
+                            latitude: lat,
+                            longitude: lng,
                             street: item.street,
                             district: item.district,
                             spaces: []
@@ -501,7 +513,6 @@
                             <div class="max-h-[120px] overflow-y-auto mb-2 pr-1 space-y-0.5">
                                 ${spacesListHtml}
                             </div>
-                            <!-- 這裡已將 AVAILABLE 顏色更改為綠色 text-emerald-400 -->
                             <div class="bg-zinc-900 text-white p-1.5 rounded border border-zinc-800 text-[10px] mb-2 font-bold flex justify-between tracking-wide">
                                 <span class="text-emerald-400">AVAILABLE:</span>
                                 <span><span class="text-emerald-400 font-black">${available}</span> / ${total} BAYS</span>
