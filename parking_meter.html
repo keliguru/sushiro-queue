@@ -2,19 +2,19 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>F1 PARKING // 香港智能錶位實時動態</title>
 	
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
-	<meta property="og:type" content="website">
-	<meta property="og:title" content="F1 PARKING // 香港智能錶位實時">
-	<meta property="og:description" content="香港智能錶位實時賽事級儀表板">
-	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png"> 
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="F1 PARKING // 香港智能錶位實時">
+    <meta property="og:description" content="香港智能錶位實時賽事級儀表板">
+    <meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png"> 
 
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="default">
-	<meta name="apple-mobile-web-app-title" content="F1 PARKING">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="F1 PARKING">
 	
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -76,18 +76,13 @@
         }
         .f1-map-popup .leaflet-popup-content-wrapper {
             border-radius: 4px;
-            border: 2px solid #ef4444; /* F1 Red */
+            border: 2px solid #10b981; /* 改為代表 Open 的綠色邊框 */
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         .f1-map-popup .leaflet-popup-tip {
-            border-top: 2px solid #ef4444;
-            border-left: 2px solid #ef4444;
+            border-top: 2px solid #10b981;
+            border-left: 2px solid #10b981;
         }
-
-        /* 優化：F1 賽事風格群組樣式 */
-        .f1-cluster-small div { background-color: rgba(24, 24, 27, 0.85); color: #10b981; border: 2px solid #10b981; font-weight: 900; font-family: 'Orbitron'; }
-        .f1-cluster-medium div { background-color: rgba(24, 24, 27, 0.9); color: #f59e0b; border: 2px solid #f59e0b; font-weight: 900; font-family: 'Orbitron'; }
-        .f1-cluster-large div { background-color: rgba(239, 68, 68, 0.95); color: #ffffff; border: 2px solid #ffffff; font-weight: 900; font-family: 'Orbitron'; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
     </style>
 </head>
 <body class="bg-zinc-50 text-zinc-900 font-sans antialiased pb-12">
@@ -337,7 +332,7 @@
             }, 300000);
         }
 
-        // --- 地圖核心功能優化區塊 ---
+        // --- 地圖核心功能與視覺優化區塊 ---
 
         function toggleViewMode() {
             isMapView = !isMapView;
@@ -383,22 +378,36 @@
                 maxZoom: 19
             }).addTo(mapInstance);
 
-            // 優化點 1：使用 L.markerClusterGroup 代替一般的 LayerGroup，開啟分塊加載優化效能
+            // 賽事級聚合優化：大範圍群組圓圈同步遵循 綠/橙/紅 戰術燈號邏輯
             markersLayerGroup = L.markerClusterGroup({
                 chunkedLoading: true,
                 chunkInterval: 40,
                 chunkDelay: 10,
                 maxClusterRadius: 50,
                 iconCreateFunction: function (cluster) {
-                    const count = cluster.getChildCount();
-                    let clusterClass = 'f1-cluster-small';
-                    if (count > 50) clusterClass = 'f1-cluster-medium';
-                    if (count > 200) clusterClass = 'f1-cluster-large';
+                    const markers = cluster.getAllChildMarkers();
+                    let totalAvailable = 0;
+                    let totalSpaces = 0;
+                    
+                    markers.forEach(m => {
+                        totalAvailable += m.options.availableCount || 0;
+                        totalSpaces += m.options.totalCount || 0;
+                    });
+                    
+                    let bgColor = '#ef4444'; // 紅色圓圈：全滿
+                    if (totalAvailable === totalSpaces && totalSpaces > 0) {
+                        bgColor = '#10b981'; // 綠色圓圈：全空
+                    } else if (totalAvailable > 0) {
+                        bgColor = '#f97316'; // 橙色圓圈：部分有空位
+                    }
                     
                     return L.divIcon({
-                        html: `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-md transition-all">${count}</div>`,
-                        className: clusterClass,
-                        iconSize: L.point(32, 32)
+                        html: `<div class="w-10 h-10 rounded-full flex flex-col items-center justify-center text-[11px] font-black text-white shadow-xl border-2 border-white" style="background-color: ${bgColor}; font-family: 'Orbitron'; border-style: double;">
+                                <span>${totalAvailable}</span>
+                                <span class="text-[8px] opacity-80 border-t border-white/30 w-7 text-center mt-0.5">${totalSpaces}</span>
+                               </div>`,
+                        className: 'bg-transparent',
+                        iconSize: L.point(40, 40)
                     });
                 }
             }).addTo(mapInstance);
@@ -411,62 +420,105 @@
             if (filteredDataGlobal.length === 0) return;
 
             const bounds = L.latLngBounds();
-            const markersArray = []; // 優化點 2：改用陣列批量存儲標記
+            const markersArray = [];
 
+            // 坐標精準分組，合併物理位置相同的多個錶位數據（防重疊視覺破壞）
+            const locationMap = new Map();
             filteredDataGlobal.forEach(item => {
                 if (item.latitude && item.longitude) {
-                    let pinColor = '#9ca3af'; 
-                    let iconHtml = '<i class="fa-solid fa-location-dot"></i>';
-                    
-                    if (item.meterStatus !== 'N') {
-                        pinColor = '#f59e0b'; 
-                        iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                    } else if (item.occupancyStatus === 'V') {
-                        pinColor = '#10b981'; 
-                        // 優化點 4：移除大規模 DOM 的 animate-ping 動畫，防止硬體加速崩潰
-                        iconHtml = '<div class="relative"><i class="fa-solid fa-location-dot relative z-10"></i><span class="absolute inset-0 rounded-full bg-emerald-400/40"></span></div>';
-                    } else if (item.occupancyStatus === 'O') {
-                        pinColor = '#ef4444'; 
+                    const key = `${item.latitude}_${item.longitude}`;
+                    if (!locationMap.has(key)) {
+                        locationMap.set(key, {
+                            latitude: parseFloat(item.latitude),
+                            longitude: parseFloat(item.longitude),
+                            street: item.street,
+                            district: item.district,
+                            spaces: []
+                        });
                     }
-
-                    const customF1Icon = L.divIcon({
-                        className: 'bg-transparent border-0',
-                        html: `<div style="color: ${pinColor}; font-size: 24px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));" class="flex items-center justify-center">${iconHtml}</div>`,
-                        iconSize: [24, 24],
-                        iconAnchor: [12, 24],
-                        popupAnchor: [0, -20]
-                    });
-
-                    const marker = L.marker([parseFloat(item.latitude), parseFloat(item.longitude)], {icon: customF1Icon});
-                    
-                    // 優化點 3：延遲綁定彈出視窗 (Lazy popup structure binding)
-                    marker.on('click', function() {
-                        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
-                        const popupContent = `
-                            <div class="f1-font text-zinc-800 min-w-[160px]">
-                                <div class="border-b border-zinc-200 pb-1 mb-2">
-                                    <h3 class="font-black text-red-600 text-sm uppercase tracking-wider"><i class="fa-solid fa-flag-checkered mr-1"></i>${item.street}</h3>
-                                    <p class="text-[10px] text-zinc-500 font-bold uppercase">${item.district}</p>
-                                </div>
-                                <div class="space-y-1 text-xs mb-2 bg-zinc-50 p-1.5 rounded border border-zinc-100">
-                                    <div class="flex justify-between"><span class="font-bold text-zinc-400">POLE ID:</span> <span>${item.poleId}</span></div>
-                                    <div class="flex justify-between"><span class="font-bold text-zinc-400">STINT:</span> <span>${item.maxParkingPeriod}</span></div>
-                                    <div class="flex justify-between"><span class="font-bold text-zinc-400">STATUS:</span> <span class="font-black ${item.occupancyStatus === 'V' && item.meterStatus === 'N' ? 'text-emerald-600' : 'text-zinc-600'}">${item.occupancyStatus === 'V' ? 'PIT OPEN 🟢' : item.occupancyStatus === 'O' ? 'OCCUPIED 🔴' : 'SUSPEND 🟡'}</span></div>
-                                </div>
-                                <a href="${mapsUrl}" target="_blank" class="block w-full text-center bg-red-600 text-white font-black py-1.5 rounded text-[10px] tracking-widest hover:bg-red-700 transition">
-                                    GPS NAV
-                                </a>
-                            </div>
-                        `;
-                        marker.bindPopup(popupContent, { className: 'f1-map-popup' }).openPopup();
-                    });
-
-                    markersArray.push(marker);
-                    bounds.extend([parseFloat(item.latitude), parseFloat(item.longitude)]);
+                    locationMap.get(key).spaces.push(item);
                 }
             });
 
-            // 優化點 2 實作：一次性把所有點注入 Cluster Group 中，避免反覆繪製
+            // 遍歷實時渲染圓圈燈號
+            locationMap.forEach(loc => {
+                const total = loc.spaces.length;
+                const available = loc.spaces.filter(s => s.meterStatus === 'N' && s.occupancyStatus === 'V').length;
+                const suspended = loc.spaces.filter(s => s.meterStatus !== 'N').length;
+                
+                let circleColor = '#ef4444'; // 預設紅色圓圈：全滿
+                
+                if (suspended === total) {
+                    circleColor = '#9ca3af'; // 灰色圓圈：全部暫停服務
+                } else if (available === total && total > 0) {
+                    circleColor = '#10b981'; // 綠色圓圈：全部有空位
+                } else if (available > 0) {
+                    circleColor = '#f97316'; // 橙色圓圈：部份車位有空缺
+                }
+
+                // 建立精簡圓圈實時燈號圖標（中央數字呈現可用空位）
+                const customCircleIcon = L.divIcon({
+                    className: 'bg-transparent border-0',
+                    html: `<div class="w-6 h-6 rounded-full border-2 border-white shadow-md flex items-center justify-center text-[10px] font-black text-white transition-all transform hover:scale-110 active:scale-95 shadow-lg" style="background-color: ${circleColor}; font-family: 'Orbitron';">
+                            ${available}
+                           </div>`,
+                    iconSize: [26, 26],
+                    iconAnchor: [13, 13],
+                    popupAnchor: [0, -10]
+                });
+
+                const marker = L.marker([loc.latitude, loc.longitude], {
+                    icon: customCircleIcon,
+                    availableCount: available,
+                    totalCount: total
+                });
+                
+                // 延遲動態渲染綁定 Popup 卡片
+                marker.on('click', function() {
+                    // 【新戰術優化】只有當該位置有可用空位 (available > 0) 時才彈出視窗，沒空位直接返回
+                    if (available <= 0) return;
+
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}`;
+                    
+                    let spacesListHtml = loc.spaces.map(s => {
+                        let statusLabel = '';
+                        if (s.meterStatus !== 'N') statusLabel = '<span class="text-amber-500 font-bold">SUSPEND 🟡</span>';
+                        else if (s.occupancyStatus === 'V') statusLabel = '<span class="text-emerald-600 font-bold">OPEN 🟢</span>';
+                        else statusLabel = '<span class="text-zinc-400">OCCUPIED 🔴</span>';
+                        
+                        return `<div class="flex justify-between border-b border-zinc-100 py-1 text-[11px]">
+                                    <span class="text-zinc-600 font-bold font-mono">${s.poleId} (${s.maxParkingPeriod})</span>
+                                    <span>${statusLabel}</span>
+                                </div>`;
+                    }).join('');
+
+                    const popupContent = `
+                        <div class="f1-font text-zinc-800 min-w-[190px]">
+                            <div class="border-b-2 border-emerald-500 pb-1 mb-2">
+                                <h3 class="font-black text-zinc-900 text-xs uppercase tracking-wider truncate"><i class="fa-solid fa-flag-checkered text-emerald-500 mr-1"></i>${loc.street}</h3>
+                                <p class="text-[9px] text-zinc-400 font-bold uppercase">${loc.district}</p>
+                            </div>
+                            <div class="max-h-[120px] overflow-y-auto mb-2 pr-1 space-y-0.5">
+                                ${spacesListHtml}
+                            </div>
+                            <!-- 這裡已將 AVAILABLE 顏色更改為綠色 text-emerald-400 -->
+                            <div class="bg-zinc-900 text-white p-1.5 rounded border border-zinc-800 text-[10px] mb-2 font-bold flex justify-between tracking-wide">
+                                <span class="text-emerald-400">AVAILABLE:</span>
+                                <span><span class="text-emerald-400 font-black">${available}</span> / ${total} BAYS</span>
+                            </div>
+                            <a href="${mapsUrl}" target="_blank" class="block w-full text-center bg-emerald-600 text-white font-black py-1.5 rounded text-[10px] tracking-widest hover:bg-emerald-700 transition shadow-sm">
+                                GPS NAV
+                            </a>
+                        </div>
+                    `;
+                    marker.bindPopup(popupContent, { className: 'f1-map-popup' }).openPopup();
+                });
+
+                markersArray.push(marker);
+                bounds.extend([loc.latitude, loc.longitude]);
+            });
+
+            // 批量注入，極致幀率保證
             markersLayerGroup.addLayers(markersArray);
 
             if (markersArray.length > 0) {
@@ -474,7 +526,7 @@
             }
         }
 
-        // --- 以下為原有功能 ---
+        // --- 看板業務邏輯控制區塊 ---
 
         function resetAllFilters() {
             currentRegion = 'ALL';
