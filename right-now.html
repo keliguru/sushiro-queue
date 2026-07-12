@@ -256,6 +256,9 @@
         }
 
         .element-item button { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; box-shadow: 1px 1px 0px var(--border); }
+        
+        /* SortableJS Styles */
+        .sortable-ghost { opacity: 0.4; border: 3px dashed #005a9c !important; }
 
         .divider { height: 3px; background-color: #cbd5e1; margin: 16px 0; }
         .no-data { color: var(--text-light); font-style: italic; text-align: center; padding: 20px; font-size: 0.95rem; font-weight: 700; }
@@ -311,7 +314,7 @@
     <div class="card instructions-card" id="guideCard">
         <h3>🚦 玩具交通總部使用說明</h3>
         <div class="instructions-step">1. 🧱 <b>建立基地</b>：在下方輸入名稱並點「新增」，建立你的路線群組。</div>
-        <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組的「⚙️ 管理」按鈕，自由挑選巴士或小巴，並登記你常去的車站點。</div>
+        <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組的「⚙️ 管理」按鈕，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
         <div class="instructions-step">3. 🚌 <b>出發看時間</b>：在主頁直接點擊群組大方塊，即可一秒召喚出所有車載實時到站時間 (ETA)！可在各車站點點擊「📌 置頂」優先顯示。</div>
     </div>
 
@@ -422,6 +425,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
     let profiles = JSON.parse(localStorage.getItem('profiles_data')) || {};
     let currentProfileId = null;
@@ -524,6 +528,7 @@
 
         profiles[currentProfileId].elements.forEach((element, index) => {
             const li = document.createElement('li'); 
+            li.style.cursor = 'grab';
             let compClass = 'el-generic';
             
             try {
@@ -544,6 +549,16 @@
             const deleteBtn = document.createElement('button'); deleteBtn.className = 'btn-danger'; deleteBtn.textContent = '刪除'; deleteBtn.onclick = () => deleteElement(index);
             li.appendChild(deleteBtn); 
             elementList.appendChild(li);
+        });
+
+        new Sortable(elementList, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function (evt) {
+                const item = profiles[currentProfileId].elements.splice(evt.oldIndex, 1)[0];
+                profiles[currentProfileId].elements.splice(evt.newIndex, 0, item);
+                saveToStorage();
+            },
         });
     }
 
