@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>個人動畫追番清單</title>
+    <title>個人動畫追番清單 Pro</title>
     <style>
         :root {
             --netflix-red: #E50914;
@@ -36,7 +36,7 @@
             z-index: 100;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
@@ -48,285 +48,147 @@
             letter-spacing: 1px;
         }
 
-        .controls { 
-            display: flex; 
-            gap: 8px; 
-            flex-wrap: wrap; 
-        }
+        .controls { display: flex; gap: 8px; flex-wrap: wrap; }
 
         .search-box { 
-            flex: 1;
-            min-width: 150px;
-            padding: 10px 15px; 
-            background: #333; 
-            border: none; 
-            border-radius: 4px; 
-            color: var(--text-main);
-            font-size: 14px;
+            flex: 1; min-width: 150px; padding: 10px 15px; 
+            background: #333; border: none; border-radius: 4px; 
+            color: var(--text-main); font-size: 14px;
         }
-
         .search-box:focus { outline: 1px solid var(--netflix-red); }
 
         .btn {
-            background: #333;
-            color: var(--text-main);
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
+            background: #333; color: var(--text-main); border: none;
+            padding: 10px 15px; border-radius: 4px; font-weight: bold;
+            font-size: 14px; cursor: pointer;
         }
-        
         .btn.primary { background: var(--text-main); color: var(--bg-dark); }
 
-        /* Netflix 風格季度滑動標籤列 */
-        .season-bar {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 4px 0;
+        /* 滑動標籤列 (季度 & 星期) */
+        .scroll-bar {
+            display: flex; gap: 8px; overflow-x: auto; padding: 2px 0;
             scrollbar-width: none; 
         }
-        .season-bar::-webkit-scrollbar { display: none; } 
+        .scroll-bar::-webkit-scrollbar { display: none; } 
 
-        .season-pill {
-            background: #222;
-            color: var(--text-main);
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            white-space: nowrap;
-            border: 1px solid #444;
-            cursor: pointer;
+        .pill {
+            background: #222; color: var(--text-main); padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: bold;
+            white-space: nowrap; border: 1px solid #444; cursor: pointer;
             transition: all 0.2s;
         }
-        .season-pill.active {
-            background: var(--text-main);
-            color: var(--bg-dark);
-            border-color: var(--text-main);
-        }
+        .pill.active { background: var(--text-main); color: var(--bg-dark); border-color: var(--text-main); }
+        .pill.day-pill { border-radius: 4px; background: #1a1a1a; border-color: #333; color: #aaa;}
+        .pill.day-pill.active { background: var(--netflix-red); color: #fff; border-color: var(--netflix-red); }
 
         /* 網格系統 */
         .anime-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); 
-            gap: 12px; 
-            padding: 15px; 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); 
+            gap: 12px; padding: 15px; 
         }
 
         .anime-card { 
-            background: var(--card-bg); 
-            border-radius: 6px; 
-            overflow: hidden; 
-            display: flex; 
-            flex-direction: column;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-            position: relative;
-            border: 1px solid transparent;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            background: var(--card-bg); border-radius: 6px; overflow: hidden; 
+            display: flex; flex-direction: column; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            position: relative; border: 1px solid transparent; transition: all 0.3s;
         }
 
-        /* 我的最愛呼吸燈特效 */
+        /* 呼吸燈特效 */
         @keyframes netflix-glow {
-            0% { box-shadow: 0 0 4px rgba(229, 9, 20, 0.2); border-color: rgba(229, 9, 20, 0.4); }
-            50% { box-shadow: 0 0 14px rgba(229, 9, 20, 0.8); border-color: var(--netflix-red); }
-            100% { box-shadow: 0 0 4px rgba(229, 9, 20, 0.2); border-color: rgba(229, 9, 20, 0.4); }
+            0% { box-shadow: 0 0 4px rgba(229, 9, 20, 0.2); border-color: rgba(229, 9, 20, 0.3); }
+            50% { box-shadow: 0 0 14px rgba(229, 9, 20, 0.7); border-color: var(--netflix-red); }
+            100% { box-shadow: 0 0 4px rgba(229, 9, 20, 0.2); border-color: rgba(229, 9, 20, 0.3); }
         }
-        .new-update-effect {
-            animation: netflix-glow 2s infinite ease-in-out;
-        }
+        .new-update-effect { animation: netflix-glow 2s infinite ease-in-out; }
 
-        .img-container { 
-            width: 100%; 
-            aspect-ratio: 2 / 3; 
-            position: relative;
-        }
+        .img-container { width: 100%; aspect-ratio: 2 / 3; position: relative; background: #222; }
+        .img-container img { width: 100%; height: 100%; object-fit: cover; }
 
-        .img-container img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-        }
-
-        /* NEW 標籤特效 (左下角) */
-        @keyframes flash-text {
-            0% { opacity: 0.7; }
-            50% { opacity: 1; transform: scale(1.03); }
-            100% { opacity: 0.7; }
-        }
         .new-ep-badge {
-            position: absolute;
-            bottom: 6px;
-            left: 6px;
-            background: var(--netflix-red);
-            color: #fff;
-            font-size: 10px;
-            font-weight: 900;
-            padding: 2px 6px;
-            border-radius: 3px;
-            z-index: 10;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            position: absolute; bottom: 6px; left: 6px; background: var(--netflix-red);
+            color: #fff; font-size: 10px; font-weight: 900; padding: 2px 6px;
+            border-radius: 3px; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
             animation: flash-text 1.5s infinite ease-in-out;
         }
+        @keyframes flash-text { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; transform: scale(1.03); } }
 
-        /* 預計更新日期半透明重疊標籤 (右下角) */
         .date-overlay-badge {
-            position: absolute;
-            bottom: 6px;
-            right: 6px;
-            background: rgba(0, 0, 0, 0.7);
-            color: var(--text-main);
-            font-size: 10px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 3px;
-            z-index: 10;
-            backdrop-filter: blur(2px);
+            position: absolute; bottom: 6px; right: 6px; background: rgba(0, 0, 0, 0.75);
+            color: var(--text-main); font-size: 10px; font-weight: bold; padding: 2px 6px;
+            border-radius: 3px; z-index: 10; backdrop-filter: blur(2px);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            letter-spacing: 0.3px;
         }
 
-        /* 我的最愛愛心按鈕 */
         .fav-btn { 
-            position: absolute; 
-            top: 8px; 
-            right: 8px; 
-            z-index: 10; 
-            background: rgba(0,0,0,0.6); 
-            color: var(--text-main); 
-            border: 1px solid rgba(255,255,255,0.2); 
-            border-radius: 50%; 
-            width: 32px; 
-            height: 32px; 
-            font-size: 16px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer; 
-            backdrop-filter: blur(2px);
+            position: absolute; top: 8px; right: 8px; z-index: 10; 
+            background: rgba(0,0,0,0.6); color: var(--text-main); 
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; 
+            width: 32px; height: 32px; font-size: 16px; display: flex; 
+            align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(2px);
         }
-
         .fav-btn.active { color: var(--netflix-red); border-color: var(--netflix-red); }
 
         .card-content { padding: 10px; display: flex; flex-direction: column; flex: 1; }
+        .editable-title { font-size: 14px; margin: 0 0 4px 0; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .meta-info { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
 
-        .editable-title { 
-            font-size: 14px; 
-            margin: 0 0 6px 0; 
-            font-weight: 500; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            cursor: pointer; 
-        }
-
-        .meta-info { 
-            font-size: 11px; 
-            color: var(--text-muted); 
-            margin-bottom: 10px; 
-            line-height: 1.4; 
-        }
-
-        /* 播放平台按鈕色彩設定 */
-        .platform-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px;
-            margin-bottom: 8px;
-        }
-
+        /* 專屬指定平台啟用色彩 */
+        .platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px; }
         .platform-btn {
-            font-size: 10px;
-            padding: 5px 2px;
-            background: #2b2b2b;
-            color: #888;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-weight: bold;
-            text-align: center;
-            transition: background 0.2s, color 0.2s;
+            font-size: 10px; padding: 5px 2px; background: #2b2b2b; color: #888;
+            border: none; border-radius: 3px; cursor: pointer; font-weight: bold; text-align: center;
         }
-        
         .platform-btn.active.nf { background: #000000; color: var(--netflix-red); }
         .platform-btn.active.dp { background: #0063e5; color: #ffffff; }
-        .platform-btn.active.yt { background: #ff0000; color: #ffffff; } /* 已更新：紅底白字 */
+        .platform-btn.active.yt { background: #ff0000; color: #ffffff; }
         .platform-btn.active.viu { background: #ffb300; color: #ffffff; }
 
+        /* 絲滑動態折疊面板結構 */
         .expand-btn { 
-            background: rgba(255,255,255,0.1); 
-            color: var(--text-main); 
-            border: none; 
-            border-radius: 4px; 
-            padding: 8px; 
-            font-size: 11px; 
-            cursor: pointer; 
-            width: 100%; 
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: rgba(255,255,255,0.08); color: var(--text-main); border: none; 
+            border-radius: 4px; padding: 8px; font-size: 11px; cursor: pointer; 
+            width: 100%; font-weight: bold; display: flex; justify-content: space-between;
+        }
+        .collapsible { 
+            max-height: 0; overflow: hidden; 
+            transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
+        }
+        .collapsible.show { max-height: 2000px; }
+
+        /* 進度條與評分樣式 */
+        .progress-container { background: #333; height: 4px; width: 100%; border-radius: 2px; margin: 4px 0 8px 0; overflow: hidden; }
+        .progress-bar { background: var(--netflix-red); height: 100%; width: 0%; transition: width 0.3s; }
+
+        .star-rating { display: flex; gap: 4px; margin: 8px 0; color: #444; font-size: 16px; cursor: pointer; }
+        .star-rating span.active { color: #ffb300; }
+        
+        .note-input {
+            width: 100%; background: #222; border: 1px solid #444; color: #fff;
+            font-size: 11px; padding: 6px; border-radius: 4px; margin-top: 6px; resize: none;
         }
 
-        .collapsible { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .collapsible.show { max-height: 800px; padding-bottom: 10px; }
-
-        .ep-grid { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 6px; 
-            padding-top: 10px; 
-        }
-
+        .ep-grid { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; }
         .ep-badge { 
-            width: 28px; 
-            height: 28px; 
-            font-size: 11px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #2b2b2b; 
-            border-radius: 50%; 
-            cursor: pointer; 
-            font-weight: bold; 
+            width: 28px; height: 28px; font-size: 11px; display: flex; 
+            align-items: center; justify-content: center; background: #2b2b2b; 
+            border-radius: 50%; cursor: pointer; font-weight: bold; 
         }
-
         .ep-badge.watched { background: var(--netflix-red); color: var(--text-main); }
         
         .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; grid-column: 1 / -1; font-size: 14px;}
+        .loading-trigger { text-align: center; color: var(--text-muted); padding: 15px; grid-column: 1 / -1; font-size: 12px; }
 
-        /* 底部導航列 */
+        /* 底部導航 */
         .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: var(--nav-bg);
-            border-top: 1px solid #262626;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 110;
+            position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
+            background: var(--nav-bg); border-top: 1px solid #262626;
+            display: flex; justify-content: space-around; align-items: center; z-index: 110;
         }
-
         .nav-item {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-            flex: 1;
+            background: none; border: none; color: var(--text-muted);
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            cursor: pointer; font-size: 11px; font-weight: bold; flex: 1;
         }
-
         .nav-item.active { color: var(--text-main); }
         .nav-icon { font-size: 18px; }
     </style>
@@ -334,20 +196,13 @@
 <body>
 
     <header>
-        <!-- 頂部標題 + 專屬設計內嵌式 SVG Logo -->
         <div style="display: flex; align-items: center; gap: 10px;">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="width: 26px; height: 26px; flex-shrink: 0;">
-                <defs>
-                    <linearGradient id="logoRed" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#E50914" />
-                        <stop offset="100%" stop-color="#990007" />
-                    </linearGradient>
-                </defs>
+                <defs><linearGradient id="logoRed" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E50914" /><stop offset="100%" stop-color="#990007" /></linearGradient></defs>
                 <circle cx="256" cy="256" r="200" fill="#E50914" opacity="0.15" />
                 <path d="M 120 256 A 136 136 0 1 0 392 256" fill="none" stroke="#333" stroke-width="26" stroke-linecap="round"/>
                 <path d="M 120 256 A 136 136 0 0 1 340 150" fill="none" stroke="url(#logoRed)" stroke-width="26" stroke-linecap="round"/>
                 <path d="M 210 165 C 210 155 222 148 232 154 L 360 242 C 369 248 369 262 360 268 L 232 356 C 222 362 210 355 210 345 Z" fill="url(#logoRed)"/>
-                <path d="M 370 120 L 379 142 L 401 151 L 379 160 L 370 182 L 361 160 L 339 151 L 361 142 Z" fill="#FFFFFF"/>
             </svg>
             <h1 id="page-title" style="line-height: 1;">新番首頁</h1>
         </div>
@@ -360,33 +215,48 @@
             <input type="file" id="importFile" style="display:none" onchange="importData(event)">
         </div>
         
-        <!-- 近 4 季切換標籤列 -->
-        <div id="season-filter" class="season-bar"></div>
+        <!-- 季度切換列 -->
+        <div id="season-filter" class="scroll-bar"></div>
+        
+        <!-- 升級功能：追番時間表 (星期幾篩選列) -->
+        <div id="day-filter" class="scroll-bar">
+            <button class="pill day-pill active" onclick="selectDay('ALL')">全部天數</button>
+            <button class="pill day-pill" onclick="selectDay('1')">週一</button>
+            <button class="pill day-pill" onclick="selectDay('2')">週二</button>
+            <button class="pill day-pill" onclick="selectDay('3')">週三</button>
+            <button class="pill day-pill" onclick="selectDay('4')">週四</button>
+            <button class="pill day-pill" onclick="selectDay('5')">週五</button>
+            <button class="pill day-pill" onclick="selectDay('6')">週六</button>
+            <button class="pill day-pill" onclick="selectDay('0')">週日</button>
+            <button class="pill day-pill" onclick="selectDay('END')">已完結</button>
+        </div>
     </header>
     
     <div id="anime-list" class="anime-grid">
         <div class="empty-state">載入中...</div>
     </div>
+    <div id="loading-trigger" class="loading-trigger" style="display: none;">正在加載更多作品...</div>
 
-    <!-- 底部導航列 -->
+    <!-- 底部導航 -->
     <nav class="bottom-nav">
         <button id="nav-home" class="nav-item active" onclick="switchTab('home')">
-            <span class="nav-icon">🏠</span>
-            <span>新番首頁</span>
+            <span class="nav-icon">🏠</span><span>新番首頁</span>
         </button>
         <button id="nav-favorites" class="nav-item" onclick="switchTab('favorites')">
-            <span class="nav-icon">❤️</span>
-            <span>我的最愛</span>
+            <span class="nav-icon">❤️</span><span>我的最愛</span>
         </button>
     </nav>
 
     <script>
         let animeData = [], chineseTitles = {};
-        let currentTab = 'home';
-        let currentSeason = 'SUMMER', currentYear = 2026; 
+        let currentTab = 'home', currentSeason = 'SUMMER', currentYear = 2026;
+        let currentPage = 1, hasNextPage = false, isLoading = false;
+        let selectedDayFilter = 'ALL';
 
-        const GQL_QUERY = `query ($search: String, $season: MediaSeason, $seasonYear: Int) { 
-            Page(page: 1, perPage: 30) { 
+        // 升級：引入分頁 PageInfo 機制
+        const GQL_QUERY = `query ($search: String, $season: MediaSeason, $seasonYear: Int, $page: Int) { 
+            Page(page: $page, perPage: 30) { 
+                pageInfo { hasNextPage currentPage }
                 media(search: $search, season: $season, seasonYear: $seasonYear, type: ANIME, sort: POPULARITY_DESC) { 
                     id title { userPreferred } coverImage { large } description episodes nextAiringEpisode { episode airingAt } 
                 } 
@@ -400,85 +270,91 @@
             } catch (e) { console.error("無法載入中文資料", e); }
             
             setupDynamicSeasonFilter();
-            fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear });
+            setupInfiniteScroll();
+            fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear, page: 1 });
         }
 
         function setupDynamicSeasonFilter() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth() + 1; 
+            const now = new Date(); const year = now.getFullYear(); const month = now.getMonth() + 1; 
+            let defaultSeason = 'SUMMER', defaultYear = year, springYear = year, summerYear = year, fallYear = year, winterYear = year;
 
-            let defaultSeason = 'SUMMER';
-            let defaultYear = year;
+            if (month >= 1 && month < 4) { defaultSeason = 'WINTER'; springYear = year - 1; summerYear = year - 1; fallYear = year - 1; winterYear = year; }
+            else if (month >= 4 && month < 7) { defaultSeason = 'SPRING'; }
+            else if (month >= 7 && month < 10) { defaultSeason = 'SUMMER'; }
+            else if (month >= 10) { defaultSeason = 'FALL'; winterYear = year + 1; }
 
-            let springYear = year;
-            let summerYear = year;
-            let fallYear = year;
-            let winterYear = year;
-
-            if (month >= 1 && month < 4) {
-                defaultSeason = 'WINTER';
-                defaultYear = year;
-                springYear = year - 1;
-                summerYear = year - 1;
-                fallYear = year - 1;
-                winterYear = year;
-            } else if (month >= 4 && month < 7) {
-                defaultSeason = 'SPRING';
-                defaultYear = year;
-            } else if (month >= 7 && month < 10) {
-                defaultSeason = 'SUMMER';
-                defaultYear = year;
-            } else if (month >= 10) {
-                defaultSeason = 'FALL';
-                defaultYear = year;
-                winterYear = year + 1; 
-            }
-
-            currentSeason = defaultSeason;
-            currentYear = defaultYear;
-
+            currentSeason = defaultSeason; currentYear = defaultYear;
             const filterContainer = document.getElementById('season-filter');
             filterContainer.innerHTML = `
-                <button class="season-pill ${defaultSeason === 'SPRING' ? 'active' : ''}" onclick="selectSeason(this, 'SPRING', ${springYear})">${springYear} 春</button>
-                <button class="season-pill ${defaultSeason === 'SUMMER' ? 'active' : ''}" onclick="selectSeason(this, 'SUMMER', ${summerYear})">${summerYear} 夏</button>
-                <button class="season-pill ${defaultSeason === 'FALL' ? 'active' : ''}" onclick="selectSeason(this, 'FALL', ${fallYear})">${fallYear} 秋</button>
-                <button class="season-pill ${defaultSeason === 'WINTER' ? 'active' : ''}" onclick="selectSeason(this, 'WINTER', ${winterYear})">${winterYear} 冬</button>
+                <button class="pill ${defaultSeason === 'SPRING' ? 'active' : ''}" onclick="selectSeason(this, 'SPRING', ${springYear})">${springYear} 春</button>
+                <button class="pill ${defaultSeason === 'SUMMER' ? 'active' : ''}" onclick="selectSeason(this, 'SUMMER', ${summerYear})">${summerYear} 夏</button>
+                <button class="pill ${defaultSeason === 'FALL' ? 'active' : ''}" onclick="selectSeason(this, 'FALL', ${fallYear})">${fallYear} 秋</button>
+                <button class="pill ${defaultSeason === 'WINTER' ? 'active' : ''}" onclick="selectSeason(this, 'WINTER', ${winterYear})">${winterYear} 冬</button>
             `;
         }
 
-        async function fetchGraphQL(query, variables = {}) {
-            const container = document.getElementById('anime-list');
-            container.innerHTML = '<div class="empty-state">載入中...</div>';
-            
+        async function fetchGraphQL(query, variables = {}, append = false) {
+            if(isLoading) return;
+            isLoading = true;
+            if(!append) document.getElementById('anime-list').innerHTML = '<div class="empty-state">載入中...</div>';
+            else document.getElementById('loading-trigger').style.display = 'block';
+
             try {
                 const response = await fetch('https://graphql.anilist.co', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ query, variables }) 
                 });
                 const result = await response.json();
-                animeData = result.data.Page.media;
+                const pageInfo = result.data.Page.pageInfo;
+                const newMedia = result.data.Page.media;
+
+                hasNextPage = pageInfo.hasNextPage;
+                currentPage = pageInfo.currentPage;
+
+                animeData = append ? [...animeData, ...newMedia] : newMedia;
                 renderList();
             } catch (error) {
-                container.innerHTML = '<div class="empty-state">連線失敗，請稍後再試</div>';
+                if(!append) document.getElementById('anime-list').innerHTML = '<div class="empty-state">連線失敗，請稍後再試</div>';
+            } finally {
+                isLoading = false;
+                document.getElementById('loading-trigger').style.display = 'none';
             }
         }
 
+        // 升級：無限滾動自動加載監聽器
+        function setupInfiniteScroll() {
+            window.addEventListener('scroll', () => {
+                if (currentTab === 'favorites' || !hasNextPage || isLoading) return;
+                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 250) {
+                    const searchInput = document.getElementById('searchInput').value;
+                    let vars = { page: currentPage + 1 };
+                    if (searchInput) vars.search = searchInput;
+                    else { vars.season = currentSeason; vars.seasonYear = currentYear; }
+                    fetchGraphQL(GQL_QUERY, vars, true);
+                }
+            });
+        }
+
         function selectSeason(element, season, year) {
-            document.querySelectorAll('.season-pill').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('#season-filter .pill').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
-            currentSeason = season;
-            currentYear = year;
+            currentSeason = season; currentYear = year;
             document.getElementById('searchInput').value = ''; 
-            fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear });
+            fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear, page: 1 });
+        }
+
+        function selectDay(dayCode) {
+            document.querySelectorAll('#day-filter .day-pill').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            selectedDayFilter = dayCode;
+            renderList();
         }
 
         async function searchAnime() {
             const term = document.getElementById('searchInput').value;
             if(!term) return;
-            document.querySelectorAll('.season-pill').forEach(el => el.classList.remove('active'));
-            fetchGraphQL(GQL_QUERY, { search: term });
+            document.querySelectorAll('#season-filter .pill').forEach(el => el.classList.remove('active'));
+            fetchGraphQL(GQL_QUERY, { search: term, page: 1 });
         }
 
         function getTitle(anime) {
@@ -494,13 +370,11 @@
             const seasonFilter = document.getElementById('season-filter');
             
             if (tab === 'favorites') {
-                searchControls.style.display = 'none';
-                seasonFilter.style.display = 'none';
+                searchControls.style.display = 'none'; seasonFilter.style.display = 'none';
                 renderList();
             } else {
-                searchControls.style.display = 'flex';
-                seasonFilter.style.display = 'flex';
-                fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear });
+                searchControls.style.display = 'flex'; seasonFilter.style.display = 'flex';
+                fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear, page: 1 });
             }
         }
 
@@ -517,21 +391,22 @@
             const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]');
             
             let displayData = [];
-            if (currentTab === 'home') {
-                displayData = animeData;
-            } else {
-                const favItems = JSON.parse(localStorage.getItem('anime_favorites_details') || '{}');
-                displayData = Object.values(favItems);
+            if (currentTab === 'home') { displayData = animeData; } 
+            else { displayData = Object.values(JSON.parse(localStorage.getItem('anime_favorites_details') || '{}')); }
+
+            // 升級：追番時間表星期幾過濾邏輯
+            if (selectedDayFilter !== 'ALL') {
+                displayData = displayData.filter(anime => {
+                    if (!anime.nextAiringEpisode) return selectedDayFilter === 'END';
+                    const day = new Date(anime.nextAiringEpisode.airingAt * 1000).getDay().toString();
+                    return day === selectedDayFilter;
+                });
             }
 
-            const pageTitle = document.getElementById('page-title');
-            const titlePrefix = currentTab === 'favorites' ? '我的最愛' : '新番首頁';
-            pageTitle.innerText = `${titlePrefix} (${displayData.length})`;
+            document.getElementById('page-title').innerText = `${currentTab === 'favorites' ? '我的最愛' : '新番首頁'} (${displayData.length})`;
 
             if(displayData.length === 0) {
-                container.innerHTML = currentTab === 'home' 
-                    ? '<div class="empty-state">該季度暫無動畫資料。</div>' 
-                    : '<div class="empty-state">目前沒有收藏的動畫項目</div>';
+                container.innerHTML = '<div class="empty-state">此篩選條件下目前沒有動畫項目</div>';
                 return;
             }
 
@@ -540,22 +415,21 @@
                 const watchedList = JSON.parse(localStorage.getItem(`watched_${anime.id}`) || '[]');
                 const platformList = JSON.parse(localStorage.getItem(`platform_${anime.id}`) || '[]');
                 
-                const nextInfo = anime.nextAiringEpisode 
-                    ? `預計更新：第 ${anime.nextAiringEpisode.episode} 話`
-                    : "目前無更新排程";
+                // 升級：評分與筆記讀取
+                const review = JSON.parse(localStorage.getItem(`review_${anime.id}`) || '{"rating":0,"note":""}');
+                
+                // 升級：精準實時進度條百分比計算
+                const validWatched = watchedList.filter(ep => ep <= airedCount).length;
+                const progressPercent = airedCount > 0 ? (validWatched / airedCount) * 100 : 0;
 
+                const nextInfo = anime.nextAiringEpisode ? `預計更新：第 ${anime.nextAiringEpisode.episode} 話` : "目前無更新排程";
                 const hasNewEpisode = (currentTab === 'favorites' && airedCount > 0 && !watchedList.includes(airedCount));
-                const cardEffectClass = hasNewEpisode ? 'new-update-effect' : '';
-                const newBadgeHtml = hasNewEpisode ? '<div class="new-ep-badge">NEW</div>' : '';
-
+                
                 let dateBadgeHtml = '';
                 if (anime.nextAiringEpisode) {
                     const date = new Date(anime.nextAiringEpisode.airingAt * 1000);
                     const days = ['日', '一', '二', '三', '四', '五', '六'];
-                    const m = date.getMonth() + 1;
-                    const d = date.getDate();
-                    const dayName = days[date.getDay()];
-                    dateBadgeHtml = `<div class="date-overlay-badge">${m}/${d} (${dayName})</div>`;
+                    dateBadgeHtml = `<div class="date-overlay-badge">${date.getMonth() + 1}/${date.getDate()} (${days[date.getDay()]})</div>`;
                 }
 
                 let epBadges = '';
@@ -564,35 +438,51 @@
                     epBadges += `<div class="ep-badge ${watchedList.includes(i) ? 'watched' : ''}" onclick="toggleWatched(${anime.id}, ${i})">${i}</div>`;
                 }
 
-                const nActive = platformList.includes('Netflix') ? 'active nf' : '';
-                const dActive = platformList.includes('Disney+') ? 'active dp' : '';
-                const yActive = platformList.includes('YouTube') ? 'active yt' : '';
-                const vActive = platformList.includes('ViuTV') ? 'active viu' : '';
+                let starsHtml = '';
+                for(let s = 1; s <= 5; s++) {
+                    starsHtml += `<span class="${s <= review.rating ? 'active' : ''}" onclick="setRating(${anime.id}, ${s})">★</span>`;
+                }
 
                 container.innerHTML += `
-                    <div class="anime-card ${cardEffectClass}">
+                    <div class="anime-card ${hasNewEpisode ? 'new-update-effect' : ''}">
                         <button class="fav-btn ${favs.includes(anime.id) ? 'active' : ''}" onclick="toggleFav(${anime.id})">♥</button>
                         <div class="img-container">
-                            <img src="${anime.coverImage.large}">
-                            ${newBadgeHtml}
+                            <!-- 升級：封面的 Fallback 機制防止破圖 -->
+                            <img src="${anime.coverImage.large}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'150\\' height=\\'225\\' viewBox=\\'0 0 150 225\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%23222\\'/><text x=\\'50%\\' y=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23444\\' font-size=\\'12\\'>No Image</text></svg>'">
+                            ${hasNewEpisode ? '<div class="new-ep-badge">NEW</div>' : ''}
                             ${dateBadgeHtml}
                         </div>
                         <div class="card-content">
                             <h3 class="editable-title" title="${getTitle(anime)}" onclick="editTitle(${anime.id})">${getTitle(anime)}</h3>
                             <div class="meta-info">${nextInfo}</div>
                             
+                            <!-- 升級：視覺化追番進度條 -->
+                            <div class="progress-container"><div class="progress-bar" style="width: ${progressPercent}%"></div></div>
+                            
                             <div class="platform-grid">
-                                <button class="platform-btn ${nActive}" onclick="togglePlatform(${anime.id}, 'Netflix')">Netflix</button>
-                                <button class="platform-btn ${dActive}" onclick="togglePlatform(${anime.id}, 'Disney+')">Disney+</button>
-                                <button class="platform-btn ${yActive}" onclick="togglePlatform(${anime.id}, 'YouTube')">YouTube</button>
-                                <button class="platform-btn ${vActive}" onclick="togglePlatform(${anime.id}, 'ViuTV')">ViuTV</button>
+                                <button class="platform-btn ${platformList.includes('Netflix') ? 'active nf' : ''}" onclick="togglePlatform(${anime.id}, 'Netflix')">Netflix</button>
+                                <button class="platform-btn ${platformList.includes('Disney+') ? 'active dp' : ''}" onclick="togglePlatform(${anime.id}, 'Disney+')">Disney+</button>
+                                <button class="platform-btn ${platformList.includes('YouTube') ? 'active yt' : ''}" onclick="togglePlatform(${anime.id}, 'YouTube')">YouTube</button>
+                                <button class="platform-btn ${platformList.includes('ViuTV') ? 'active viu' : ''}" onclick="togglePlatform(${anime.id}, 'ViuTV')">ViuTV</button>
                             </div>
 
                             <button class="expand-btn" onclick="this.nextElementSibling.classList.toggle('show')">
-                                <span>展開集數</span> <span>▼</span>
+                                <span>展開控制面板</span> <span>▼</span>
                             </button>
                             <div class="collapsible">
-                                <div class="ep-grid">${epBadges || '尚無集數'}</div>
+                                <div style="padding-top: 8px;">
+                                    <!-- 升級：一鍵畢業/看完功能 -->
+                                    <button class="btn primary" style="font-size:10px; padding:4px 8px; width:100%; margin-bottom:6px;" onclick="markAllWatched(${anime.id}, ${airedCount})">🚀 標記全集已看</button>
+                                    
+                                    <div class="ep-grid">${epBadges || '<span style="font-size:11px;color:#666;">尚無公開集數</span>'}</div>
+                                    
+                                    <!-- 升級：個人短評與五星評分區 -->
+                                    <div style="margin-top:10px; border-top: 1px solid #222; padding-top:6px;">
+                                        <div style="font-size:11px; color:#aaa;">我的評分：</div>
+                                        <div class="star-rating">${starsHtml}</div>
+                                        <textarea class="note-input" placeholder="隨手記點追番心得..." onchange="saveNote(${anime.id}, this.value)">${review.note || ''}</textarea>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -605,17 +495,10 @@
             let favDetails = JSON.parse(localStorage.getItem('anime_favorites_details') || '{}');
             
             if (favs.includes(id)) {
-                favs = favs.filter(fid => fid !== id);
-                delete favDetails[id];
+                favs = favs.filter(fid => fid !== id); delete favDetails[id];
             } else {
-                let animeObj = animeData.find(a => a.id === id);
-                if (!animeObj && favDetails[id]) {
-                    animeObj = favDetails[id];
-                }
-                if (animeObj) {
-                    favs.push(id);
-                    favDetails[id] = animeObj;
-                }
+                let animeObj = animeData.find(a => a.id === id) || favDetails[id];
+                if (animeObj) { favs.push(id); favDetails[id] = animeObj; }
             }
             localStorage.setItem('anime_favorites', JSON.stringify(favs));
             localStorage.setItem('anime_favorites_details', JSON.stringify(favDetails));
@@ -627,6 +510,29 @@
             w = w.includes(epNum) ? w.filter(n => n !== epNum) : [...w, epNum];
             localStorage.setItem(`watched_${id}`, JSON.stringify(w));
             renderList();
+        }
+
+        // 升級：一鍵畢業核心處理
+        function markAllWatched(id, maxEp) {
+            let w = [];
+            for(let i = 1; i <= maxEp; i++) w.push(i);
+            localStorage.setItem(`watched_${id}`, JSON.stringify(w));
+            renderList();
+        }
+
+        // 升級：保存個人評分
+        function setRating(id, rating) {
+            let review = JSON.parse(localStorage.getItem(`review_${id}`) || '{"rating":0,"note":""}');
+            review.rating = rating;
+            localStorage.setItem(`review_${id}`, JSON.stringify(review));
+            renderList();
+        }
+
+        // 升級：保存觀後感隨手記
+        function saveNote(id, noteText) {
+            let review = JSON.parse(localStorage.getItem(`review_${id}`) || '{"rating":0,"note":""}');
+            review.note = noteText;
+            localStorage.setItem(`review_${id}`, JSON.stringify(review));
         }
 
         function editTitle(id) { 
@@ -641,7 +547,7 @@
         function exportData() {
             const data = {}; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); data[key] = localStorage.getItem(key); }
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'anime_backup.json'; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'anime_pro_backup.json'; a.click();
         }
 
         function importData(e) {
