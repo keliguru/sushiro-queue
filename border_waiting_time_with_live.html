@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邊境即時動態與直播</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap');
+
+        :root {
+            --board-bg: #1a1a1a;
+            --flap-bg: #333;
+            --text-color: #f0f0f0;
+            --accent-yellow: #ffdf00;
+        }
+
+        body { background-color: #000; color: var(--text-color); font-family: 'Roboto Mono', monospace, sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .board { width: 100%; max-width: 600px; background: var(--board-bg); padding: 10px; border-radius: 5px; border: 4px solid #444; margin-bottom: 25px; }
+        
+        .row { display: flex; align-items: center; justify-content: space-between; background: var(--flap-bg); padding: 12px; margin-bottom: 5px; border-bottom: 2px solid #000; overflow: hidden; flex-wrap: wrap; }
+        .row-main { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        
+        .flap-text { display: inline-block; animation: flip 0.6s ease-in-out; }
+        @keyframes flip {
+            0% { transform: rotateX(-90deg); opacity: 0; }
+            100% { transform: rotateX(0deg); opacity: 1; }
+        }
+
+        .info-col { font-size: 0.7rem; color: #aaa; width: 110px; }
+        .status-pill { padding: 3px 8px; border-radius: 3px; font-size: 0.75rem; color: #000; font-weight: bold; margin-left: 5px; }
+        
+        .s0 { background: #50c878; }
+        .s1 { background: #ffdf00; }
+        .s2 { background: #ff4444; }
+        .s4, .s99 { background: #888; }
+        .s-fluent { background: #50c878; }
+
+        .toggle-btn { background: #555; color: #fff; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem; margin-left: 5px; transition: background 0.2s; }
+        .toggle-btn:hover { background: #777; }
+
+        .live-container { width: 100%; margin-top: 10px; display: none; text-align: center; background: #222; padding: 8px; border-radius: 4px; }
+        .live-container p { font-size: 0.65rem; color: #888; margin: 4px 0 0 0; }
+
+        h1 { text-align: center; color: var(--accent-yellow); font-size: 1.2rem; margin-bottom: 15px; letter-spacing: 2px; }
+        h2 { color: var(--accent-yellow); font-size: 1rem; margin-bottom: 10px; width: 100%; max-width: 600px; text-align: left; border-left: 4px solid var(--accent-yellow); padding-left: 8px; }
+    </style>
+</head>
+<body>
+    <h1>邊境即時動態</h1>
+    
+    <h2>香港陸路管制站</h2>
+    <div class="board" id="hk-board">正在加載數據...</div>
+
+    <h2>深圳口岸狀態與直播</h2>
+    <div class="board" id="sz-board">載入深圳口岸中...</div>
+
+    <h2>港珠澳大橋珠海口岸</h2>
+    <div class="board" id="zh-board"></div>
+
+    <script>
+        const hkStations = {
+            "HYW": {name: "香園圍", time: "07:00-22:00"},
+            "HZM": {name: "港珠澳", time: "24小時"},
+            "LMC": {name: "落馬洲", time: "06:30-22:30"},
+            "LSC": {name: "落馬洲線", time: "06:30-22:30"},
+            "LWS": {name: "羅湖", time: "06:30-00:00"},
+            "MKT": {name: "文錦渡", time: "07:00-22:00"},
+            "SBC": {name: "深圳灣", time: "06:30-00:00"},
+            "STK": {name: "沙頭角", time: "07:00-22:00"}
+        };
+        const labels = { 0: "正常", 1: "繁忙", 2: "極忙", 4: "維護", 99: "關閉" };
+
+        const szStations = [
+            { id: "ft", name: "福田口岸", time: "06:30-22:30", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
+            { id: "lh", name: "羅湖口岸", time: "06:30-24:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
+            { id: "wjd", name: "文錦渡口岸", time: "07:00-22:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
+            { id: "hg", name: "皇崗口岸", time: "00:00-24:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
+            { id: "szw", name: "深圳灣口岸", time: "06:30-24:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
+            { id: "lt", name: "蓮塘口岸", time: "07:00-22:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
+            { id: "xjl", name: "西九龍站", time: "06:30-23:30", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" }
+        ];
+
+        async function updateHKBoard() {
+            try {
+                const [r] = await Promise.all([
+                    fetch('https://cors.freehi.workers.dev/?https://secure1.info.gov.hk/immd/mobileapps/2bb9ae17/data/CPQueueTimeR.json').then(res => res.json())
+                ]);
+                const board = document.getElementById('hk-board');
+                board.innerHTML = '';
+                Object.keys(hkStations).forEach(k => {
+                    const row = document.createElement('div');
+                    row.className = 'row';
+                    row.innerHTML = `
+                        <div style="width:90px">${hkStations[k].name}</div>
+                        <div class="info-col">${hkStations[k].time}</div>
+                        <div>
+                            <span class="status-pill s${r[k].arrQueue} flap-text">入:${labels[r[k].arrQueue]}</span>
+                            <span class="status-pill s${r[k].depQueue} flap-text">出:${labels[r[k].depQueue]}</span>
+                        </div>
+                    `;
+                    board.appendChild(row);
+                });
+            } catch(e) {
+                document.getElementById('hk-board').innerHTML = '<div style="padding:10px; text-align:center; color:#888;">暫無法讀取香港數據</div>';
+            }
+        }
+
+        function renderSZBoard() {
+            const board = document.getElementById('sz-board');
+            board.innerHTML = '';
+            szStations.forEach((st) => {
+                const row = document.createElement('div');
+                row.className = 'row';
+                row.innerHTML = `
+                    <div class="row-main">
+                        <div style="width:90px">${st.name}</div>
+                        <div class="info-col">${st.time}</div>
+                        <div>
+                            <span class="status-pill ${st.class} flap-text">${st.status}</span>
+                            <button class="toggle-btn" onclick="toggleLive('${st.id}')">展開直播</button>
+                        </div>
+                    </div>
+                    <div class="live-container" id="live-${st.id}">
+                        <iframe src="${st.liveUrl}" width="100%" height="450px" frameborder="0" style="background: #fff; border-radius: 3px;"></iframe>
+                        <p>來源：深圳口岸即時監控 <a href="${st.liveUrl}" target="_blank" style="color: #ffdf00; text-decoration: none; margin-left: 10px;">[在新分頁開啟]</a></p>
+                    </div>
+                `;
+                board.appendChild(row);
+            });
+        }
+
+        function renderZHBoard() {
+            const board = document.getElementById('zh-board');
+            board.innerHTML = `
+                <div class="row">
+                    <div class="row-main">
+                        <div style="width:120px">珠海口岸實況</div>
+                        <button class="toggle-btn" onclick="toggleLive('zh')">展開直播</button>
+                    </div>
+                    <div class="live-container" id="live-zh" style="width: 100%;">
+                        <iframe src="https://traffic-info.gzazhka.com:5015/#/" width="100%" height="700px" frameborder="0" style="background: #fff; border-radius: 3px;"></iframe>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleLive(id) {
+            const el = document.getElementById(`live-${id}`);
+            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        }
+
+        updateHKBoard();
+        renderSZBoard();
+        renderZHBoard();
+        setInterval(updateHKBoard, 300000);
+    </script>
+</body>
+</html>

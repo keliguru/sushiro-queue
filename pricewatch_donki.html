@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>驚安物價監察 - DONKI 風格</title>
+    <style>
+        :root { 
+            --donki-yellow: #ffdf00; 
+            --donki-red: #e60012; 
+            --donki-blue: #0055a4; 
+            --donki-black: #111111;
+        }
+        body { font-family: 'Arial Black', Impact, sans-serif; margin: 0; padding: 10px; background-color: var(--donki-yellow); color: var(--donki-black); }
+        h1 { background-color: var(--donki-red); color: white; padding: 15px; text-align: center; border: 4px solid white; margin: 0 0 15px 0; text-transform: uppercase; text-shadow: 2px 2px #000; letter-spacing: 2px; }
+        .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        input, select { padding: 12px; border: 3px solid var(--donki-blue); font-size: 1rem; font-weight: bold; background: white; outline: none; }
+        .filter-btn { padding: 12px; border: 3px solid var(--donki-blue); background: white; color: var(--donki-blue); font-weight: 900; cursor: pointer; text-transform: uppercase; }
+        .filter-btn.active { background: var(--donki-red); border-color: white; color: white; }
+        .card { background: white; padding: 15px; margin-bottom: 12px; border: 4px solid var(--donki-blue); position: relative; box-shadow: 4px 4px 0px rgba(0,0,0,0.8); }
+        .pop-tag { background: var(--donki-red); color: white; padding: 2px 6px; font-size: 0.75rem; display: inline-block; margin-bottom: 4px; font-weight: bold; }
+        .fav-btn { position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 2rem; color: #ddd; text-shadow: 1px 1px #000; }
+        .fav-btn.active { color: var(--donki-red); }
+        .item-brand { font-size: 0.8rem; color: var(--donki-blue); font-weight: bold; text-transform: uppercase; }
+        .item-name { font-weight: 900; color: var(--donki-black); font-size: 1.1rem; margin-top: 2px; padding-right: 35px; }
+        .item-en { font-size: 0.75rem; color: #555; margin-bottom: 8px; }
+        .price-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; border-bottom: 1px dotted #ccc; padding: 4px 0; font-weight: bold; }
+        .price { color: var(--donki-red); font-size: 1.3rem; font-weight: 900; }
+        .offer-box { font-size: 0.9rem; color: var(--donki-red); background: #fff0f0; border: 2px dashed var(--donki-red); padding: 8px; margin-top: 8px; font-weight: bold; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <h1>驚安物價監察</h1>
+    
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋商品名稱..." oninput="renderData()">
+        <select id="catFilter" onchange="renderData()">
+            <option value="all">⚡ 全部分類</option>
+        </select>
+        <button id="favBtn" class="filter-btn" onclick="toggleFilter('fav')">⭐ 只顯示最愛</button>
+        <button id="offerBtn" class="filter-btn" onclick="toggleFilter('offer')">🎁 只顯示有優惠</button>
+    </div>
+    
+    <div id="data-container" style="text-align:center; padding:20px;">資料讀取中...</div>
+
+    <script>
+        let allData = [];
+        let favorites = JSON.parse(localStorage.getItem('favs')) || [];
+        let filterFav = false;
+        let filterOffer = false;
+
+        async function fetchData() {
+            const proxy = 'https://cors.freehi.workers.dev/?';
+            try {
+                const res = await fetch(proxy + encodeURIComponent('https://online-price-watch.consumer.org.hk/opw/opendata/pricewatch.json'));
+                allData = await res.json();
+                const cats = [...new Set(allData.map(i => i.cat1Name?.['zh-Hant']))].filter(Boolean);
+                const select = document.getElementById('catFilter');
+                cats.forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
+                renderData();
+            } catch (e) { document.getElementById('data-container').innerText = '載入失敗。'; }
+        }
+
+        function toggleFilter(type) {
+            if (type === 'fav') {
+                filterFav = !filterFav;
+                document.getElementById('favBtn').classList.toggle('active', filterFav);
+            } else {
+                filterOffer = !filterOffer;
+                document.getElementById('offerBtn').classList.toggle('active', filterOffer);
+            }
+            renderData();
+        }
+
+        function toggleFav(code) {
+            if (favorites.includes(code)) favorites = favorites.filter(c => c !== code);
+            else favorites.push(code);
+            localStorage.setItem('favs', JSON.stringify(favorites));
+            renderData();
+        }
+
+        function renderData() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cat = document.getElementById('catFilter').value;
+            const container = document.getElementById('data-container');
+            container.innerHTML = '';
+
+            allData.filter(i => {
+                const nameZh = (i.name?.['zh-Hant'] || '').toLowerCase();
+                const nameEn = (i.name?.['en'] || '').toLowerCase();
+                const hasOffer = i.offers && i.offers.length > 0;
+                return (nameZh.includes(query) || nameEn.includes(query)) && 
+                       (cat === 'all' || i.cat1Name?.['zh-Hant'] === cat) && 
+                       (!filterFav || favorites.includes(i.code)) &&
+                       (!filterOffer || hasOffer);
+            }).forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="fav-btn ${favorites.includes(item.code) ? 'active' : ''}" onclick="toggleFav('${item.code}')">★</div>
+                    <div class="pop-tag">HOT PRICE</div>
+                    <div class="item-brand">${item.brand?.['zh-Hant'] || item.brand?.['en'] || ''}</div>
+                    <div class="item-name">${item.name?.['zh-Hant'] || '---'}</div>
+                    <div class="item-en">${item.name?.['en'] || ''}</div>
+                    ${item.prices.map(p => `<div class="price-row"><span>${p.supermarketCode}</span><span class="price">HK$${p.price}</span></div>`).join('')}
+                    ${item.offers ? item.offers.map(o => {
+                        const msg = o.offers?.['zh-Hant'] || o.offers?.['en'] || '';
+                        return msg ? `<div class="offer-box">🎁 <b>${o.supermarketCode}</b>: ${msg}</div>` : '';
+                    }).join('') : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+        fetchData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HK TUNNEL TOLL - PISTON CUP EDITION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mcqueen-red: #d31010;
+            --mcqueen-dark: #8b0000;
+            --rusteze-yellow: #fbc02d;
+            --rusteze-brown: #8d4004;
+            --chrome-1: #e0e0e0;
+            --chrome-2: #9e9e9e;
+            --chrome-3: #ffffff;
+            --asphalt: #1a1a1d;
+            --text-light: #fdfdfd;
+            --font-racing: 'Racing Sans One', 'Microsoft JhengHei', sans-serif;
+            --font-mono: 'Share Tech Mono', 'Courier New', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--asphalt);
+            background-image: 
+                radial-gradient(#333 15%, transparent 16%),
+                radial-gradient(#333 15%, transparent 16%);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            color: var(--text-light);
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif, 'Microsoft JhengHei';
+            padding: 15px 10px;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            max-width: 1000px;
+            width: 100%;
+            background: linear-gradient(135deg, var(--mcqueen-red) 0%, var(--mcqueen-dark) 100%);
+            border: 6px solid var(--chrome-2);
+            border-image: linear-gradient(to bottom right, var(--chrome-3), var(--chrome-2), var(--chrome-1)) 1;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 賽車條紋 Racing Stripes */
+        .dashboard-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            width: 30px;
+            height: 100%;
+            background: rgba(255,255,255,0.15);
+            transform: skewX(-15deg);
+            pointer-events: none;
+        }
+        .dashboard-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: calc(10% + 40px);
+            width: 10px;
+            height: 100%;
+            background: rgba(255,255,255,0.15);
+            transform: skewX(-15deg);
+            pointer-events: none;
+        }
+
+        .chequered-flag {
+            height: 20px;
+            background-image: linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), 
+                              linear-gradient(45deg, #000 25%, #fff 25%, #fff 75%, #000 75%, #000);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            margin: -20px -20px 15px -20px;
+            border-bottom: 3px solid var(--rusteze-yellow);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+        }
+
+        .stopwatch-header {
+            background: #111;
+            border: 3px solid var(--chrome-2);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            position: sticky;
+            top: 5px;
+            z-index: 100;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.5);
+            background-image: linear-gradient(to bottom, #222, #000);
+        }
+
+        .stopwatch-label {
+            font-family: var(--font-racing);
+            font-size: 16px;
+            letter-spacing: 1.5px;
+            color: var(--rusteze-yellow);
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .stopwatch-display {
+            font-family: var(--font-mono);
+            font-size: 38px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px var(--rusteze-yellow), 0 0 3px #fff;
+            display: inline-block;
+            letter-spacing: 1.5px;
+        }
+
+        .stopwatch-display .ms {
+            color: var(--mcqueen-red);
+            font-size: 24px;
+            text-shadow: 0 0 8px var(--mcqueen-red);
+        }
+
+        .sync-container {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .sync-btn {
+            background: linear-gradient(to bottom, #444, #222);
+            border: 2px solid var(--chrome-2);
+            color: var(--text-light);
+            padding: 8px 12px;
+            font-family: var(--font-racing);
+            font-size: 12px;
+            letter-spacing: 1px;
+            border-radius: 30px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.5);
+        }
+
+        .sync-btn:hover {
+            background: var(--rusteze-yellow);
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 0 10px var(--rusteze-yellow);
+        }
+
+        .sync-btn:active {
+            transform: scale(0.95);
+        }
+
+        .spinning {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: linear-gradient(to bottom, #333, #111);
+            border: 2px solid var(--chrome-2);
+            color: #aaa;
+            padding: 12px 8px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-family: var(--font-racing);
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            text-shadow: 1px 1px 2px #000;
+            min-height: 48px;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--chrome-3);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(to bottom, var(--rusteze-yellow), #d49a1c);
+            border-color: #fff;
+            color: #000;
+            box-shadow: 0 0 15px rgba(251, 192, 45, 0.6), inset 0 2px 4px rgba(255,255,255,0.8);
+            text-shadow: none;
+            transform: scale(1.03);
+            z-index: 2;
+        }
+
+        .sector-title {
+            font-family: var(--font-racing);
+            font-size: 18px;
+            color: var(--rusteze-yellow);
+            margin: 20px 0 10px 0;
+            padding-left: 10px;
+            border-left: 4px solid #fff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 10;
+        }
+
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .gauge-card {
+            background: linear-gradient(145deg, #2a2a2a, #111111);
+            border: 3px solid var(--chrome-2);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.6), inset 0 0 8px rgba(0,0,0,0.8);
+        }
+
+        .gauge-card::before {
+            content: '';
+            position: absolute;
+            top: 4px; right: 4px; bottom: 4px; left: 4px;
+            border: 1px dashed #555;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        .gauge-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 16px rgba(0,0,0,0.7);
+            border-color: var(--chrome-3);
+        }
+
+        .gauge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+
+        .gauge-title {
+            font-family: var(--font-racing);
+            font-size: 16px;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .gauge-code {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+            background: var(--chrome-1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #555;
+        }
+
+        .gauge-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .flag-status {
+            font-family: var(--font-racing);
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+
+        .flag-green { background: linear-gradient(to bottom, #4CAF50, #2E7D32); color: #fff; border: 1px solid #81C784; }
+        .flag-yellow { background: linear-gradient(to bottom, #FDD835, #F57F17); color: #000; border: 1px solid #FFF59D; text-shadow: none; }
+        .flag-red { background: linear-gradient(to bottom, #E53935, #C62828); color: #fff; border: 1px solid #EF9A9A; }
+        .flag-fixed { background: linear-gradient(to bottom, #29B6F6, #0277BD); color: #fff; border: 1px solid #81D4FA; }
+        .flag-free { background: linear-gradient(to bottom, #9E9E9E, #616161); color: #fff; border: 1px solid #E0E0E0; }
+
+        .speedo-price {
+            font-family: var(--font-mono);
+            font-size: 34px;
+            font-weight: bold;
+            color: var(--rusteze-yellow);
+            line-height: 1;
+            text-shadow: 1.5px 1.5px 0px #000;
+        }
+
+        .speedo-price small {
+            font-size: 13px;
+            color: #ccc;
+            margin-left: 2px;
+            font-family: var(--font-racing);
+        }
+
+        .next-sector {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            padding: 6px 8px;
+        }
+
+        .next-sector .next-label {
+            color: #aaa;
+            font-family: var(--font-racing);
+            letter-spacing: 0.5px;
+            font-size: 11px;
+        }
+
+        .next-sector .next-price {
+            color: #fff;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .info-box {
+            background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+            border: 2px solid var(--chrome-2);
+            border-left: 6px solid var(--rusteze-yellow);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: var(--font-mono);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+            position: relative;
+            z-index: 10;
+        }
+
+        .info-box p {
+            font-size: 13px;
+            color: #ddd;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .info-box p:last-child { margin-bottom: 0; }
+        .info-box strong { color: var(--rusteze-yellow); font-family: var(--font-racing); letter-spacing: 0.5px; }
+
+        .system-footer {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            font-family: var(--font-mono);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 針對手機版面的強制單欄與縮減優化 */
+        @media (max-width: 600px) {
+            body { padding: 5px; }
+            .dashboard-container { padding: 12px; border-width: 4px; }
+            .telemetry-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .stopwatch-header { padding: 10px; margin-bottom: 15px; }
+            .stopwatch-display { font-size: 28px; }
+            .stopwatch-display .ms { font-size: 18px; }
+            .sync-container { position: static; transform: none; margin-top: 8px; text-align: center; }
+            .sync-btn { display: inline-flex; justify-content: center; width: 100%; border-radius: 12px; }
+            .mode-selector { flex-direction: column; gap: 6px; margin-bottom: 15px; }
+            .mode-btn { font-size: 12px; padding: 10px; min-height: 40px; }
+            .sector-title { font-size: 15px; margin: 15px 0 8px 0; }
+            .gauge-card { padding: 12px; }
+            .speedo-price { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <div class="chequered-flag"></div>
+    
+    <div class="stopwatch-header">
+        <div class="stopwatch-label">🏆 PISTON CUP TIMING & TOLL BOARD 🏆</div>
+        <div class="stopwatch-display" id="stopwatch">00:00:00<span class="ms">.000</span></div>
+        
+        <div class="sync-container">
+            <button class="sync-btn" onclick="forceSync()">
+                <span id="sync-icon">⟳</span> PIT STOP SYNC
+            </button>
+        </div>
+    </div>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="changeVehicle('private_car', this)">STAGE 1: 私家車</button>
+        <button class="mode-btn" onclick="changeVehicle('taxi', this)">FLEET: 的士</button>
+        <button class="mode-btn" onclick="changeVehicle('motorcycle', this)">MOTO: 電單車</button>
+    </div>
+
+    <!-- 分組一：過海隧道 -->
+    <div class="sector-title">SECTOR 1: 過海隧道 (Dynamic Toll)</div>
+    <div class="telemetry-grid">
+        <!-- 紅隧 -->
+        <div class="gauge-card">
+            <div class="gauge-header">
+                <span class="gauge-title">紅磡海底隧道</span>
+                <span class="gauge-code">CHT</span>
+            </div>
+            <div class="gauge-body">
+                <span class="flag-status flag-green" id="flag-cht">GREEN FLAG</span>
+                <div class="speedo-price">$<span id="price-cht">00</span><small>HKD</small></div>
+            </div>
+            <div class="next-sector">
+                <span class="next-label" id="next-label-cht">NEXT LAP ></span>
+                <span class="flag-status flag-yellow" id="next-flag-cht" style="font-size: 10px; padding: 2px 4px;">--</span>
+                <span class="next-price" id="next-price-cht">--</span>
+            </div>
+        </div>
+        <!-- 東隧 -->
+        <div class="gauge-card">
+            <div class="gauge-header">
+                <span class="gauge-title">東區海底隧道</span>
+                <span class="gauge-code">EHC</span>
+            </div>
+            <div class="gauge-body">
+                <span class="flag-status flag-green" id="flag-ehc">GREEN FLAG</span>
+                <div class="speedo-price">$<span id="price-ehc">00</span><small>HKD</small></div>
+            </div>
+            <div class="next-sector">
+                <span class="next-label" id="next-label-ehc">NEXT LAP ></span>
+                <span class="flag-status flag-yellow" id="next-flag-ehc" style="font-size: 10px; padding: 2px 4px;">--</span>
+                <span class="next-price" id="next-price-ehc">--</span>
+            </div>
+        </div>
+        <!-- 西隧 -->
+        <div class="gauge-card">
+            <div class="gauge-header">
+                <span class="gauge-title">西區海底隧道</span>
+                <span class="gauge-code">WHC</span>
+            </div>
+            <div class="gauge-body">
+                <span class="flag-status flag-green" id="flag-whc">GREEN FLAG</span>
+                <div class="speedo-price">$<span id="price-whc">00</span><small>HKD</small></div>
+            </div>
+            <div class="next-sector">
+                <span class="next-label" id="next-label-whc">NEXT LAP ></span>
+                <span class="flag-status flag-yellow" id="next-flag-whc" style="font-size: 10px; padding: 2px 4px;">--</span>
+                <span class="next-price" id="next-price-whc">--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分組二：陸路收費隧道 -->
+    <div class="sector-title">SECTOR 2: 陸路收費隧道</div>
+    <div class="telemetry-grid">
+        <div class="gauge-card">
+            <div class="gauge-header"><span class="gauge-title">大欖隧道</span><span class="gauge-code">TLT</span></div>
+            <div class="gauge-body"><span class="flag-status flag-fixed">GOVT TOLL</span><div class="speedo-price">$<span id="price-tlt">35</span><small>HKD</small></div></div>
+        </div>
+        <div class="gauge-card">
+            <div class="gauge-header"><span class="gauge-title">大老山隧道</span><span class="gauge-code">TCT</span></div>
+            <div class="gauge-body"><span class="flag-status flag-fixed">FIXED</span><div class="speedo-price">$<span id="price-tct">20</span><small>HKD</small></div></div>
+        </div>
+        <div class="gauge-card">
+            <div class="gauge-header"><span class="gauge-title">獅子山隧道</span><span class="gauge-code">LRT</span></div>
+            <div class="gauge-body"><span class="flag-status flag-fixed">FIXED</span><div class="speedo-price">$<span id="price-lrt">8</span><small>HKD</small></div></div>
+        </div>
+        <div class="gauge-card">
+            <div class="gauge-header"><span class="gauge-title">青沙公路 (尖山)</span><span class="gauge-code">TSR</span></div>
+            <div class="gauge-body"><span class="flag-status flag-fixed">FIXED</span><div class="speedo-price">$<span id="price-tsr">8</span><small>HKD</small></div></div>
+        </div>
+        <div class="gauge-card">
+            <div class="gauge-header"><span class="gauge-title">城門隧道</span><span class="gauge-code">SMT</span></div>
+            <div class="gauge-body"><span class="flag-status flag-fixed">FIXED</span><div class="speedo-price">$<span id="price-smt">8</span><small>HKD</small></div></div>
+        </div>
+        <div class="gauge-card">
+            <div class="gauge-header"><span class="gauge-title">香港仔隧道</span><span class="gauge-code">ABT</span></div>
+            <div class="gauge-body"><span class="flag-status flag-fixed">FIXED</span><div class="speedo-price">$<span id="price-abt">8</span><small>HKD</small></div></div>
+        </div>
+    </div>
+
+    <!-- 分組三：免費隧道 -->
+    <div class="sector-title">SECTOR 3: 免費通行路段</div>
+    <div class="telemetry-grid">
+        <div class="gauge-card" style="opacity: 0.8;">
+            <div class="gauge-header"><span class="gauge-title">將軍澳 / 屯赤 / 啟德</span></div>
+            <div class="gauge-body"><span class="flag-status flag-free">FREE HIGHWAY</span><div class="speedo-price">$0<small>HKD</small></div></div>
+        </div>
+    </div>
+
+    <!-- 說明 -->
+    <div class="sector-title">CREW CHIEF BRIEFING: 系統說明</div>
+    <div class="info-box">
+        <p>⚡ <strong>時段收費機制 (TVT):</strong> 三條過海隧道現已實施「不同時段不同收費」。系統除了顯示當前實時收費，亦會預測及顯示<strong>下一個即將轉換的時段及價錢</strong> (NEXT LAP)。</p>
+        <p>⚡ <strong>過渡時段:</strong> 於不同收費時段之間切換時，系統並非瞬間變價，而是設有「過渡時段」，收費會以每 2 分鐘 $2 的幅度平穩遞增或遞減。</p>
+        <p>⚡ <strong>的士全日劃一:</strong> 的士於過海隧道全日劃一收取 $25；因此下一個時段顯示會鎖定為 NO CHANGE。</p>
+        <p style="text-align: right; margin-top: 8px; color: var(--rusteze-yellow); font-family: var(--font-racing); font-size: 16px;">Ka-Chow!</p>
+    </div>
+
+    <div class="system-footer">
+        STATUS: PIT CREW ONLINE // SPONSOR: RUST-EZE // TIME ZONE: GMT+8
+    </div>
+</div>
+
+<script>
+    let currentVehicle = 'private_car';
+
+    function triggerVibrate() {
+        if (navigator.vibrate) {
+            navigator.vibrate(40);
+        }
+    }
+
+    function runStopwatch() {
+        const now = new Date();
+        
+        let hrs = String(now.getHours()).padStart(2, '0');
+        let mins = String(now.getMinutes()).padStart(2, '0');
+        let secs = String(now.getSeconds()).padStart(2, '0');
+        let ms = String(now.getMilliseconds()).padStart(3, '0');
+        
+        document.getElementById('stopwatch').innerHTML = `${hrs}:${mins}:${secs}<span class="ms">.${ms}</span>`;
+        
+        if (ms < 40) { 
+            calculateTolls(now);
+        }
+        
+        requestAnimationFrame(runStopwatch);
+    }
+
+    function forceSync() {
+        triggerVibrate();
+        const icon = document.getElementById('sync-icon');
+        icon.classList.add('spinning');
+        calculateTolls(new Date());
+        setTimeout(() => { icon.classList.remove('spinning'); }, 800);
+    }
+
+    function changeVehicle(type, element) {
+        triggerVibrate();
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+        currentVehicle = type;
+        calculateTolls(new Date());
+    }
+
+    function getTollInfo(vehicle, isSunday, hour, min) {
+        const timeVal = hour + min / 60;
+        
+        if (vehicle === 'taxi') {
+            return { text: "全日劃一", class: "flag-fixed", cht: 25, ehc: 25, whc: 25 };
+        }
+        
+        let pPeak = { text: "RED FLAG (繁忙)", class: "flag-red", cht: 40, ehc: 40, whc: 60 };
+        let pNorm = { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: 30, ehc: 30, whc: 30 };
+        let pOff  = { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: 20, ehc: 20, whc: 20 };
+        
+        if (vehicle === 'motorcycle') {
+            pPeak = { text: "RED FLAG (繁忙)", class: "flag-red", cht: 16, ehc: 16, whc: 24 };
+            pNorm = { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: 12, ehc: 12, whc: 12 };
+            pOff  = { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: 8, ehc: 8, whc: 8 };
+        }
+        
+        if (isSunday) {
+            if (timeVal < 10.25) return pOff;
+            if (timeVal < 19.25) return pNorm;
+            return pOff;
+        } else {
+            if (timeVal < 7.5) return pOff;
+            if (timeVal < 10.25) return pPeak;
+            if (timeVal < 16.5) return pNorm;
+            if (timeVal < 19.0) return pPeak;
+            if (timeVal < 23.0) return pNorm;
+            return pOff;
+        }
+    }
+
+    function calculateTolls(now) {
+        const hour = now.getHours();
+        const min = now.getMinutes();
+        const day = now.getDay(); 
+        const isSunday = (day === 0);
+        const timeVal = hour + min / 60;
+
+        const currentInfo = getTollInfo(currentVehicle, isSunday, hour, min);
+
+        let nextInfo = currentInfo;
+        let nextTimeStr = "";
+
+        if (currentVehicle !== 'taxi') {
+            if (isSunday) {
+                if (timeVal < 10.25) { nextInfo = getTollInfo(currentVehicle, isSunday, 10, 16); nextTimeStr = "10:15"; }
+                else if (timeVal < 19.25) { nextInfo = getTollInfo(currentVehicle, isSunday, 19, 16); nextTimeStr = "19:15"; }
+                else { nextInfo = getTollInfo(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; }
+            } else {
+                if (timeVal < 7.5) { nextInfo = getTollInfo(currentVehicle, isSunday, 7, 31); nextTimeStr = "07:30"; }
+                else if (timeVal < 10.25) { nextInfo = getTollInfo(currentVehicle, isSunday, 10, 16); nextTimeStr = "10:15"; }
+                else if (timeVal < 16.5) { nextInfo = getTollInfo(currentVehicle, isSunday, 16, 31); nextTimeStr = "16:30"; }
+                else if (timeVal < 19.0) { nextInfo = getTollInfo(currentVehicle, isSunday, 19, 1); nextTimeStr = "19:00"; }
+                else if (timeVal < 23.0) { nextInfo = getTollInfo(currentVehicle, isSunday, 23, 1); nextTimeStr = "23:00"; }
+                else {
+                    let nextDayIsSunday = (day === 6);
+                    if (nextDayIsSunday) { nextInfo = getTollInfo(currentVehicle, true, 10, 16); nextTimeStr = "Tmwr 10:15"; }
+                    else { nextInfo = getTollInfo(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; }
+                }
+            }
+        }
+
+        let tlt = 35, tct = 20, lrt = 8, tsr = 8, smt = 8, abt = 8;
+        if (currentVehicle === 'taxi') tlt = 30, tct = 15;
+        if (currentVehicle === 'motorcycle') tlt = 22, tct = 15;
+
+        updateCrossHarborUI(currentInfo, nextInfo, nextTimeStr);
+        updateLandTunnelsUI(tlt, tct, lrt, tsr, smt, abt);
+    }
+
+    function updateCrossHarborUI(curr, next, nextTimeStr) {
+        ['cht', 'ehc', 'whc'].forEach((id) => {
+            const flag = document.getElementById(`flag-${id}`);
+            flag.innerText = curr.text;
+            flag.className = `flag-status ${curr.class}`;
+            document.getElementById(`price-${id}`).innerText = curr[id];
+
+            const nextLabel = document.getElementById(`next-label-${id}`);
+            const nextFlag = document.getElementById(`next-flag-${id}`);
+            const nextPrice = document.getElementById(`next-price-${id}`);
+            
+            if (curr.text === next.text || currentVehicle === 'taxi') {
+                nextLabel.innerText = "NEXT LAP";
+                nextFlag.innerText = "NO CHANGE";
+                nextFlag.className = `flag-status flag-fixed`;
+                nextPrice.innerText = `--`;
+            } else {
+                nextLabel.innerText = `NEXT @ ${nextTimeStr}`;
+                nextFlag.innerText = next.text;
+                nextFlag.className = `flag-status ${next.class}`;
+                nextPrice.innerText = `$${next[id]}`;
+            }
+        });
+    }
+
+    function updateLandTunnelsUI(tlt, tct, lrt, tsr, smt, abt) {
+        document.getElementById('price-tlt').innerText = tlt;
+        document.getElementById('price-tct').innerText = tct;
+        document.getElementById('price-lrt').innerText = lrt;
+        document.getElementById('price-tsr').innerText = tsr;
+        document.getElementById('price-smt').innerText = smt;
+        document.getElementById('price-abt').innerText = abt;
+    }
+
+    requestAnimationFrame(runStopwatch);
+</script>
+
+</body>
+</html>
