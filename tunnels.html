@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HK TUNNEL TOLL - PISTON CUP EDITION</title>
+    <title>HK TUNNEL TOLL</title>
+	
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/tunnels-icon.png">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="HK TUNNEL TOLL">
+	<meta property="og:description" content="HK TUNNEL TOLL">
+	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/tunnels-icon.png"> 
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/tunnels-icon.png">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="HK TUNNEL TOLL">
+	
     <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -55,14 +67,11 @@
             overflow: hidden;
         }
 
-        /* 賽車條紋 Racing Stripes */
         .dashboard-container::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 10%;
-            width: 30px;
-            height: 100%;
+            top: 0; left: 10%;
+            width: 30px; height: 100%;
             background: rgba(255,255,255,0.15);
             transform: skewX(-15deg);
             pointer-events: none;
@@ -70,10 +79,8 @@
         .dashboard-container::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: calc(10% + 40px);
-            width: 10px;
-            height: 100%;
+            top: 0; left: calc(10% + 40px);
+            width: 10px; height: 100%;
             background: rgba(255,255,255,0.15);
             transform: skewX(-15deg);
             pointer-events: none;
@@ -132,8 +139,7 @@
 
         .sync-container {
             position: absolute;
-            right: 12px;
-            top: 50%;
+            right: 12px; top: 50%;
             transform: translateY(-50%);
         }
 
@@ -162,14 +168,8 @@
             box-shadow: 0 0 10px var(--rusteze-yellow);
         }
 
-        .sync-btn:active {
-            transform: scale(0.95);
-        }
-
-        .spinning {
-            animation: spin 1s linear infinite;
-        }
-
+        .sync-btn:active { transform: scale(0.95); }
+        .spinning { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .mode-selector {
@@ -198,11 +198,7 @@
             min-height: 48px;
         }
 
-        .mode-btn:hover {
-            border-color: var(--chrome-3);
-            color: #fff;
-            transform: translateY(-2px);
-        }
+        .mode-btn:hover { border-color: var(--chrome-3); color: #fff; transform: translateY(-2px); }
 
         .mode-btn.active {
             background: linear-gradient(to bottom, var(--rusteze-yellow), #d49a1c);
@@ -374,10 +370,8 @@
         }
 
         .info-box p {
-            font-size: 13px;
-            color: #ddd;
-            margin-bottom: 8px;
-            line-height: 1.5;
+            font-size: 13px; color: #ddd;
+            margin-bottom: 8px; line-height: 1.5;
         }
 
         .info-box p:last-child { margin-bottom: 0; }
@@ -388,22 +382,17 @@
             border: 1px solid #333;
             border-radius: 6px;
             padding: 10px;
-            font-size: 11px;
-            color: #666;
+            font-size: 11px; color: #666;
             text-align: center;
             font-family: var(--font-mono);
             position: relative;
             z-index: 10;
         }
 
-        /* 針對手機版面的強制單欄與縮減優化 */
         @media (max-width: 600px) {
             body { padding: 5px; }
             .dashboard-container { padding: 12px; border-width: 4px; }
-            .telemetry-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
+            .telemetry-grid { grid-template-columns: 1fr; gap: 10px; }
             .stopwatch-header { padding: 10px; margin-bottom: 15px; }
             .stopwatch-display { font-size: 28px; }
             .stopwatch-display .ms { font-size: 18px; }
@@ -442,52 +431,49 @@
     <!-- 分組一：過海隧道 -->
     <div class="sector-title">SECTOR 1: 過海隧道 (Dynamic Toll)</div>
     <div class="telemetry-grid">
-        <!-- 紅隧 -->
         <div class="gauge-card">
             <div class="gauge-header">
                 <span class="gauge-title">紅磡海底隧道</span>
                 <span class="gauge-code">CHT</span>
             </div>
             <div class="gauge-body">
-                <span class="flag-status flag-green" id="flag-cht">GREEN FLAG</span>
-                <div class="speedo-price">$<span id="price-cht">00</span><small>HKD</small></div>
+                <span class="flag-status flag-red" id="flag-cht">RED FLAG (繁忙)</span>
+                <div class="speedo-price">$<span id="price-cht">40</span><small>HKD</small></div>
             </div>
             <div class="next-sector">
-                <span class="next-label" id="next-label-cht">NEXT LAP ></span>
-                <span class="flag-status flag-yellow" id="next-flag-cht" style="font-size: 10px; padding: 2px 4px;">--</span>
-                <span class="next-price" id="next-price-cht">--</span>
+                <span class="next-label" id="next-label-cht">NEXT @ 19:00</span>
+                <span class="flag-status flag-yellow" id="next-flag-cht" style="font-size: 10px; padding: 2px 4px;">TRANSITION</span>
+                <span class="next-price" id="next-price-cht">$38-$22</span>
             </div>
         </div>
-        <!-- 東隧 -->
         <div class="gauge-card">
             <div class="gauge-header">
                 <span class="gauge-title">東區海底隧道</span>
                 <span class="gauge-code">EHC</span>
             </div>
             <div class="gauge-body">
-                <span class="flag-status flag-green" id="flag-ehc">GREEN FLAG</span>
-                <div class="speedo-price">$<span id="price-ehc">00</span><small>HKD</small></div>
+                <span class="flag-status flag-red" id="flag-ehc">RED FLAG (繁忙)</span>
+                <div class="speedo-price">$<span id="price-ehc">40</span><small>HKD</small></div>
             </div>
             <div class="next-sector">
-                <span class="next-label" id="next-label-ehc">NEXT LAP ></span>
-                <span class="flag-status flag-yellow" id="next-flag-ehc" style="font-size: 10px; padding: 2px 4px;">--</span>
-                <span class="next-price" id="next-price-ehc">--</span>
+                <span class="next-label" id="next-label-ehc">NEXT @ 19:00</span>
+                <span class="flag-status flag-yellow" id="next-flag-ehc" style="font-size: 10px; padding: 2px 4px;">TRANSITION</span>
+                <span class="next-price" id="next-price-ehc">$38-$22</span>
             </div>
         </div>
-        <!-- 西隧 -->
         <div class="gauge-card">
             <div class="gauge-header">
                 <span class="gauge-title">西區海底隧道</span>
                 <span class="gauge-code">WHC</span>
             </div>
             <div class="gauge-body">
-                <span class="flag-status flag-green" id="flag-whc">GREEN FLAG</span>
-                <div class="speedo-price">$<span id="price-whc">00</span><small>HKD</small></div>
+                <span class="flag-status flag-red" id="flag-whc">RED FLAG (繁忙)</span>
+                <div class="speedo-price">$<span id="price-whc">52</span><small>HKD</small></div>
             </div>
             <div class="next-sector">
-                <span class="next-label" id="next-label-whc">NEXT LAP ></span>
-                <span class="flag-status flag-yellow" id="next-flag-whc" style="font-size: 10px; padding: 2px 4px;">--</span>
-                <span class="next-price" id="next-price-whc">--</span>
+                <span class="next-label" id="next-label-whc">NEXT @ 19:00</span>
+                <span class="flag-status flag-yellow" id="next-flag-whc" style="font-size: 10px; padding: 2px 4px;">TRANSITION</span>
+                <span class="next-price" id="next-price-whc">$50-$22</span>
             </div>
         </div>
     </div>
@@ -497,7 +483,15 @@
     <div class="telemetry-grid">
         <div class="gauge-card">
             <div class="gauge-header"><span class="gauge-title">大欖隧道</span><span class="gauge-code">TLT</span></div>
-            <div class="gauge-body"><span class="flag-status flag-fixed">GOVT TOLL</span><div class="speedo-price">$<span id="price-tlt">35</span><small>HKD</small></div></div>
+            <div class="gauge-body">
+                <span class="flag-status flag-green" id="flag-tlt">GREEN (一般)</span>
+                <div class="speedo-price">$<span id="price-tlt">30</span><small>HKD</small></div>
+            </div>
+            <div class="next-sector">
+                <span class="next-label" id="next-label-tlt">NEXT @ 17:15</span>
+                <span class="flag-status flag-red" id="next-flag-tlt" style="font-size: 10px; padding: 2px 4px;">RED (繁忙)</span>
+                <span class="next-price" id="next-price-tlt">$32-$45</span>
+            </div>
         </div>
         <div class="gauge-card">
             <div class="gauge-header"><span class="gauge-title">大老山隧道</span><span class="gauge-code">TCT</span></div>
@@ -533,9 +527,9 @@
     <!-- 說明 -->
     <div class="sector-title">CREW CHIEF BRIEFING: 系統說明</div>
     <div class="info-box">
-        <p>⚡ <strong>時段收費機制 (TVT):</strong> 三條過海隧道現已實施「不同時段不同收費」。系統除了顯示當前實時收費，亦會預測及顯示<strong>下一個即將轉換的時段及價錢</strong> (NEXT LAP)。</p>
-        <p>⚡ <strong>過渡時段:</strong> 於不同收費時段之間切換時，系統並非瞬間變價，而是設有「過渡時段」，收費會以每 2 分鐘 $2 的幅度平穩遞增或遞減。</p>
-        <p>⚡ <strong>的士全日劃一:</strong> 的士於過海隧道全日劃一收取 $25；因此下一個時段顯示會鎖定為 NO CHANGE。</p>
+        <p>⚡ <strong>時段收費機制 (TVT):</strong> 過海及大欖隧道現已實施分時段收費。系統除了顯示實時收費，亦會預測及顯示<strong>下一個即將轉換的時段及價錢</strong> (NEXT LAP)。</p>
+        <p>⚡ <strong>過渡時段:</strong> 於不同收費時段之間切換時，設有過渡性安排，收費以每 2 分鐘 $2（或比例）平穩遞增或遞減。</p>
+        <p>⚡ <strong>大欖與的士:</strong> 大欖隧道私家車/電單車設動態分時段收費，的士全日劃一 $28，商用車 $43。</p>
         <p style="text-align: right; margin-top: 8px; color: var(--rusteze-yellow); font-family: var(--font-racing); font-size: 16px;">Ka-Chow!</p>
     </div>
 
@@ -548,26 +542,18 @@
     let currentVehicle = 'private_car';
 
     function triggerVibrate() {
-        if (navigator.vibrate) {
-            navigator.vibrate(40);
-        }
+        if (navigator.vibrate) { navigator.vibrate(40); }
     }
-
-    function runStopwatch() {
+    
+    function loop() {
         const now = new Date();
-        
         let hrs = String(now.getHours()).padStart(2, '0');
         let mins = String(now.getMinutes()).padStart(2, '0');
         let secs = String(now.getSeconds()).padStart(2, '0');
         let ms = String(now.getMilliseconds()).padStart(3, '0');
-        
         document.getElementById('stopwatch').innerHTML = `${hrs}:${mins}:${secs}<span class="ms">.${ms}</span>`;
-        
-        if (ms < 40) { 
-            calculateTolls(now);
-        }
-        
-        requestAnimationFrame(runStopwatch);
+        if(parseInt(ms) < 40) { calculateTolls(now); }
+        requestAnimationFrame(loop);
     }
 
     function forceSync() {
@@ -586,19 +572,17 @@
         calculateTolls(new Date());
     }
 
-    function getTollInfo(vehicle, isSunday, hour, min) {
+    function getCrossHarborToll(vehicle, isSunday, hour, min) {
         const timeVal = hour + min / 60;
-        
         if (vehicle === 'taxi') {
             return { text: "全日劃一", class: "flag-fixed", cht: 25, ehc: 25, whc: 25 };
         }
-        
-        let pPeak = { text: "RED FLAG (繁忙)", class: "flag-red", cht: 40, ehc: 40, whc: 60 };
+        let pPeak = { text: "RED FLAG (繁忙)", class: "flag-red", cht: 40, ehc: 40, whc: 52 };
         let pNorm = { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: 30, ehc: 30, whc: 30 };
         let pOff  = { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: 20, ehc: 20, whc: 20 };
         
         if (vehicle === 'motorcycle') {
-            pPeak = { text: "RED FLAG (繁忙)", class: "flag-red", cht: 16, ehc: 16, whc: 24 };
+            pPeak = { text: "RED FLAG (繁忙)", class: "flag-red", cht: 16, ehc: 16, whc: 20.8 };
             pNorm = { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: 12, ehc: 12, whc: 12 };
             pOff  = { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: 8, ehc: 8, whc: 8 };
         }
@@ -617,6 +601,87 @@
         }
     }
 
+    function getTltToll(vehicle, isSunday, hour, min) {
+        const totalMin = hour * 60 + min;
+        
+        if (vehicle === 'taxi') {
+            return { price: 28, text: "FIXED", class: "flag-fixed" };
+        }
+        
+        const isMoto = (vehicle === 'motorcycle');
+        const factor = isMoto ? 0.4 : 1.0;
+
+        if (isSunday) {
+            return { price: Math.round(18 * factor * 10) / 10, text: "HOLIDAY FIXED", class: "flag-green" };
+        }
+
+        if (totalMin <= 434) {
+            return { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" };
+        }
+        if (totalMin <= 460) {
+            let step = Math.floor((totalMin - 435) / 2);
+            let p = 19 + step * 2;
+            return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
+        }
+        if (totalMin <= 584) {
+            return { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" };
+        }
+        if (totalMin <= 598) {
+            let step = Math.floor((totalMin - 585) / 2);
+            let p = 43 - step * 2;
+            return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
+        }
+        if (totalMin <= 1034) {
+            return { price: Math.round(30 * factor * 10) / 10, text: "YELLOW (一般)", class: "flag-yellow" };
+        }
+        if (totalMin <= 1048) {
+            let step = Math.floor((totalMin - 1035) / 2);
+            let p = 31 + step * 2;
+            return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
+        }
+        if (totalMin <= 1139) {
+            return { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" };
+        }
+        if (totalMin <= 1165) {
+            let step = Math.floor((totalMin - 1140) / 2);
+            let p = 43 - step * 2;
+            return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
+        }
+        return { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" };
+    }
+
+    function getNextTltInfo(vehicle, isSunday, hour, min) {
+        const totalMin = hour * 60 + min;
+        if (vehicle === 'taxi') {
+            return { nextInfo: { price: 28, text: "NO CHANGE", class: "flag-fixed" }, timeStr: "NEXT LAP" };
+        }
+        const factor = (vehicle === 'motorcycle') ? 0.4 : 1.0;
+
+        if (isSunday) {
+            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "NO CHANGE", class: "flag-fixed" }, timeStr: "NEXT LAP" };
+        }
+
+        if (totalMin < 435) {
+            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" }, timeStr: "07:15" };
+        } else if (totalMin < 461) {
+            return { nextInfo: { price: Math.round(43 * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" }, timeStr: "07:41" };
+        } else if (totalMin < 585) {
+            return { nextInfo: { price: Math.round(30 * factor * 10) / 10, text: "YELLOW (一般)", class: "flag-yellow" }, timeStr: "09:45" };
+        } else if (totalMin < 599) {
+            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" }, timeStr: "09:59" };
+        } else if (totalMin < 1035) {
+            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" }, timeStr: "17:15" };
+        } else if (totalMin < 1049) {
+            return { nextInfo: { price: Math.round(43 * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" }, timeStr: "17:29" };
+        } else if (totalMin < 1140) {
+            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" }, timeStr: "19:00" };
+        } else if (totalMin < 1166) {
+            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" }, timeStr: "19:26" };
+        } else {
+            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" }, timeStr: "Tmwr 00:00" };
+        }
+    }
+
     function calculateTolls(now) {
         const hour = now.getHours();
         const min = now.getMinutes();
@@ -624,36 +689,38 @@
         const isSunday = (day === 0);
         const timeVal = hour + min / 60;
 
-        const currentInfo = getTollInfo(currentVehicle, isSunday, hour, min);
+        const currentInfo = getCrossHarborToll(currentVehicle, isSunday, hour, min);
+        const tltInfo = getTltToll(currentVehicle, isSunday, hour, min);
+        const tltNext = getNextTltInfo(currentVehicle, isSunday, hour, min);
 
         let nextInfo = currentInfo;
         let nextTimeStr = "";
 
         if (currentVehicle !== 'taxi') {
             if (isSunday) {
-                if (timeVal < 10.25) { nextInfo = getTollInfo(currentVehicle, isSunday, 10, 16); nextTimeStr = "10:15"; }
-                else if (timeVal < 19.25) { nextInfo = getTollInfo(currentVehicle, isSunday, 19, 16); nextTimeStr = "19:15"; }
-                else { nextInfo = getTollInfo(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; }
+                if (timeVal < 10.25) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 10, 16); nextTimeStr = "10:15"; }
+                else if (timeVal < 19.25) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 19, 16); nextTimeStr = "19:15"; }
+                else { nextInfo = getCrossHarborToll(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; }
             } else {
-                if (timeVal < 7.5) { nextInfo = getTollInfo(currentVehicle, isSunday, 7, 31); nextTimeStr = "07:30"; }
-                else if (timeVal < 10.25) { nextInfo = getTollInfo(currentVehicle, isSunday, 10, 16); nextTimeStr = "10:15"; }
-                else if (timeVal < 16.5) { nextInfo = getTollInfo(currentVehicle, isSunday, 16, 31); nextTimeStr = "16:30"; }
-                else if (timeVal < 19.0) { nextInfo = getTollInfo(currentVehicle, isSunday, 19, 1); nextTimeStr = "19:00"; }
-                else if (timeVal < 23.0) { nextInfo = getTollInfo(currentVehicle, isSunday, 23, 1); nextTimeStr = "23:00"; }
+                if (timeVal < 7.5) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 7, 31); nextTimeStr = "07:30"; }
+                else if (timeVal < 10.25) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 10, 16); nextTimeStr = "10:15"; }
+                else if (timeVal < 16.5) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 16, 31); nextTimeStr = "16:30"; }
+                else if (timeVal < 19.0) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 19, 1); nextTimeStr = "19:00"; }
+                else if (timeVal < 23.0) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 23, 1); nextTimeStr = "23:00"; }
                 else {
                     let nextDayIsSunday = (day === 6);
-                    if (nextDayIsSunday) { nextInfo = getTollInfo(currentVehicle, true, 10, 16); nextTimeStr = "Tmwr 10:15"; }
-                    else { nextInfo = getTollInfo(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; }
+                    if (nextDayIsSunday) { nextInfo = getCrossHarborToll(currentVehicle, true, 10, 16); nextTimeStr = "Tmwr 10:15"; }
+                    else { nextInfo = getCrossHarborToll(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; }
                 }
             }
         }
 
-        let tlt = 35, tct = 20, lrt = 8, tsr = 8, smt = 8, abt = 8;
-        if (currentVehicle === 'taxi') tlt = 30, tct = 15;
-        if (currentVehicle === 'motorcycle') tlt = 22, tct = 15;
+        let tct = 20, lrt = 8, tsr = 8, smt = 8, abt = 8;
+        if (currentVehicle === 'taxi') tct = 15;
+        if (currentVehicle === 'motorcycle') tct = 15;
 
         updateCrossHarborUI(currentInfo, nextInfo, nextTimeStr);
-        updateLandTunnelsUI(tlt, tct, lrt, tsr, smt, abt);
+        updateLandTunnelsUI(tltInfo, tltNext, tct, lrt, tsr, smt, abt);
     }
 
     function updateCrossHarborUI(curr, next, nextTimeStr) {
@@ -681,8 +748,28 @@
         });
     }
 
-    function updateLandTunnelsUI(tlt, tct, lrt, tsr, smt, abt) {
-        document.getElementById('price-tlt').innerText = tlt;
+    function updateLandTunnelsUI(tlt, tltNext, tct, lrt, tsr, smt, abt) {
+        const flagTlt = document.getElementById('flag-tlt');
+        flagTlt.innerText = tlt.text;
+        flagTlt.className = `flag-status ${tlt.class}`;
+        document.getElementById('price-tlt').innerText = tlt.price;
+
+        const nextLabelTlt = document.getElementById('next-label-tlt');
+        const nextFlagTlt = document.getElementById('next-flag-tlt');
+        const nextPriceTlt = document.getElementById('next-price-tlt');
+
+        if (tlt.text === tltNext.nextInfo.text || currentVehicle === 'taxi') {
+            nextLabelTlt.innerText = "NEXT LAP";
+            nextFlagTlt.innerText = "NO CHANGE";
+            nextFlagTlt.className = `flag-status flag-fixed`;
+            nextPriceTlt.innerText = `--`;
+        } else {
+            nextLabelTlt.innerText = `NEXT @ ${tltNext.timeStr}`;
+            nextFlagTlt.innerText = tltNext.nextInfo.text;
+            nextFlagTlt.className = `flag-status ${tltNext.nextInfo.class}`;
+            nextPriceTlt.innerText = `$${tltNext.nextInfo.price}`;
+        }
+
         document.getElementById('price-tct').innerText = tct;
         document.getElementById('price-lrt').innerText = lrt;
         document.getElementById('price-tsr').innerText = tsr;
@@ -690,7 +777,7 @@
         document.getElementById('price-abt').innerText = abt;
     }
 
-    requestAnimationFrame(runStopwatch);
+    requestAnimationFrame(loop);
 </script>
 
 </body>
