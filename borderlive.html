@@ -2,62 +2,154 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>邊境即時動態與直播</title>
+	
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/borderlive-icon.png">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="邊境即時動態與直播">
+	<meta property="og:description" content="邊境即時動態與直播">
+	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/borderlive-icon.png"> 
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/borderlive-icon.png">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="邊境即時動態與直播">
+	
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap');
 
         :root {
             --board-bg: #1a1a1a;
-            --flap-bg: #333;
+            --flap-bg: #2a2a2a;
             --text-color: #f0f0f0;
             --accent-yellow: #ffdf00;
         }
 
-        body { background-color: #000; color: var(--text-color); font-family: 'Roboto Mono', monospace, sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .board { width: 100%; max-width: 600px; background: var(--board-bg); padding: 10px; border-radius: 5px; border: 4px solid #444; margin-bottom: 25px; }
+        * { box-sizing: border-box; }
+
+        body { 
+            background-color: #0b0b0b; 
+            color: var(--text-color); 
+            font-family: 'Roboto Mono', monospace, sans-serif; 
+            margin: 0; 
+            padding: 12px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .board { 
+            width: 100%; 
+            background: var(--board-bg); 
+            padding: 8px; 
+            border-radius: 8px; 
+            border: 2px solid #333; 
+            margin-bottom: 20px; 
+        }
         
-        .row { display: flex; align-items: center; justify-content: space-between; background: var(--flap-bg); padding: 12px; margin-bottom: 5px; border-bottom: 2px solid #000; overflow: hidden; flex-wrap: wrap; }
-        .row-main { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        .row { 
+            background: var(--flap-bg); 
+            padding: 10px 12px; 
+            margin-bottom: 6px; 
+            border-radius: 6px; 
+            border-bottom: 2px solid #111; 
+            transition: opacity 0.3s;
+        }
+        /* 非營業中狀態調整透明度 */
+        .row.is-closed {
+            opacity: 0.55;
+        }
+
+        .row-main { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            width: 100%; 
+        }
         
+        .station-name {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #fff;
+            width: 80px;
+        }
+
         .flap-text { display: inline-block; animation: flip 0.6s ease-in-out; }
         @keyframes flip {
             0% { transform: rotateX(-90deg); opacity: 0; }
             100% { transform: rotateX(0deg); opacity: 1; }
         }
 
-        .info-col { font-size: 0.7rem; color: #aaa; width: 110px; }
-        .status-pill { padding: 3px 8px; border-radius: 3px; font-size: 0.75rem; color: #000; font-weight: bold; margin-left: 5px; }
+        .info-col { 
+            font-size: 0.65rem; 
+            color: #888; 
+            flex-grow: 1;
+            padding: 0 8px;
+        }
+
+        .status-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .status-pill { 
+            padding: 3px 6px; 
+            border-radius: 3px; 
+            font-size: 0.7rem; 
+            color: #000; 
+            font-weight: bold; 
+        }
         
         .s0 { background: #50c878; }
         .s1 { background: #ffdf00; }
         .s2 { background: #ff4444; }
-        .s4, .s99 { background: #888; }
+        .s4, .s99 { background: #888; color: #fff !important; }
         .s-fluent { background: #50c878; }
+        .s-closed { background: #444; color: #aaa !important; } /* 非營業中樣式 */
 
-        .toggle-btn { background: #555; color: #fff; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem; margin-left: 5px; transition: background 0.2s; }
-        .toggle-btn:hover { background: #777; }
+        .toggle-btn { 
+            background: #444; 
+            color: #ffdf00; 
+            border: 1px solid #555; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 0.7rem; 
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.2s; 
+        }
+        .toggle-btn:active { background: #666; }
 
-        .live-container { width: 100%; margin-top: 10px; display: none; text-align: center; background: #222; padding: 8px; border-radius: 4px; }
-        .live-container p { font-size: 0.65rem; color: #888; margin: 4px 0 0 0; }
-
-        h1 { text-align: center; color: var(--accent-yellow); font-size: 1.2rem; margin-bottom: 15px; letter-spacing: 2px; }
-        h2 { color: var(--accent-yellow); font-size: 1rem; margin-bottom: 10px; width: 100%; max-width: 600px; text-align: left; border-left: 4px solid var(--accent-yellow); padding-left: 8px; }
+        h1 { text-align: center; color: var(--accent-yellow); font-size: 1.1rem; margin: 10px 0 15px 0; letter-spacing: 1px; }
+        h2 { color: var(--accent-yellow); font-size: 0.85rem; margin: 15px 0 8px 0; border-left: 3px solid var(--accent-yellow); padding-left: 6px; }
     </style>
 </head>
 <body>
-    <h1>邊境即時動態</h1>
-    
-    <h2>香港陸路管制站</h2>
-    <div class="board" id="hk-board">正在加載數據...</div>
+    <div class="container">
+        <h1>邊境即時動態</h1>
+        
+        <h2>香港陸路管制站</h2>
+        <div class="board" id="hk-board">正在加載數據...</div>
 
-    <h2>深圳口岸狀態與直播</h2>
-    <div class="board" id="sz-board">載入深圳口岸中...</div>
+        <h2>深圳口岸狀態與直播</h2>
+        <div class="board" id="sz-board">載入深圳口岸中...</div>
 
-    <h2>港珠澳大橋珠海口岸</h2>
-    <div class="board" id="zh-board"></div>
+        <h2>港珠澳大橋珠海口岸</h2>
+        <div class="board" id="zh-board"></div>
+    </div>
 
     <script>
+        const proxyUrl = 'https://cors.freehi.workers.dev/?';
+
         const hkStations = {
             "HYW": {name: "香園圍", time: "07:00-22:00"},
             "HZM": {name: "港珠澳", time: "24小時"},
@@ -71,37 +163,69 @@
         const labels = { 0: "正常", 1: "繁忙", 2: "極忙", 4: "維護", 99: "關閉" };
 
         const szStations = [
-            { id: "ft", name: "福田口岸", time: "06:30-22:30", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
-            { id: "lh", name: "羅湖口岸", time: "06:30-24:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
-            { id: "wjd", name: "文錦渡口岸", time: "07:00-22:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
-            { id: "hg", name: "皇崗口岸", time: "00:00-24:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
-            { id: "szw", name: "深圳灣口岸", time: "06:30-24:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
-            { id: "lt", name: "蓮塘口岸", time: "07:00-22:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" },
-            { id: "xjl", name: "西九龍站", time: "06:30-23:30", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/index?type=xianggang&language=zhs" }
+            { id: "ft", name: "福田口岸", time: "06:30-22:30", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/info?id=1721344719956475904&language=zhs&name=%E7%A6%8F%E7%94%B0%E5%8F%A3%E5%B2%B8%E7%9B%B4%E6%92%AD" },
+            { id: "lh", name: "羅湖口岸", time: "06:30-24:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/info?id=1722573911175987200&language=zhs&name=%E7%BD%97%E6%B9%96%E5%8F%A3%E5%B2%B8%E7%9B%B4%E6%92%AD" },
+            { id: "wjd", name: "文錦渡口岸", time: "07:00-22:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/info?id=1721124464722182144&language=zhs&name=%E6%96%87%E9%94%A6%E6%B8%A1%E5%8F%A3%E5%B2%B8%E7%9B%B4%E6%92%AD" },
+            { id: "hg", name: "皇崗口岸", time: "00:00-24:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/info?id=1721140966997360640&language=zhs&name=%E7%9A%87%E5%B2%97%E5%8F%A3%E5%B2%B8%E7%9B%B4%E6%92%AD" },
+            { id: "szw", name: "深圳灣口岸", time: "06:30-24:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/info?id=1721142081369407488&language=zhs&name=%E6%B7%B1%E5%9C%B3%E6%B9%BE%E5%8F%A3%E5%B2%B8%E7%9B%B4%E6%92%AD" },
+            { id: "lt", name: "蓮塘口岸", time: "07:00-22:00", status: "暢通", class: "s-fluent", liveUrl: "https://i.ka.sz.gov.cn/attend/kab-park/park/info?id=1722573362850430976&language=zhs&name=%E8%8E%B2%E5%A1%98%E5%8F%A3%E5%B2%B8%E7%9B%B4%E6%92%AD" },
+            { id: "xjl", name: "西九龍站", time: "06:30-23:30", status: "暢通", class: "s-fluent", liveUrl: "" }
         ];
+
+        // 檢查時間是否在營業區間內
+        function isOperating(timeStr) {
+            if (timeStr === "24小時" || timeStr === "00:00-24:00") return true;
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            
+            const [start, end] = timeStr.split('-');
+            if (!start || !end) return true;
+
+            const [startH, startM] = start.split(':').map(Number);
+            const [endH, endM] = end.split(':').map(Number);
+            
+            const startMinutes = startH * 60 + startM;
+            let endMinutes = endH * 60 + endM;
+            
+            // 處理跨午夜（如 06:30-00:00 視為當天 24:00）
+            if (endMinutes === 0) endMinutes = 24 * 60;
+
+            return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+        }
 
         async function updateHKBoard() {
             try {
                 const [r] = await Promise.all([
-                    fetch('https://cors.freehi.workers.dev/?https://secure1.info.gov.hk/immd/mobileapps/2bb9ae17/data/CPQueueTimeR.json').then(res => res.json())
+                    fetch(proxyUrl + 'https://secure1.info.gov.hk/immd/mobileapps/2bb9ae17/data/CPQueueTimeR.json').then(res => res.json())
                 ]);
                 const board = document.getElementById('hk-board');
                 board.innerHTML = '';
                 Object.keys(hkStations).forEach(k => {
+                    const isOpen = isOperating(hkStations[k].time);
                     const row = document.createElement('div');
-                    row.className = 'row';
-                    row.innerHTML = `
-                        <div style="width:90px">${hkStations[k].name}</div>
-                        <div class="info-col">${hkStations[k].time}</div>
-                        <div>
+                    row.className = `row ${isOpen ? '' : 'is-closed'}`;
+                    
+                    let statusHtml = '';
+                    if (isOpen) {
+                        statusHtml = `
                             <span class="status-pill s${r[k].arrQueue} flap-text">入:${labels[r[k].arrQueue]}</span>
                             <span class="status-pill s${r[k].depQueue} flap-text">出:${labels[r[k].depQueue]}</span>
+                        `;
+                    } else {
+                        statusHtml = `<span class="status-pill s-closed flap-text">休息中</span>`;
+                    }
+
+                    row.innerHTML = `
+                        <div class="row-main">
+                            <div class="station-name">${hkStations[k].name}</div>
+                            <div class="info-col">${hkStations[k].time}</div>
+                            <div class="status-group">${statusHtml}</div>
                         </div>
                     `;
                     board.appendChild(row);
                 });
             } catch(e) {
-                document.getElementById('hk-board').innerHTML = '<div style="padding:10px; text-align:center; color:#888;">暫無法讀取香港數據</div>';
+                document.getElementById('hk-board').innerHTML = '<div style="padding:10px; text-align:center; color:#888; font-size:0.75rem;">暫無法讀取香港數據</div>';
             }
         }
 
@@ -109,20 +233,21 @@
             const board = document.getElementById('sz-board');
             board.innerHTML = '';
             szStations.forEach((st) => {
+                const isOpen = isOperating(st.time);
                 const row = document.createElement('div');
-                row.className = 'row';
+                row.className = `row ${isOpen ? '' : 'is-closed'}`;
+                
+                const statusClass = isOpen ? st.class : 's-closed';
+                const statusText = isOpen ? st.status : '休息中';
+
                 row.innerHTML = `
                     <div class="row-main">
-                        <div style="width:90px">${st.name}</div>
+                        <div class="station-name">${st.name}</div>
                         <div class="info-col">${st.time}</div>
-                        <div>
-                            <span class="status-pill ${st.class} flap-text">${st.status}</span>
-                            <button class="toggle-btn" onclick="toggleLive('${st.id}')">展開直播</button>
+                        <div class="status-group">
+                            <span class="status-pill ${statusClass} flap-text">${statusText}</span>
+                            ${st.liveUrl ? `<a class="toggle-btn" href="${st.liveUrl}" target="_blank">直播</a>` : ''}
                         </div>
-                    </div>
-                    <div class="live-container" id="live-${st.id}">
-                        <iframe src="${st.liveUrl}" width="100%" height="450px" frameborder="0" style="background: #fff; border-radius: 3px;"></iframe>
-                        <p>來源：深圳口岸即時監控 <a href="${st.liveUrl}" target="_blank" style="color: #ffdf00; text-decoration: none; margin-left: 10px;">[在新分頁開啟]</a></p>
                     </div>
                 `;
                 board.appendChild(row);
@@ -131,22 +256,15 @@
 
         function renderZHBoard() {
             const board = document.getElementById('zh-board');
+            const zhUrl = 'https://traffic-info.gzazhka.com:5015/#/';
             board.innerHTML = `
                 <div class="row">
                     <div class="row-main">
-                        <div style="width:120px">珠海口岸實況</div>
-                        <button class="toggle-btn" onclick="toggleLive('zh')">展開直播</button>
-                    </div>
-                    <div class="live-container" id="live-zh" style="width: 100%;">
-                        <iframe src="https://traffic-info.gzazhka.com:5015/#/" width="100%" height="700px" frameborder="0" style="background: #fff; border-radius: 3px;"></iframe>
+                        <div class="station-name" style="width:110px">珠海口岸實況</div>
+                        <a class="toggle-btn" href="${zhUrl}" target="_blank">直播</a>
                     </div>
                 </div>
             `;
-        }
-
-        function toggleLive(id) {
-            const el = document.getElementById(`live-${id}`);
-            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
         }
 
         updateHKBoard();
