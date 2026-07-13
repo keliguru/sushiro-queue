@@ -332,7 +332,24 @@
 <body>
 
     <header>
-        <h1 id="page-title">新番首頁</h1>
+        <!-- 頂部標題 + 專屬設計內嵌式 SVG Logo -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="width: 26px; height: 26px; flex-shrink: 0;">
+                <defs>
+                    <linearGradient id="logoRed" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#E50914" />
+                        <stop offset="100%" stop-color="#990007" />
+                    </linearGradient>
+                </defs>
+                <circle cx="256" cy="256" r="200" fill="#E50914" opacity="0.15" />
+                <path d="M 120 256 A 136 136 0 1 0 392 256" fill="none" stroke="#333" stroke-width="26" stroke-linecap="round"/>
+                <path d="M 120 256 A 136 136 0 0 1 340 150" fill="none" stroke="url(#logoRed)" stroke-width="26" stroke-linecap="round"/>
+                <path d="M 210 165 C 210 155 222 148 232 154 L 360 242 C 369 248 369 262 360 268 L 232 356 C 222 362 210 355 210 345 Z" fill="url(#logoRed)"/>
+                <path d="M 370 120 L 379 142 L 401 151 L 379 160 L 370 182 L 361 160 L 339 151 L 361 142 Z" fill="#FFFFFF"/>
+            </svg>
+            <h1 id="page-title" style="line-height: 1;">新番首頁</h1>
+        </div>
+
         <div id="search-controls" class="controls">
             <input type="text" id="searchInput" class="search-box" placeholder="搜尋動畫...">
             <button class="btn primary" onclick="searchAnime()">搜尋</button>
@@ -341,7 +358,7 @@
             <input type="file" id="importFile" style="display:none" onchange="importData(event)">
         </div>
         
-        <!-- 近 4 季切換標籤列（由 JavaScript 根據日期動態渲染生成） -->
+        <!-- 近 4 季切換標籤列（由 JavaScript 根據系統日期自動渲染生成） -->
         <div id="season-filter" class="season-bar"></div>
     </header>
     
@@ -364,7 +381,7 @@
     <script>
         let animeData = [], chineseTitles = {};
         let currentTab = 'home';
-        let currentSeason = 'SUMMER', currentYear = 2026; // 預設值，將由動態日期系統覆寫
+        let currentSeason = 'SUMMER', currentYear = 2026; 
 
         const GQL_QUERY = `query ($search: String, $season: MediaSeason, $seasonYear: Int) { 
             Page(page: 1, perPage: 30) { 
@@ -380,18 +397,18 @@
                 chineseTitles = await res.json();
             } catch (e) { console.error("無法載入中文資料", e); }
             
-            // 根據當前日期動態設定並生成季度 Filter
+            // 根據自動化日期邏輯初始化季度 Filter 按鈕
             setupDynamicSeasonFilter();
             
-            // 載入預設當前季度的動畫
+            // 載入當前預設季度的動畫清單
             fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear });
         }
 
-        // 根據日期自動計算春夏秋冬並渲染 Button
+        // 月份自動計算系統：4月(春)、7月(夏)、10月(秋)、1月(冬)
         function setupDynamicSeasonFilter() {
             const now = new Date();
             const year = now.getFullYear();
-            const month = now.getMonth() + 1; // 1 - 12 月
+            const month = now.getMonth() + 1; 
 
             let defaultSeason = 'SUMMER';
             let defaultYear = year;
@@ -401,9 +418,7 @@
             let fallYear = year;
             let winterYear = year;
 
-            // 月份劃分邏輯：4月(春)、7月(夏)、10月(秋)、1月(冬)
             if (month >= 1 && month < 4) {
-                // 1、2、3月 預設為當年的冬季
                 defaultSeason = 'WINTER';
                 defaultYear = year;
                 springYear = year - 1;
@@ -411,25 +426,20 @@
                 fallYear = year - 1;
                 winterYear = year;
             } else if (month >= 4 && month < 7) {
-                // 4、5、6月 預設為當年的春季
                 defaultSeason = 'SPRING';
                 defaultYear = year;
             } else if (month >= 7 && month < 10) {
-                // 7、8、9月 預設為當年的夏季
                 defaultSeason = 'SUMMER';
                 defaultYear = year;
             } else if (month >= 10) {
-                // 10、11、12月 預設為當年的秋季，並開啟下一年冬季前瞻
                 defaultSeason = 'FALL';
                 defaultYear = year;
-                winterYear = year + 1;
+                winterYear = year + 1; // 踏入 10 月後，冬季按鈕自動前瞻至隔年
             }
 
-            // 更新全域變數做為 API 預設請求
             currentSeason = defaultSeason;
             currentYear = defaultYear;
 
-            // 動態插入按鈕到頁面
             const filterContainer = document.getElementById('season-filter');
             filterContainer.innerHTML = `
                 <button class="season-pill ${defaultSeason === 'SPRING' ? 'active' : ''}" onclick="selectSeason(this, 'SPRING', ${springYear})">${springYear} 春</button>
@@ -516,7 +526,7 @@
                 displayData = Object.values(favItems);
             }
 
-            // 動態更新帶有數量的標題
+            // 動態同步頂部標題與目前列表顯示數量
             const pageTitle = document.getElementById('page-title');
             const titlePrefix = currentTab === 'favorites' ? '我的最愛' : '新番首頁';
             pageTitle.innerText = `${titlePrefix} (${displayData.length})`;
@@ -562,11 +572,10 @@
                 const yActive = platformList.includes('YouTube') ? 'active yt' : '';
                 const vActive = platformList.includes('ViuTV') ? 'active viu' : '';
 
-                const animeStr = encodeURIComponent(JSON.stringify(anime));
-
                 container.innerHTML += `
                     <div class="anime-card ${cardEffectClass}">
-                        <button class="fav-btn ${favs.includes(anime.id) ? 'active' : ''}" onclick="toggleFav(${anime.id}, '${animeStr}')">♥</button>
+                        <!-- 安全核心：按鈕僅透過純數字 ID 傳入，全面排除引號帶來的 JS 語法崩潰 -->
+                        <button class="fav-btn ${favs.includes(anime.id) ? 'active' : ''}" onclick="toggleFav(${anime.id})">♥</button>
                         <div class="img-container">
                             <img src="${anime.coverImage.large}">
                             ${newBadgeHtml}
@@ -595,7 +604,8 @@
             });
         }
 
-        function toggleFav(id, animeStr) {
+        // 安全重構：不依賴 HTML 字串屬性，從內存及時查詢動畫細節資料
+        function toggleFav(id) {
             let favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]');
             let favDetails = JSON.parse(localStorage.getItem('anime_favorites_details') || '{}');
             
@@ -603,9 +613,14 @@
                 favs = favs.filter(fid => fid !== id);
                 delete favDetails[id];
             } else {
-                favs.push(id);
-                const animeObj = JSON.parse(decodeURIComponent(animeStr));
-                favDetails[id] = animeObj;
+                let animeObj = animeData.find(a => a.id === id);
+                if (!animeObj && favDetails[id]) {
+                    animeObj = favDetails[id];
+                }
+                if (animeObj) {
+                    favs.push(id);
+                    favDetails[id] = animeObj;
+                }
             }
             localStorage.setItem('anime_favorites', JSON.stringify(favs));
             localStorage.setItem('anime_favorites_details', JSON.stringify(favDetails));
