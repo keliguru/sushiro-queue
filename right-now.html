@@ -55,6 +55,7 @@
             padding: 12px;
             display: flex;
             justify-content: center;
+            padding-bottom: 80px; /* 為懸浮按鈕留出空間 */
         }
 
         .container {
@@ -230,15 +231,45 @@
         .list-group { list-style: none; padding: 0; margin: 0; }
         
         .list-item {
-            display: flex; flex-direction: column; gap: 10px; padding: 14px;
+            position: relative;
+            display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 14px;
             border: 3px solid var(--border); border-radius: 16px; margin-bottom: 12px;
             background: var(--card); box-shadow: 4px 4px 0px var(--border);
         }
         .list-item .item-title { font-size: 1.2rem; font-weight: 900; color: #005a9c; display: flex; align-items: center; gap: 6px; }
-        .list-item .btn-group { display: flex; gap: 6px; width: 100%; }
-        .list-item .btn-group button { flex: 1; padding: 10px; font-size: 0.85rem; border-radius: 10px; }
+        .list-item .btn-group { display: flex; gap: 6px; align-items: center; }
+        .list-item .btn-group button { padding: 6px 10px; font-size: 0.85rem; border-radius: 10px; }
         
-        .btn-eta { background-color: #00a651; color: white; }
+        .btn-eta {
+            background: none;
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            font-size: 1.2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .btn-eta:active {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-close-icon {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: none;
+            border: none;
+            box-shadow: none;
+            padding: 4px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .btn-close-icon:active {
+            transform: none;
+            box-shadow: none;
+        }
 
         .element-item {
             display: flex; justify-content: space-between; align-items: center; gap: 6px;
@@ -306,15 +337,45 @@
         .spinning .refresh-icon { display: inline-block; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
+
+        /* 懸浮返回主頁按鈕樣式 */
+        .floating-home-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            background-color: #ffd200;
+            color: #000;
+            padding: 14px 20px;
+            border: 3px solid var(--border);
+            border-radius: 50px;
+            box-shadow: 4px 4px 0px var(--border);
+            font-size: 1.05rem;
+            font-weight: 950;
+            display: none; /* 預設隱藏，進入群組時顯示 */
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .floating-home-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--border);
+        }
     </style>
 </head>
 <body>
+
+<!-- 懸浮返回主頁圖示 -->
+<button id="floatingHomeBtn" class="floating-home-btn" onclick="expandProfiles()">
+    🏠 主頁基地
+</button>
 
 <div class="container" id="mainContainer">
     <div class="card instructions-card" id="guideCard">
         <h3>🚦 玩具交通總部使用說明</h3>
         <div class="instructions-step">1. 🧱 <b>建立基地</b>：在下方輸入名稱並點「新增」，建立你的路線群組。</div>
-        <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組的「⚙️ 管理」按鈕，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
+        <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組的「⚙️」按鈕，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
         <div class="instructions-step">3. 🚌 <b>出發看時間</b>：在主頁直接點擊群組大方塊，即可一秒召喚出所有車載實時到站時間 (ETA)！可在各車站點點擊「📌 置頂」優先顯示。</div>
     </div>
 
@@ -342,7 +403,7 @@
             <span class="breadcrumb-item active" id="breadcrumbCurrent">未選取</span>
         </div>
 
-        <div class="card" id="profileSettingCard" name="profileSetting">
+        <div class="card" id="profileSettingCard" name="profileSetting" style="display: none;">
             <h2>⚙️ 內容管理：<span id="currentProfileName">請先選取項目</span></h2>
             
             <div id="elementSection" style="display: none;">
@@ -396,11 +457,11 @@
             
             <div id="errorMessage" class="error" style="display: none;"></div>
             <div id="statusMessage" class="loading" style="display: none;">正在連線到交通總部...</div>
-            <div id="placeholderText" class="no-data">請返回主頁點擊群組的「⚙️ 管理」進行路線配對。</div>
+            <div id="placeholderText" class="no-data">請返回主頁點擊群組的「⚙️」進行路線配對。</div>
         </div>
         
         <div class="card" id="arrivalContainerCard" name="arrivalContainer" style="display: none;">
-            <h1>⏰ 實時到站時間 (ETA)</h1>
+            <h1 id="etaMainTitle">⏰ 實時到站時間</h1>
             <div class="form-group controls">
                 <div class="update-status" id="update-time">未加載</div>
                 <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
@@ -480,34 +541,33 @@
             li.className = `list-item ${id === currentProfileId ? 'active' : ''}`;
             li.onclick = (e) => { if (e.target.tagName !== 'BUTTON') renderETA(id); };
 
-            const titleDiv = document.createElement('div');
-            titleDiv.className = 'item-title';
-            titleDiv.innerHTML = '🧱 ' + profiles[id].name;
-
-            const btnGroup = document.createElement('div'); 
-            btnGroup.className = 'btn-group';
-
             const etaBtn = document.createElement('button'); 
             etaBtn.className = 'btn-eta'; 
-            etaBtn.textContent = '⚙️ 管理'; 
+            etaBtn.textContent = '⚙️'; 
             etaBtn.onclick = (e) => { e.stopPropagation(); selectProfile(id); };
 
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'item-title';
+            titleDiv.innerHTML = profiles[id].name;
+
             const renameBtn = document.createElement('button');
-            renameBtn.style.backgroundColor = '#60a5fa';
-            renameBtn.style.color = 'white';
-            renameBtn.textContent = '✏️ 改名';
+            renameBtn.style.background = 'none';
+            renameBtn.style.border = 'none';
+            renameBtn.style.boxShadow = 'none';
+            renameBtn.style.padding = '0';
+            renameBtn.style.cursor = 'pointer';
+            renameBtn.textContent = '✏️';
             renameBtn.onclick = (e) => { e.stopPropagation(); renameProfile(id); };
             
             const deleteBtn = document.createElement('button'); 
-            deleteBtn.className = 'btn-danger'; 
-            deleteBtn.textContent = '🗑️ 刪除'; 
+            deleteBtn.className = 'btn-close-icon'; 
+            deleteBtn.textContent = '❌'; 
             deleteBtn.onclick = (e) => { e.stopPropagation(); deleteProfile(id); };
 
-            btnGroup.appendChild(etaBtn); 
-            btnGroup.appendChild(renameBtn);
-            btnGroup.appendChild(deleteBtn);
+            li.appendChild(etaBtn);
             li.appendChild(titleDiv); 
-            li.appendChild(btnGroup);
+            li.appendChild(renameBtn);
+            li.appendChild(deleteBtn);
             profileList.appendChild(li);
         });
     }
@@ -574,7 +634,7 @@
 
     function renameProfile(id) {
         const oldName = profiles[id].name;
-        const newName = prompt('🧱 請輸入新的基地名稱：', oldName);
+        const newName = prompt('請輸入新的基地名稱：', oldName);
         if (newName === null) return; 
         const trimmedName = newName.trim();
         if (!trimmedName) { alert('基地名稱不可以是空白喔！'); return; }
@@ -603,6 +663,7 @@
         document.getElementById('guideCard').style.display = 'none';
         document.getElementById('breadcrumbCurrent').textContent = profileName;
         document.getElementById('breadcrumbArea').style.display = 'flex';
+        document.getElementById('floatingHomeBtn').style.display = 'flex'; // 顯示懸浮按鈕
         window.scrollTo(0, 0);
     }
 
@@ -612,9 +673,10 @@
         document.getElementById('profileContainer').classList.remove('collapsed');
         document.getElementById('guideCard').style.display = 'block';
         document.getElementById('breadcrumbArea').style.display = 'none';
-        document.getElementById('profileSettingCard').style.display = 'block';
+        document.getElementById('profileSettingCard').style.display = 'none';
         document.getElementById('arrivalContainerCard').style.display = 'none';
         document.getElementById('fullRouteContainerCard').style.display = 'none';
+        document.getElementById('floatingHomeBtn').style.display = 'none'; // 隱藏懸浮按鈕
         renderProfiles(); renderElements();
         window.scrollTo(0, 0);
     }
@@ -953,11 +1015,16 @@
     
     function renderETA(profileId) {
         currentProfileId = profileId; const elements = profiles[currentProfileId].elements;
+        const profileName = profiles[currentProfileId].name;
+        
+        // 動態更改 ETA 標題文字
+        document.getElementById('etaMainTitle').innerText = `⏰ 實時到站時間 - ${profileName}`;
+
         document.getElementById('profileSettingCard').style.display = 'none';
         document.getElementById('fullRouteContainerCard').style.display = 'none';
         document.getElementById('arrivalContainerCard').style.display = 'block';
 
-        collapseProfiles(profiles[profileId].name + " (即時)");
+        collapseProfiles(profileName + " (即時)");
         busTargets.length = 0; 
         elements.forEach((element) => { try { busTargets.push(JSON.parse(element)); } catch(e) {} });
         
