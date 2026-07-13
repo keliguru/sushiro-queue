@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>驚安物價監察 - DONKI 風格</title>
+    <title>物價監察</title>
+	
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/price-icon.png">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="物價監察">
+	<meta property="og:description" content="物價監察">
+	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/price-icon.png"> 
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/price-icon.png">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="物價監察">
+	
     <style>
         :root { 
             --donki-yellow: #ffdf00; 
@@ -17,6 +29,9 @@
         input, select { padding: 12px; border: 3px solid var(--donki-blue); font-size: 1rem; font-weight: bold; background: white; outline: none; }
         .filter-btn { padding: 12px; border: 3px solid var(--donki-blue); background: white; color: var(--donki-blue); font-weight: 900; cursor: pointer; text-transform: uppercase; }
         .filter-btn.active { background: var(--donki-red); border-color: white; color: white; }
+        .reset-btn { padding: 12px; border: 3px solid var(--donki-black); background: var(--donki-black); color: white; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+        .reset-btn:hover { background: #333; }
+        .item-count { font-weight: 900; font-size: 1rem; margin-bottom: 10px; background: white; padding: 8px 12px; border: 3px solid var(--donki-blue); display: inline-block; }
         .card { background: white; padding: 15px; margin-bottom: 12px; border: 4px solid var(--donki-blue); position: relative; box-shadow: 4px 4px 0px rgba(0,0,0,0.8); }
         .pop-tag { background: var(--donki-red); color: white; padding: 2px 6px; font-size: 0.75rem; display: inline-block; margin-bottom: 4px; font-weight: bold; }
         .fav-btn { position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 2rem; color: #ddd; text-shadow: 1px 1px #000; }
@@ -30,7 +45,7 @@
     </style>
 </head>
 <body>
-    <h1>驚安物價監察</h1>
+    <h1>物價監察</h1>
     
     <div class="controls">
         <input type="text" id="searchInput" placeholder="🔍 搜尋商品名稱..." oninput="renderData()">
@@ -39,8 +54,10 @@
         </select>
         <button id="favBtn" class="filter-btn" onclick="toggleFilter('fav')">⭐ 只顯示最愛</button>
         <button id="offerBtn" class="filter-btn" onclick="toggleFilter('offer')">🎁 只顯示有優惠</button>
+        <button class="reset-btn" onclick="resetFilter()">🔄 重置篩選 (Reset Filter)</button>
     </div>
     
+    <div id="countDisplay" class="item-count" style="display:none;">📦 顯示中商品數量: 0</div>
     <div id="data-container" style="text-align:center; padding:20px;">資料讀取中...</div>
 
     <script>
@@ -79,13 +96,29 @@
             renderData();
         }
 
+        function resetFilter() {
+            // 清除輸入框與重置下拉選單
+            document.getElementById('searchInput').value = '';
+            document.getElementById('catFilter').value = 'all';
+            
+            // 重置最愛與優惠按鈕的狀態與樣式
+            filterFav = false;
+            filterOffer = false;
+            document.getElementById('favBtn').classList.remove('active');
+            document.getElementById('offerBtn').classList.remove('active');
+            
+            // 重新渲染畫面
+            renderData();
+        }
+
         function renderData() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const cat = document.getElementById('catFilter').value;
             const container = document.getElementById('data-container');
+            const countDisplay = document.getElementById('countDisplay');
             container.innerHTML = '';
 
-            allData.filter(i => {
+            const filteredItems = allData.filter(i => {
                 const nameZh = (i.name?.['zh-Hant'] || '').toLowerCase();
                 const nameEn = (i.name?.['en'] || '').toLowerCase();
                 const hasOffer = i.offers && i.offers.length > 0;
@@ -93,7 +126,15 @@
                        (cat === 'all' || i.cat1Name?.['zh-Hant'] === cat) && 
                        (!filterFav || favorites.includes(i.code)) &&
                        (!filterOffer || hasOffer);
-            }).forEach(item => {
+            });
+
+            // 更新並顯示商品數量
+            if (allData.length > 0) {
+                countDisplay.style.display = 'inline-block';
+                countDisplay.innerText = `📦 顯示中商品數量: ${filteredItems.length}`;
+            }
+
+            filteredItems.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
@@ -104,7 +145,7 @@
                     <div class="item-en">${item.name?.['en'] || ''}</div>
                     ${item.prices.map(p => `<div class="price-row"><span>${p.supermarketCode}</span><span class="price">HK$${p.price}</span></div>`).join('')}
                     ${item.offers ? item.offers.map(o => {
-                        const msg = o.offers?.['zh-Hant'] || o.offers?.['en'] || '';
+                        const msg = o['zh-Hant'] || o['en'] || '';
                         return msg ? `<div class="offer-box">🎁 <b>${o.supermarketCode}</b>: ${msg}</div>` : '';
                     }).join('') : ''}
                 `;
