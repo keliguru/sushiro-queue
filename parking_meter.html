@@ -196,6 +196,11 @@
                 <button id="view-toggle-btn" class="bg-blue-600 hover:bg-blue-700 border border-blue-700 text-white px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition flex items-center gap-1 f1-font">
                     <i class="fa-solid fa-map" id="view-icon"></i> <span id="view-toggle-text">MAP</span>
                 </button>
+                
+                <span class="text-[10px] text-zinc-400 shrink-0 font-black uppercase tracking-widest f1-font ml-3"><i class="fa-solid fa-location-arrow text-emerald-600"></i> GPS:</span>
+                <button id="gps-sort-btn" class="bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition flex items-center gap-1 f1-font">
+                    <i class="fa-solid fa-location-crosshairs"></i> <span id="gps-sort-text">定位排序 OFF</span>
+                </button>
             </div>
         </div>
 
@@ -268,9 +273,15 @@
         let mapInstance = null;
         let markersLayerGroup = null;
 
+        // GPS 定位相關變數
+        let userLat = null;
+        let userLng = null;
+        let isGpsSorting = false;
+
         document.addEventListener('DOMContentLoaded', () => {
             initPage();
             document.getElementById('view-toggle-btn').addEventListener('click', toggleViewMode);
+            document.getElementById('gps-sort-btn').addEventListener('click', toggleGpsSorting);
         });
         document.addEventListener('visibilitychange', handleVisibilityChange);
         
@@ -309,6 +320,64 @@
             autoRefreshInterval = setInterval(() => {
                 fetchAllData(false);
             }, 300000);
+        }
+
+        // 大圓距離公式（計算兩點之間的公里數）
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // 地球半徑 (km)
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // GPS 定位功能開關與觸發
+        function toggleGpsSorting() {
+            if (isGpsSorting) {
+                isGpsSorting = false;
+                userLat = null;
+                userLng = null;
+                updateGpsBtnStyle();
+                prepareAndRenderInitialCards();
+            } else {
+                if (navigator.geolocation) {
+                    const btnText = document.getElementById('gps-sort-text');
+                    btnText.innerText = "定位中...";
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            userLat = position.coords.latitude;
+                            userLng = position.coords.longitude;
+                            isGpsSorting = true;
+                            updateGpsBtnStyle();
+                            prepareAndRenderInitialCards();
+                        },
+                        (error) => {
+                            console.error(error);
+                            alert("無法取得您的定位資訊，請檢查瀏覽器定位權限設定。");
+                            isGpsSorting = false;
+                            updateGpsBtnStyle();
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                } else {
+                    alert("您的瀏覽器不支援 Geolocation 定位功能。");
+                }
+            }
+        }
+
+        function updateGpsBtnStyle() {
+            const btn = document.getElementById('gps-sort-btn');
+            const text = document.getElementById('gps-sort-text');
+            if (isGpsSorting) {
+                btn.className = "bg-emerald-600 hover:bg-emerald-700 border border-emerald-700 text-white px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition flex items-center gap-1 f1-font";
+                text.innerText = "定位排序 ON";
+            } else {
+                btn.className = "bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition flex items-center gap-1 f1-font";
+                text.innerText = "定位排序 OFF";
+            }
         }
 
         function toggleViewMode() {
@@ -469,10 +538,21 @@
                                 </div>`;
                     }).join('');
 
+                    // 地圖彈窗中若有 GPS 資訊，顯示距離徽章
+                    let distanceHtml = '';
+                    if (isGpsSorting && userLat !== null && userLng !== null) {
+                        const dist = getDistance(userLat, userLng, loc.latitude, loc.longitude);
+                        const distStr = dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`;
+                        distanceHtml = `<span class="bg-emerald-100 text-emerald-800 text-[9px] px-1.5 py-0.5 rounded font-black f1-font border border-emerald-200 ml-1.5"><i class="fa-solid fa-location-arrow"></i> ${distStr}</span>`;
+                    }
+
                     const popupContent = `
                         <div class="f1-font text-zinc-800 min-w-[190px]">
                             <div class="border-b-2 border-emerald-500 pb-1 mb-2">
-                                <h3 class="font-black text-zinc-900 text-xs uppercase tracking-wider truncate"><i class="fa-solid fa-flag-checkered text-emerald-500 mr-1"></i>${loc.street}</h3>
+                                <h3 class="font-black text-zinc-900 text-xs uppercase tracking-wider truncate flex items-center justify-between">
+                                    <span><i class="fa-solid fa-flag-checkered text-emerald-500 mr-1"></i>${loc.street}</span>
+                                    ${distanceHtml}
+                                </h3>
                                 <p class="text-[9px] text-zinc-400 font-bold uppercase">${loc.district}</p>
                             </div>
                             <div class="max-h-[120px] overflow-y-auto mb-2 pr-1 space-y-0.5">
@@ -507,6 +587,12 @@
             currentSelectedStreet = 'ALL';
             currentSearch = '';
             showFavoritesOnly = false;
+            
+            // 重設 GPS 定位狀態
+            isGpsSorting = false;
+            userLat = null;
+            userLng = null;
+            updateGpsBtnStyle();
 
             document.getElementById('search-input').value = '';
 
@@ -859,6 +945,19 @@
                 return matchRegion && matchVehicle && matchPeriod && matchSearch && matchFav;
             });
 
+            // 計算 GPS 定位距離 (公里)
+            if (isGpsSorting && userLat !== null && userLng !== null) {
+                filteredDataGlobal.forEach(item => {
+                    const lat = parseFloat(item.latitude);
+                    const lng = parseFloat(item.longitude);
+                    if (lat && lng) {
+                        item.distanceToUser = getDistance(userLat, userLng, lat, lng);
+                    } else {
+                        item.distanceToUser = 999999; 
+                    }
+                });
+            }
+
             let currentFilterAvailableCount = 0;
             filteredDataGlobal.forEach(item => {
                 if (item.meterStatus === 'N' && item.occupancyStatus === 'V') currentFilterAvailableCount++;
@@ -866,16 +965,27 @@
             document.getElementById('available-count').innerText = currentFilterAvailableCount;
 
             filteredDataGlobal.sort((a, b) => {
+                // 優先排序 1: 最愛街道
                 const aFav = favStreets.includes(a.street) ? 1 : 0;
                 const bFav = favStreets.includes(b.street) ? 1 : 0;
                 if (aFav !== bFav) return bFav - aFav;
+
+                // 優先排序 2: 狀態 (Available / PIT OPEN 的排前面)
                 const getOrder = (item) => {
                     if (item.meterStatus !== 'N') return 3; 
                     if (item.occupancyStatus === 'V') return 1; 
                     if (item.occupancyStatus === 'O') return 2; 
                     return 4;
                 };
-                return getOrder(a) - getOrder(b);
+                const orderA = getOrder(a);
+                const orderB = getOrder(b);
+                if (orderA !== orderB) return orderA - orderB;
+
+                // 優先排序 3: GPS 定位距離排序 (由近到遠)
+                if (isGpsSorting && userLat !== null && userLng !== null) {
+                    return a.distanceToUser - b.distanceToUser;
+                }
+                return 0;
             });
 
             document.getElementById('total-count').innerText = filteredDataGlobal.length;
@@ -899,7 +1009,6 @@
             }
         }
 
-        // [優化點] 使用 DocumentFragment 進行 DOM 批次渲染，消滅多餘的頁面重排卡頓
         function appendCardsPage() {
             const container = document.getElementById('parking-list');
             const startIndex = (currentPage - 1) * itemsPerPage;
@@ -939,6 +1048,15 @@
                 else if (item.maxParkingPeriod === '30分鐘') periodColorClass = 'bg-yellow-50 text-amber-700 border border-yellow-200';
                 
                 let periodBadge = `<span class="${periodColorClass} text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider f1-font">${item.maxParkingPeriod}</span>`;
+                
+                // 產生 GPS 距離徽章
+                let distanceBadge = '';
+                if (isGpsSorting && item.distanceToUser !== undefined && item.distanceToUser < 9999) {
+                    const dist = item.distanceToUser;
+                    const distStr = dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`;
+                    distanceBadge = `<span class="bg-emerald-100 text-emerald-800 text-[9px] px-1.5 py-0.5 rounded font-black f1-font border border-emerald-200 shrink-0"><i class="fa-solid fa-location-arrow mr-1 animate-pulse"></i>${distStr}</span>`;
+                }
+
                 const cardBorderAndBg = isAvailable 
                     ? 'border-2 border-emerald-500 bg-white shadow-md shadow-emerald-500/5 ring-1 ring-emerald-500/10' 
                     : 'border border-zinc-200 bg-white shadow-sm';
@@ -951,6 +1069,7 @@
                         <div class="mb-1 flex justify-between items-center gap-1">
                             <span class="text-[9px] uppercase tracking-wider text-zinc-400 font-bold f1-font truncate">${item.district}</span>
                             <div class="flex gap-1 items-center shrink-0">
+                                ${distanceBadge}
                                 ${periodBadge}
                                 <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-xs p-0.5 text-zinc-400 hover:text-amber-500 transition" title="收藏至 GRID">
                                     <i class="${isStreetFaved ? 'fa-solid fa-star text-amber-500' : 'fa-regular fa-star'}"></i>
@@ -1063,6 +1182,7 @@
             });
         }
 
+        // [優化] 修改為與其他篩選器相同邏輯
         function setupPeriodFilters() {
             document.querySelectorAll('.period-filter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
