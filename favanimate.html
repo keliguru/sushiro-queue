@@ -15,8 +15,8 @@
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="default">
 	<meta name="apple-mobile-web-app-title" content="個人動畫追番清單">
-    
     <style>
+    
         :root {
             --netflix-red: #E50914;
             --bg-dark: #141414;
@@ -206,6 +206,39 @@
         }
         .nav-item.active { color: var(--text-main); }
         .nav-icon { font-size: 18px; }
+
+        /* 回最頂端懸浮按鈕 */
+        .back-to-top {
+            position: fixed;
+            bottom: 80px; /* 避開底部導航列 60px */
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            background: rgba(0, 0, 0, 0.75);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 105;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .back-to-top:hover {
+            background: var(--netflix-red);
+            border-color: var(--netflix-red);
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -245,6 +278,9 @@
         <div class="empty-state">載入中...</div>
     </div>
     <div id="loading-trigger" class="loading-trigger" style="display: none;">正在加載更多作品...</div>
+
+    <!-- 回最頂端按鈕 -->
+    <button id="backToTop" class="back-to-top" onclick="scrollToTop()">▲</button>
 
     <!-- 底部導航 -->
     <nav class="bottom-nav">
@@ -333,9 +369,17 @@
             }
         }
 
-        // 升級：無限滾動自動加載監聽器
+        // 升級：無限滾動自動加載監聽器 與 回最頂端按鈕顯示控制
         function setupInfiniteScroll() {
             window.addEventListener('scroll', () => {
+                // 控制「回最頂端」按鈕的顯示/隱藏
+                const bttBtn = document.getElementById('backToTop');
+                if (window.scrollY > 300) {
+                    bttBtn.classList.add('show');
+                } else {
+                    bttBtn.classList.remove('show');
+                }
+
                 if (currentTab === 'favorites' || !hasNextPage || isLoading) return;
                 if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 250) {
                     const searchInput = document.getElementById('searchInput').value;
@@ -345,6 +389,11 @@
                     fetchGraphQL(GQL_QUERY, vars, true);
                 }
             });
+        }
+
+        // 滾動至網頁最頂端
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function selectSeason(element, season, year) {
@@ -400,14 +449,27 @@
             renderList();
         }
 
+        // 計算動畫尚未觀看的集數 (未看集數 = 已播集數 - 已看集數)
+        function getUnwatchedCount(anime) {
+            const airedCount = anime.nextAiringEpisode ? anime.nextAiringEpisode.episode - 1 : (anime.episodes || 0);
+            const watchedList = JSON.parse(localStorage.getItem(`watched_${anime.id}`) || '[]');
+            const validWatched = watchedList.filter(ep => ep <= airedCount).length;
+            return Math.max(0, airedCount - validWatched);
+        }
+
         function renderList() {
             const container = document.getElementById('anime-list');
             container.innerHTML = '';
             const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]');
             
             let displayData = [];
-            if (currentTab === 'home') { displayData = animeData; } 
-            else { displayData = Object.values(JSON.parse(localStorage.getItem('anime_favorites_details') || '{}')); }
+            if (currentTab === 'home') { 
+                displayData = animeData; 
+            } else { 
+                displayData = Object.values(JSON.parse(localStorage.getItem('anime_favorites_details') || '{}'));
+                // 依未觀看集數由多到少排序 (未看最多的排最前)
+                displayData.sort((a, b) => getUnwatchedCount(b) - getUnwatchedCount(a));
+            }
 
             // 升級：追番時間表星期幾過濾邏輯
             if (selectedDayFilter !== 'ALL') {
@@ -545,6 +607,7 @@
             }
         }
 
+        // 喜愛清單開關
         function toggleFav(id) {
             let favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]');
             let favDetails = JSON.parse(localStorage.getItem('anime_favorites_details') || '{}');
