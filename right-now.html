@@ -1075,123 +1075,162 @@
         document.getElementById('arrivalContainerCard').style.display = 'block';
     }
 
-    async function viewFullRoute(company, route, direction, targetStopId, routeId, region) {
-        document.getElementById('arrivalContainerCard').style.display = 'none';
-        document.getElementById('fullRouteContainerCard').style.display = 'block';
-        const container = document.getElementById('full-route-bus-container');
-        const dirText = direction === "outbound" ? "去程" : "回程";
-        document.getElementById('fullRouteTitle').innerText = `🗺️ ${company} ${route} (${dirText})`;
-        
-        container.innerHTML = '<div class="loading">🚜 正在鋪設全線軌道與數據... (需時數秒)</div>';
+	async function viewFullRoute(company, route, direction, targetStopId, routeId, region) {
+		document.getElementById('arrivalContainerCard').style.display = 'none';
+		document.getElementById('fullRouteContainerCard').style.display = 'block';
+		const container = document.getElementById('full-route-bus-container');
+		const dirText = direction === "outbound" ? "去程" : "回程";
+		document.getElementById('fullRouteTitle').innerText = `🗺️ ${company} ${route} (${dirText})`;
+		
+		container.innerHTML = '<div class="loading">🚜 正在同步鋪設全線軌道與即時數據...</div>';
 
-        try {
-            let stopList = [];
-            let etaData = [];
+		try {
+			let stopList = [];
+			let etaData = []; // 僅 KMB 使用全線預載
+			let actualRouteId = routeId;
+			const targetGroupId = direction === 'outbound' ? 1 : 2;
 
+			// 1. 取得各家營運商的車站列表
 			if (company === 'MIB') {
-                const targetGroupId = direction === 'outbound' ? 1 : 2;
-                const activeRegion = region || 'KLN';
-                const routeRes = await fetch(`${baseUrlMib}/route/${activeRegion}/${route}`);
-                const routeJson = await routeRes.json();
-                const mibRouteData = routeJson.data?.find(item => parseInt(item.group_id) === targetGroupId) || routeJson.data?.[0];
-                
-                if (!mibRouteData) throw new Error(`找不到小巴路線 ${route} 的方向資料`);
-                const actualRouteId = mibRouteData.route_id;
+				let activeRegion = region;
+				let mibRouteData = null;
 
-                const stopRes = await fetch(`${baseUrlMib}/route-stop/${actualRouteId}/${targetGroupId}`);
-                const stopJson = await stopRes.json();
-                stopList = stopJson.data?.route_stops || [];
-                
-                const etaRes = await fetch(`${baseUrlMib}/eta/route/${actualRouteId}`);
-                const etaJson = await etaRes.json();
-                etaData = etaJson.data || [];
-            } else if (company === 'KMB') {
-                const kmbDir = direction === 'outbound' ? 'outbound' : 'inbound';
-                const stopRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`);
-                const stopJson = await stopRes.json();
-                stopList = stopJson.data || [];
-
-                const etaRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-eta/${route}/1`);
-                const etaJson = await etaRes.json();
+				// 自動相容機制：若舊數據無 region 則自動探測
+				if (!activeRegion) {
+					const regions = ['HKI', 'KLN', 'NT'];
+					const fetchPromises = regions.map(async (r) => {
+						try {
+							const res = await fetch(`${baseUrlMib}/route/${r}/${route}`);
+							if (res.ok) {
+								const json = await res.json();
+								if (json.data && json.data.length > 0) return { region: r, data: json.data };
+							}
+						} catch (e) {}
+						return null;
+					});
+					const results = await Promise.all(fetchPromises);
+					const found = results.find(res => res !== null);
+					if (found) {
+						activeRegion = found.region;
+						mibRouteData = found.data.find(item => parseInt(item.group_id) === targetGroupId) || found.data[0];
+					}
+				} else {
+					const routeRes = await fetch(`${baseUrlMib}/route/${activeRegion}/${route}`);
+					const routeJson = await routeRes.json();
+					mibRouteData = routeJson.data?.find(item => parseInt(item.group_id) === targetGroupId) || routeJson.data?.[0];
+				}
 				
-                etaData = etaJson.data || [];
-                
-            } else { 
-                const stopRes = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/route-stop/${company}/${route}/${direction}`);
-                const stopJson = await stopRes.json();
-                stopList = stopJson.data || [];
-            }
+				if (!mibRouteData) throw new Error(`找不到小巴路線 ${route} 的方向資料`);
+				actualRouteId = mibRouteData.route_id;
 
-            const stopDetails = [];
-            for (let stop of stopList) {
-                let stopId = stop.stop || stop.stop_id;
-                let stopSeq = stop.seq || stop.stop_seq;
-                let stopName = stop.name_tc || await getStopName(company, stopId);
-                
-                let stopETAs = [];
+				const stopRes = await fetch(`${baseUrlMib}/route-stop/${actualRouteId}/${targetGroupId}`);
+				const stopJson = await stopRes.json();
+				stopList = stopJson.data?.route_stops || [];
+				
+				// 💡 註：小巴不支援一次性獲取全線，此處不執行無效的全線 fetch，改到下方併行處理。
+			} else if (company === 'KMB') {
+				const kmbDir = direction === 'outbound' ? 'outbound' : 'inbound';
+				const stopRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`);
+				const stopJson = await stopRes.json();
+				stopList = stopJson.data || [];
 
-                if (company === 'MIB') {
-                    const targetGroupId = direction === 'outbound' ? 1 : 2;
-                    const sEta = etaData.find(e => e.stop_id == stopId && e.route_seq == targetGroupId);
-                    if (sEta) stopETAs = sEta.eta || [];
-                } else if (company === 'KMB') {
-                    const dirCode = direction === 'outbound' ? 'O' : 'I';
-                    stopETAs = etaData.filter(e => (e.seq == stopSeq) && (e.dir === dirCode));
-                } else if (company === 'CTB' || company === 'NWFB') {
-                    try {
-                        const etaRes = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/eta/${company}/${stopId}/${route}`);
-                        const etaJson = await etaRes.json();
-                        const dirCode = direction === 'outbound' ? 'O' : 'I';
-                        if (etaJson.data) {
-                            stopETAs = etaJson.data.filter(e => e.dir === dirCode);
-                        }
-                    } catch (error) {
-                        console.error(`無法獲取站點 ${stopId} 的 ETA:`, error);
-                    }
-                }
+				// 九巴支援全線大包裝 API
+				const etaRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-eta/${route}/1`);
+				const etaJson = await etaRes.json();
+				etaData = etaJson.data || [];
+			} else { 
+				const stopRes = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/route-stop/${company}/${route}/${direction}`);
+				const stopJson = await stopRes.json();
+				stopList = stopJson.data || [];
+			}
 
-                stopDetails.push({ stopId, stopSeq, stopName, etas: stopETAs });
-            }
+			// 2. 🔥 【核心優化】使用 Promise.all 同步併行請求全線車站的 ETA 與名稱
+			const stopDetailsPromises = stopList.map(async (stop) => {
+				const stopId = stop.stop || stop.stop_id;
+				const stopSeq = stop.seq || stop.stop_seq;
+				const stopName = stop.name_tc || await getStopName(company, stopId);
+				let stopETAs = [];
 
-            let html = '<ul class="list-group" style="display: flex; flex-direction: column; gap: 8px;">';
-            stopDetails.forEach(sd => {
-                let etaHtml = '';
-                if (sd.etas.length === 0) {
-                    etaHtml = '<span class="time-badge">暫無服務</span>';
-                } else {
-                    sd.etas.slice(0, 3).forEach(info => {
-                        const rawEtaTime = info.timestamp || info.eta; 
-                        const mins = getMinutesDiff(rawEtaTime);
-                        if (mins !== null) {
-                            let urgentClass = mins <= 3 ? 'urgent' : '';
-                            let display = mins === 0 ? '馬上到' : `${mins}分`;
-                            etaHtml += `<span class="time-badge ${urgentClass}" style="margin-right:6px; font-size: 0.85rem;">${display}</span>`;
-                        }
-                    });
-                }
+				if (company === 'MIB') {
+					try {
+						// 套用正確的 /eta/route-stop/{route_id}/{stop_id} 進行單站精準查詢
+						const etaRes = await fetch(`${baseUrlMib}/eta/route-stop/${actualRouteId}/${stopId}`);
+						if (etaRes.ok) {
+							const etaJson = await etaRes.json();
+							if (etaJson.data && etaJson.data.length > 0) {
+								stopETAs = etaJson.data[0].eta || [];
+							}
+						}
+					} catch (error) {
+						console.error(`無法獲取小巴站點 ${stopId} 的 ETA:`, error);
+					}
+				} else if (company === 'KMB') {
+					const dirCode = direction === 'outbound' ? 'O' : 'I';
+					stopETAs = etaData.filter(e => (e.seq == stopSeq) && (e.dir === dirCode));
+				} else if (company === 'CTB' || company === 'NWFB') {
+					try {
+						const etaRes = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/eta/${company}/${stopId}/${route}`);
+						if (etaRes.ok) {
+							const etaJson = await etaRes.json();
+							const dirCode = direction === 'outbound' ? 'O' : 'I';
+							if (etaJson.data) {
+								stopETAs = etaJson.data.filter(e => e.dir === dirCode);
+							}
+						}
+					} catch (error) {
+						console.error(`無法獲取城巴站點 ${stopId} 的 ETA:`, error);
+					}
+				}
 
-                let isCurrentTarget = (String(sd.stopId) === String(targetStopId));
-                let itemClass = `element-item ${isCurrentTarget ? 'current-target-stop' : ''}`;
+				return { stopId, stopSeq, stopName, etas: stopETAs };
+			});
 
-                html += `
-                    <li class="${itemClass}" style="flex-direction: column; align-items: flex-start; padding: 12px;">
-                        <div style="font-weight: 900; margin-bottom: 8px; color: var(--text);">
-                            <span style="background: ${isCurrentTarget ? '#2563eb' : 'var(--border)'}; color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 0.8rem; margin-right: 6px;">${sd.stopSeq}</span>
-                            ${sd.stopName} ${isCurrentTarget ? '<span class="pinned-tag" style="background-color: #2563eb;">📍 當前登記站</span>' : ''}
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; width: 100%;">
-                            ${etaHtml || '<span class="time-badge">未明時間</span>'}
-                        </div>
-                    </li>
-                `;
-            });
-            html += '</ul>';
-            container.innerHTML = html;
+			// 等待所有車站的數據同時回傳
+			const stopDetails = await Promise.all(stopDetailsPromises);
 
-        } catch (err) {
-            container.innerHTML = `<div class="error">🚨 無法載入全線數據：${err.message}</div>`;
-        }
-    }
+			// 3. 渲染全線 UI 面板
+			let html = '<ul class="list-group" style="display: flex; flex-direction: column; gap: 8px;">';
+			stopDetails.forEach(sd => {
+				let etaHtml = '';
+				if (sd.etas.length === 0) {
+					etaHtml = '<span class="time-badge">暫無服務</span>';
+				} else {
+					sd.etas.slice(0, 3).forEach(info => {
+						const rawEtaTime = info.timestamp || info.eta; 
+						const mins = getMinutesDiff(rawEtaTime);
+						if (mins !== null) {
+							let urgentClass = mins <= 3 ? 'urgent' : '';
+							let display = mins === 0 ? '馬上到' : `${mins}分`;
+							if (company === 'MIB' && info.remarks_tc) {
+								display += ` (${info.remarks_tc})`;
+							}
+							etaHtml += `<span class="time-badge ${urgentClass}" style="margin-right:6px; font-size: 0.85rem; margin-bottom:4px;">${display}</span>`;
+						}
+					});
+				}
+
+				let isCurrentTarget = (String(sd.stopId) === String(targetStopId));
+				let itemClass = `element-item ${isCurrentTarget ? 'current-target-stop' : ''}`;
+
+				html += `
+					<li class="${itemClass}" style="flex-direction: column; align-items: flex-start; padding: 12px;">
+						<div style="font-weight: 900; margin-bottom: 8px; color: var(--text);">
+							<span style="background: ${isCurrentTarget ? '#2563eb' : 'var(--border)'}; color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 0.8rem; margin-right: 6px;">${sd.stopSeq}</span>
+							${sd.stopName} ${isCurrentTarget ? '<span class="pinned-tag" style="background-color: #2563eb;">📍 當前登記站</span>' : ''}
+						</div>
+						<div style="display: flex; flex-wrap: wrap; width: 100%;">
+							${etaHtml || '<span class="time-badge">未明時間</span>'}
+						</div>
+					</li>
+				`;
+			});
+			html += '</ul>';
+			container.innerHTML = html;
+
+		} catch (err) {
+			container.innerHTML = `<div class="error">🚨 無法載入全線數據：${err.message}</div>`;
+		}
+	}
 </script>
 
 </body>
