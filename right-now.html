@@ -542,7 +542,6 @@
         </div>
         <ul id="profileList" class="list-group"></ul>
 
-        <!-- 🔧 新增：預設立即打開特定交通基地的功能設定區 -->
         <div class="divider"></div>
         <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; border: 2px dashed var(--border);">
             <label for="autoOpenToggle" style="margin: 0; cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: space-between; font-weight: 900;">
@@ -653,6 +652,7 @@
     let profiles = JSON.parse(localStorage.getItem('profiles_data')) || {};
     let currentProfileId = null;
     let pinnedStops = JSON.parse(localStorage.getItem('pinned_stops_data')) || {};
+    let sortableInstance = null;
     
     const baseUrlCtb = 'https://rt.data.gov.hk';
     const baseUrlKmb = 'https://data.etabus.gov.hk';
@@ -673,12 +673,9 @@
             document.getElementById('themeBtn').textContent = '☀️';
         }
 
-        // 初始化自動開啟設定狀態與介面
         initAutoOpenSettings();
-
         renderProfiles();
 
-        // 檢查是否開啟自動預設開啟功能
         const autoOpenEnabled = localStorage.getItem('auto_open_enabled') === 'true';
         const autoOpenProfileId = localStorage.getItem('auto_open_profile_id');
         if (autoOpenEnabled && autoOpenProfileId && profiles[autoOpenProfileId]) {
@@ -736,7 +733,7 @@
         const keys = Object.keys(profiles);
         if (keys.length === 0) { 
             profileList.innerHTML = '<li class="no-data">目前空空如也，快建立新基地吧！</li>'; 
-            populateAutoOpenSelect(); // 確保無群組時下拉選單同步清空
+            populateAutoOpenSelect();
             return; 
         }
 
@@ -836,7 +833,6 @@
             profileList.appendChild(li);
         });
 
-        // 動態重新填充預設載入設定檔下拉選單
         populateAutoOpenSelect();
     }
 
@@ -845,6 +841,11 @@
         const elementSection = document.getElementById('elementSection');
         const placeholderText = document.getElementById('placeholderText');
         const currentProfileName = document.getElementById('currentProfileName');
+
+        if (sortableInstance) {
+            sortableInstance.destroy();
+            sortableInstance = null;
+        }
 
         if (!currentProfileId || !profiles[currentProfileId]) {
             elementSection.style.display = 'none'; placeholderText.style.display = 'block'; currentProfileName.textContent = '請先選取項目'; return;
@@ -879,9 +880,11 @@
             elementList.appendChild(li);
         });
 
-        new Sortable(elementList, {
+        sortableInstance = new Sortable(elementList, {
             animation: 150,
             ghostClass: 'sortable-ghost',
+            forceFallback: true,
+            fallbackTolerance: 4,
             onEnd: function (evt) {
                 const item = profiles[currentProfileId].elements.splice(evt.oldIndex, 1)[0];
                 profiles[currentProfileId].elements.splice(evt.newIndex, 0, item);
@@ -924,7 +927,6 @@
         if (!confirm('確定要拆除此基地群組嗎？')) return;
         delete profiles[id]; 
         
-        // 如果被刪除的群組是設為「預設立即開啟」，則清除該預設設定
         if (localStorage.getItem('auto_open_profile_id') === id) {
             localStorage.removeItem('auto_open_profile_id');
         }
@@ -1534,7 +1536,6 @@
 		}
 	}
 
-    // 🚀 新增自動載入設定的輔助函式
     function initAutoOpenSettings() {
         const toggle = document.getElementById('autoOpenToggle');
         const selectGroup = document.getElementById('autoOpenSelectGroup');
