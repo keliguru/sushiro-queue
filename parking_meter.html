@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
-    <!-- 優化：引入 Leaflet MarkerCluster 插件 -->
+    <!-- 引入 Leaflet MarkerCluster 插件 -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
@@ -58,7 +58,6 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        /* 白天版格子旗緞帶裝飾 */
         .checkered-pattern {
             background-image: linear-gradient(45deg, #e4e4e7 25%, transparent 25%), 
                               linear-gradient(-45deg, #e4e4e7 25%, transparent 25%), 
@@ -68,8 +67,6 @@
             background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
             background-color: #f4f4f5;
         }
-
-        /* 地圖相關樣式調整 */
         .leaflet-container {
             z-index: 10 !important;
             font-family: 'Orbitron', sans-serif, "微軟正黑體";
@@ -90,8 +87,6 @@
     <!-- 頂部賽事導航列 -->
     <nav class="bg-white border-b-2 border-red-600 shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-3 py-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-            
-            <!-- 第一層：標題與更新按鈕 -->
             <div class="flex justify-between items-center w-full sm:w-auto">
                 <h1 class="text-base sm:text-lg font-black italic tracking-wider flex items-center gap-2 text-zinc-900 f1-font">
                     <i class="fa-solid fa-flag-checkered text-red-600 animate-pulse"></i> 
@@ -102,7 +97,6 @@
                 </button>
             </div>
             
-            <!-- 第二層：核心控制台 -->
             <div class="grid grid-cols-3 sm:flex items-center gap-1.5 w-full sm:w-auto f1-font">
                 <button id="notify-config-btn" class="justify-center bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-800 px-2.5 py-2.5 sm:py-1.5 rounded text-[11px] font-bold transition flex items-center gap-1">
                     <i class="fa-solid fa-bell text-emerald-600" id="notify-icon-status"></i> <span>RADIO</span>
@@ -117,7 +111,6 @@
                     <i class="fa-solid fa-rotate" id="refresh-icon"></i> <span>PURSUE</span>
                 </button>
             </div>
-            
         </div>
     </nav>
 
@@ -156,8 +149,6 @@
 
     <!-- 主數據控制台 -->
     <main class="max-w-7xl mx-auto px-2.5 sm:px-4 py-3 sm:py-6">
-        
-        <!-- 賽事篩選面板 -->
         <div class="bg-white border border-zinc-200 p-3 mb-4 flex flex-col gap-3 relative shadow-sm">
             <div class="absolute top-0 left-0 w-full h-[3px] checkered-pattern"></div>
             
@@ -168,7 +159,6 @@
                 <input type="text" id="search-input" placeholder="搜尋賽道（街道、地區）..." class="w-full pl-10 pr-4 py-2.5 sm:py-2 text-xs bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder-zinc-400 rounded focus:outline-none focus:border-red-500 transition f1-font">
             </div>
             
-            <!-- 分區選擇 -->
             <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5" id="region-filters">
                 <button class="region-filter-btn bg-red-600 text-white px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font" data-region="ALL">ALL</button>
                 <button class="region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-region="HONG KONG">香港島</button>
@@ -176,7 +166,6 @@
                 <button class="region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font" data-region="NEW TERRITORIES">新界</button>
             </div>
 
-            <!-- 車型戰術分類 -->
             <div class="flex items-center gap-2 pt-2 border-t border-zinc-100 overflow-x-auto no-scrollbar">
                 <span class="text-[10px] text-zinc-400 shrink-0 font-black uppercase tracking-widest f1-font"><i class="fa-solid fa-car text-red-600"></i> CLASS:</span>
                 <div id="vehicle-filters" class="flex gap-1.5">
@@ -187,7 +176,6 @@
                 </div>
             </div>
 
-            <!-- 停留限時戰術 -->
             <div class="flex items-center gap-2 pt-2 border-t border-zinc-100 overflow-x-auto no-scrollbar">
                 <span class="text-[10px] text-zinc-400 shrink-0 font-black uppercase tracking-widest f1-font"><i class="fa-solid fa-stopwatch text-red-600"></i> STINT:</span>
                 <div id="period-filters" class="flex gap-1.5">
@@ -198,13 +186,11 @@
                 </div>
             </div>
 
-            <!-- 最愛捷徑 -->
             <div id="fav-street-buttons-container" class="flex items-center gap-2 pt-2 border-t border-zinc-100 hidden overflow-x-auto no-scrollbar">
                 <span class="text-[10px] text-zinc-400 shrink-0 font-black uppercase tracking-widest f1-font"><i class="fa-solid fa-thumbtack text-amber-500"></i> HOT LAP:</span>
                 <div id="fav-street-btns" class="flex gap-1.5 items-center bg-white"></div>
             </div>
 
-            <!-- 地圖與網格 模式切換 -->
             <div class="flex items-center gap-2 pt-2 border-t border-zinc-100 overflow-x-auto no-scrollbar">
                 <span class="text-[10px] text-zinc-400 shrink-0 font-black uppercase tracking-widest f1-font"><i class="fa-solid fa-display text-blue-600"></i> VIEW MODE:</span>
                 <button id="view-toggle-btn" class="bg-blue-600 hover:bg-blue-700 border border-blue-700 text-white px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition flex items-center gap-1 f1-font">
@@ -213,7 +199,6 @@
             </div>
         </div>
 
-        <!-- 數據看板狀態列 -->
         <div class="flex justify-between items-center mb-3 text-[10px] uppercase tracking-wider text-zinc-500 px-1 f1-font font-bold">
             <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                 <span>TELEMETRY SYNC: <span id="update-time" class="text-zinc-900 font-bold">OFFLINE</span></span>
@@ -222,7 +207,6 @@
             <p class="text-right">TRACK UNITS: <span id="displayed-count" class="font-black text-red-600">0</span> / <span id="total-count" class="font-black text-zinc-500">0</span></p>
         </div>
 
-        <!-- 數據下載載入視窗 -->
         <div id="loading-view" class="flex flex-col items-center justify-center py-16 bg-white border border-zinc-200 rounded shadow-sm">
             <div class="loader ease-linear rounded-full border-4 border-t-4 border-zinc-200 h-10 w-10 mb-4"></div>
             <p id="loading-text" class="text-zinc-500 text-xs text-center px-4 mb-3 tracking-widest uppercase font-black f1-font">CALIBRATING SYSTEM...</p>
@@ -232,15 +216,12 @@
             <p id="progress-percent" class="text-[10px] font-bold text-zinc-400 mt-1.5 f1-font">0%</p>
         </div>
 
-        <!-- 錶位即時網格 -->
         <div id="parking-list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 hidden">
         </div>
 
-        <!-- 地圖視圖容器 -->
         <div id="map-view" class="hidden w-full h-[65vh] bg-zinc-100 rounded border-2 border-zinc-200 shadow-inner relative z-10 overflow-hidden">
         </div>
 
-        <!-- 分頁加載提示 -->
         <div id="infinite-scroll-trigger" class="w-full text-center py-5 text-xs text-zinc-400 font-bold tracking-widest uppercase f1-font hidden">
             <i class="fa-solid fa-circle-notch animate-spin text-red-600 mr-1"></i> FETCHING DATA STREAM...
         </div>
@@ -249,7 +230,6 @@
         </div>
     </main>
 
-    <!-- 底部資訊宣告 -->
     <footer class="bg-zinc-100 border-t border-zinc-200 text-zinc-400 text-center py-4 mt-8 text-[10px] tracking-wider font-bold uppercase f1-font">
         <p>© 2026 F1 PARKING TELEMETRY // DATA SOURCE: DATA.GOV.HK</p>
     </footer>
@@ -284,7 +264,6 @@
         let itemsPerPage = 50;       
         let currentPage = 1;         
 
-        // 地圖相關變數
         let isMapView = false;
         let mapInstance = null;
         let markersLayerGroup = null;
@@ -332,8 +311,6 @@
             }, 300000);
         }
 
-        // --- 地圖核心功能與視覺優化區塊 ---
-
         function toggleViewMode() {
             isMapView = !isMapView;
             const mapEl = document.getElementById('map-view');
@@ -371,13 +348,12 @@
         }
 
         function initMap() {
-            // 設定香港的合理邊界範圍 (西南角, 東北角)
             const hkBounds = L.latLngBounds(L.latLng(22.1, 113.8), L.latLng(22.6, 114.5));
 
             mapInstance = L.map('map-view', {
-                maxBounds: hkBounds,           // 限制地圖拖曳在此邊界內
-                maxBoundsViscosity: 1.0,       // 完全鎖定，到達邊緣時無彈性
-                minZoom: 10                    // 限制最小縮放級別，防止縮得太小看到廣東省
+                maxBounds: hkBounds,
+                maxBoundsViscosity: 1.0,
+                minZoom: 10
             }).setView([22.3193, 114.1694], 12);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -385,7 +361,6 @@
                 maxZoom: 19
             }).addTo(mapInstance);
 
-            // 賽事級聚合優化：大範圍群組圓圈同步遵循 綠/橙/紅 戰術燈號邏輯
             markersLayerGroup = L.markerClusterGroup({
                 chunkedLoading: true,
                 chunkInterval: 40,
@@ -401,11 +376,11 @@
                         totalSpaces += m.options.totalCount || 0;
                     });
                     
-                    let bgColor = '#ef4444'; // 紅色圓圈：全滿
+                    let bgColor = '#ef4444';
                     if (totalAvailable === totalSpaces && totalSpaces > 0) {
-                        bgColor = '#10b981'; // 綠色圓圈：全空
+                        bgColor = '#10b981';
                     } else if (totalAvailable > 0) {
-                        bgColor = '#f97316'; // 橙色圓圈：部分有空位
+                        bgColor = '#f97316';
                     }
                     
                     return L.divIcon({
@@ -428,15 +403,11 @@
 
             const bounds = L.latLngBounds();
             const markersArray = [];
-
-            // 坐標精準分組，合併物理位置相同的多個錶位數據（防重疊視覺破壞）
             const locationMap = new Map();
+
             filteredDataGlobal.forEach(item => {
                 const lat = parseFloat(item.latitude);
                 const lng = parseFloat(item.longitude);
-                
-                // 【新增防護】：嚴格驗證 GPS 坐標是否落在香港合理範圍內
-                // 排除 0,0 或是漂流到其他國家的異常開放數據
                 if (lat && lng && lat > 22.1 && lat < 22.6 && lng > 113.8 && lng < 114.5) {
                     const key = `${lat}_${lng}`;
                     if (!locationMap.has(key)) {
@@ -452,23 +423,20 @@
                 }
             });
 
-            // 遍歷實時渲染圓圈燈號
             locationMap.forEach(loc => {
                 const total = loc.spaces.length;
                 const available = loc.spaces.filter(s => s.meterStatus === 'N' && s.occupancyStatus === 'V').length;
                 const suspended = loc.spaces.filter(s => s.meterStatus !== 'N').length;
                 
-                let circleColor = '#ef4444'; // 預設紅色圓圈：全滿
-                
+                let circleColor = '#ef4444';
                 if (suspended === total) {
-                    circleColor = '#9ca3af'; // 灰色圓圈：全部暫停服務
+                    circleColor = '#9ca3af';
                 } else if (available === total && total > 0) {
-                    circleColor = '#10b981'; // 綠色圓圈：全部有空位
+                    circleColor = '#10b981';
                 } else if (available > 0) {
-                    circleColor = '#f97316'; // 橙色圓圈：部份車位有空缺
+                    circleColor = '#f97316';
                 }
 
-                // 建立精簡圓圈實時燈號圖標（中央數字呈現可用空位）
                 const customCircleIcon = L.divIcon({
                     className: 'bg-transparent border-0',
                     html: `<div class="w-6 h-6 rounded-full border-2 border-white shadow-md flex items-center justify-center text-[10px] font-black text-white transition-all transform hover:scale-110 active:scale-95 shadow-lg" style="background-color: ${circleColor}; font-family: 'Orbitron';">
@@ -485,11 +453,8 @@
                     totalCount: total
                 });
                 
-                // 延遲動態渲染綁定 Popup 卡片
                 marker.on('click', function() {
-                    // 【新戰術優化】只有當該位置有可用空位 (available > 0) 時才彈出視窗，沒空位直接返回
                     if (available <= 0) return;
-
                     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}`;
                     
                     let spacesListHtml = loc.spaces.map(s => {
@@ -529,15 +494,11 @@
                 bounds.extend([loc.latitude, loc.longitude]);
             });
 
-            // 批量注入，極致幀率保證
             markersLayerGroup.addLayers(markersArray);
-
             if (markersArray.length > 0) {
                 mapInstance.fitBounds(bounds, {padding: [30, 30], maxZoom: 16});
             }
         }
-
-        // --- 看板業務邏輯控制區塊 ---
 
         function resetAllFilters() {
             currentRegion = 'ALL';
@@ -549,54 +510,36 @@
 
             document.getElementById('search-input').value = '';
 
-            const regionButtons = document.querySelectorAll('.region-filter-btn');
-            regionButtons.forEach(b => {
-                const reg = b.getAttribute('data-region');
-                if (reg === 'ALL') {
-                    b.className = "region-filter-btn bg-red-600 text-white px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
-                } else {
-                    b.className = "region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
-                }
+            document.querySelectorAll('.region-filter-btn').forEach(b => {
+                b.className = (b.getAttribute('data-region') === 'ALL')
+                    ? "region-filter-btn bg-red-600 text-white px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font"
+                    : "region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
             });
 
-            const vehicleButtons = document.querySelectorAll('.vehicle-filter-btn');
-            vehicleButtons.forEach(b => {
-                const veh = b.getAttribute('data-vehicle');
-                if (veh === 'ALL') {
-                    b.className = "vehicle-filter-btn bg-yellow-400 text-zinc-900 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
-                } else {
-                    b.className = "vehicle-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
-                }
+            document.querySelectorAll('.vehicle-filter-btn').forEach(b => {
+                b.className = (b.getAttribute('data-vehicle') === 'ALL')
+                    ? "vehicle-filter-btn bg-yellow-400 text-zinc-900 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font"
+                    : "vehicle-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
             });
 
-            const periodButtons = document.querySelectorAll('.period-filter-btn');
-            periodButtons.forEach(b => {
-                const per = b.getAttribute('data-period');
-                if (per === 'ALL') {
-                    b.className = "period-filter-btn bg-orange-600 text-white px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
-                } else {
-                    b.className = "period-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
-                }
+            document.querySelectorAll('.period-filter-btn').forEach(b => {
+                b.className = (b.getAttribute('data-period') === 'ALL')
+                    ? "period-filter-btn bg-orange-600 text-white px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font"
+                    : "period-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
             });
 
             const favBtn = document.getElementById('fav-toggle-btn');
-            const favText = document.getElementById('fav-toggle-text');
             favBtn.className = "justify-center bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-800 px-2.5 py-2.5 sm:py-1.5 rounded text-[11px] font-bold transition flex items-center gap-1";
-            favText.innerText = "GRID";
+            document.getElementById('fav-toggle-text').innerText = "GRID";
 
-            if (favStreets.length > 0) {
-                updateFavStreetButtonStyles();
-            }
-
+            if (favStreets.length > 0) updateFavStreetButtonStyles();
             prepareAndRenderInitialCards();
         }
 
         function openNotificationModal() {
             if ('Notification' in window && Notification.permission !== 'granted') {
                 Notification.requestPermission().then(permission => {
-                    if (permission !== 'granted') {
-                        alert('⚠️ 您拒絕了系統通知權限，將無法接收動態廣播。');
-                    }
+                    if (permission !== 'granted') alert('⚠️ 您拒絕了系統通知權限，將無法接收動態廣播。');
                 });
             }
             document.getElementById('notify-master-switch').checked = notifySettings.enabled;
@@ -714,9 +657,7 @@
                 const statusRes = await fetchWithProgress(STATUS_URL, 'LIVE STATUS', 55, 90);
                 const statusParsed = Papa.parse(statusRes, { header: false, skipEmptyLines: true }).data;
 
-                if (isManualClick || !rawInfoData) {
-                    updateProgress(95, "INTEGRATING METRICS MATRIX...");
-                }
+                if (isManualClick || !rawInfoData) updateProgress(95, "INTEGRATING METRICS MATRIX...");
 
                 const statusMap = new Map();
                 statusParsed.forEach((row, index) => {
@@ -753,13 +694,9 @@
 
                     let rawPeriod = (row[20] || '').trim();
                     let formattedPeriod = rawPeriod || '未明';
-                    if (rawPeriod === '120' || rawPeriod.includes('120')) {
-                        formattedPeriod = '2小時';
-                    } else if (rawPeriod === '60' || rawPeriod.includes('60')) {
-                        formattedPeriod = '1小時';
-                    } else if (rawPeriod === '30' || rawPeriod.includes('30')) {
-                        formattedPeriod = '30分鐘';
-                    }
+                    if (rawPeriod === '120' || rawPeriod.includes('120')) formattedPeriod = '2小時';
+                    else if (rawPeriod === '60' || rawPeriod.includes('60')) formattedPeriod = '1小時';
+                    else if (rawPeriod === '30' || rawPeriod.includes('30')) formattedPeriod = '30分鐘';
 
                     parkingData.push({
                         id: spaceId,
@@ -781,10 +718,7 @@
 
                 const timeEl = document.getElementById('update-time');
                 if(timeEl) timeEl.innerText = new Date().toLocaleTimeString();
-                
-                if (isManualClick || !rawInfoData) {
-                    updateProgress(100, "SYSTEM GREEN!");
-                }
+                if (isManualClick || !rawInfoData) updateProgress(100, "SYSTEM GREEN!");
 
                 setTimeout(() => {
                     renderFavStreetButtons();
@@ -818,26 +752,16 @@
                 if (oldStatus.occ !== item.occupancyStatus || oldStatus.meter !== item.meterStatus) {
                     changesCount++;
                     let statusDesc = '';
-                    if (item.meterStatus !== 'N') {
-                        statusDesc = '暫停服務 🟡';
-                    } else if (item.occupancyStatus === 'V') {
-                        statusDesc = 'PIT OPEN / 有空位 🟢';
-                    } else if (item.occupancyStatus === 'O') {
-                        statusDesc = 'OCCUPIED / 已佔用 🔴';
-                    } else {
-                        statusDesc = '未知';
-                    }
+                    if (item.meterStatus !== 'N') statusDesc = '暫停服務 🟡';
+                    else if (item.occupancyStatus === 'V') statusDesc = 'PIT OPEN / 有空位 🟢';
+                    else statusDesc = 'OCCUPIED / 已佔用 🔴';
 
-                    if (changesCount <= 3) {
-                        notificationText += `【${item.street}】➔ ${statusDesc}\n`;
-                    }
+                    if (changesCount <= 3) notificationText += `【${item.street}】➔ ${statusDesc}\n`;
                 }
             });
 
             if (changesCount > 0) {
-                if (changesCount > 3) {
-                    notificationText = `您關注的賽道有 ${changesCount} 處空缺異動，立即切換至主戰術板。`;
-                }
+                if (changesCount > 3) notificationText = `您關注的賽道有 ${changesCount} 處空缺異動，立即切換至主戰術板。`;
                 new Notification('🏎️ F1 PARKING // 安全車訊號廣播', {
                     body: notificationText,
                     icon: 'https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png',
@@ -864,21 +788,18 @@
             allBtn.innerText = "ALL";
             allBtn.addEventListener('click', () => {
                 currentSelectedStreet = 'ALL';
-                if (showFavoritesOnly) {
-                    toggleFavoritesFilter(); 
-                } else {
+                if (showFavoritesOnly) toggleFavoritesFilter(); 
+                else {
                     updateFavStreetButtonStyles();
                     prepareAndRenderInitialCards();
                 }
             });
             btnsDiv.appendChild(allBtn);
 
-            // 預先篩選出目前真正有空車位的最愛街道
             const streetsWithAvailableSpaces = favStreets.filter(street => {
                 return parkingData.some(item => item.street === street && item.meterStatus === 'N' && item.occupancyStatus === 'V');
             });
 
-            // 使用篩選後的街道名稱來產生按鈕
             streetsWithAvailableSpaces.forEach(street => {
                 const btn = document.createElement('button');
                 btn.setAttribute('data-street', street);
@@ -931,7 +852,6 @@
                 
                 let matchFav = true;
                 if (showFavoritesOnly) {
-                    // 當啟用 GRID 時，必須是在最愛清單中，且「儀錶正常運作 (N)」加上「車位空置 (V)」
                     matchFav = favStreets.includes(item.street) && item.meterStatus === 'N' && item.occupancyStatus === 'V';
                 }
                 if (currentSelectedStreet !== 'ALL') matchFav = (item.street === currentSelectedStreet);
@@ -941,9 +861,7 @@
 
             let currentFilterAvailableCount = 0;
             filteredDataGlobal.forEach(item => {
-                if (item.meterStatus === 'N' && item.occupancyStatus === 'V') {
-                    currentFilterAvailableCount++;
-                }
+                if (item.meterStatus === 'N' && item.occupancyStatus === 'V') currentFilterAvailableCount++;
             });
             document.getElementById('available-count').innerText = currentFilterAvailableCount;
 
@@ -967,7 +885,6 @@
                 document.getElementById('displayed-count').innerText = "0";
                 document.getElementById('infinite-scroll-trigger').classList.add('hidden');
                 document.getElementById('all-loaded-text').classList.add('hidden');
-                
                 if (isMapView) renderMapMarkers(); 
                 return;
             }
@@ -982,11 +899,14 @@
             }
         }
 
+        // [優化點] 使用 DocumentFragment 進行 DOM 批次渲染，消滅多餘的頁面重排卡頓
         function appendCardsPage() {
             const container = document.getElementById('parking-list');
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = Math.min(startIndex + itemsPerPage, filteredDataGlobal.length);
             const pageData = filteredDataGlobal.slice(startIndex, endIndex);
+
+            const fragment = document.createDocumentFragment();
 
             pageData.forEach(item => {
                 let occText = '';
@@ -1014,62 +934,50 @@
                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
 
                 let periodColorClass = 'bg-zinc-100 text-zinc-700 border-zinc-200';
-                if (item.maxParkingPeriod === '2小時') {
-                    periodColorClass = 'bg-red-50 text-red-600 border border-red-200';
-                } else if (item.maxParkingPeriod === '1小時') {
-                    periodColorClass = 'bg-orange-50 text-orange-600 border border-orange-200';
-                } else if (item.maxParkingPeriod === '30分鐘') {
-                    periodColorClass = 'bg-yellow-50 text-amber-700 border border-yellow-200';
-                }
+                if (item.maxParkingPeriod === '2小時') periodColorClass = 'bg-red-50 text-red-600 border border-red-200';
+                else if (item.maxParkingPeriod === '1小時') periodColorClass = 'bg-orange-50 text-orange-600 border border-orange-200';
+                else if (item.maxParkingPeriod === '30分鐘') periodColorClass = 'bg-yellow-50 text-amber-700 border border-yellow-200';
+                
                 let periodBadge = `<span class="${periodColorClass} text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider f1-font">${item.maxParkingPeriod}</span>`;
-
                 const cardBorderAndBg = isAvailable 
                     ? 'border-2 border-emerald-500 bg-white shadow-md shadow-emerald-500/5 ring-1 ring-emerald-500/10' 
                     : 'border border-zinc-200 bg-white shadow-sm';
 
-                const cardHtml = `
-                    <div class="rounded transition overflow-hidden ${cardBorderAndBg} ${!isUsable ? 'opacity-60' : ''} flex flex-col justify-between relative text-xs">
-                        ${isAvailable ? '<div class="absolute left-0 top-0 bottom-0 w-[4px] bg-emerald-500"></div>' : ''}
-                        <div class="p-2 sm:p-2.5 ${isAvailable ? 'pl-3' : ''}">
-                            <div class="mb-1 flex justify-between items-center gap-1">
-                                <span class="text-[9px] uppercase tracking-wider text-zinc-400 font-bold f1-font truncate">
-                                    ${item.district}
-                                </span>
-                                <div class="flex gap-1 items-center shrink-0">
-                                    ${periodBadge}
-                                    <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-xs p-0.5 text-zinc-400 hover:text-amber-500 transition" title="收藏至 GRID">
-                                        <i class="${isStreetFaved ? 'fa-solid fa-star text-amber-500' : 'fa-regular fa-star'}"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <p class="text-zinc-900 text-xs font-black mb-0.5 truncate tracking-wide"><i class="fa-solid fa-location-crosshairs text-red-600 text-[10px] mr-1"></i>${item.street}</p>
-                            <p class="text-zinc-400 text-[9px] f1-font mb-2 font-bold uppercase">POLE ID: ${item.poleId}</p>
-                            
-                            <div class="space-y-1 mb-1.5 text-[11px] text-zinc-700 ${isAvailable ? 'bg-emerald-50/30 border-emerald-100' : 'bg-zinc-50 border-zinc-100'} p-1.5 border rounded">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-zinc-400 text-[9px] font-bold uppercase f1-font">METRIC STATION:</span><span>${meterText}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-zinc-400 text-[9px] font-bold uppercase f1-font">CIRCUIT STATUS:</span><span>${occText}</span>
-                                </div>
+                const tempDiv = document.createElement('div');
+                tempDiv.className = `rounded transition overflow-hidden ${cardBorderAndBg} ${!isUsable ? 'opacity-60' : ''} flex flex-col justify-between relative text-xs`;
+                tempDiv.innerHTML = `
+                    ${isAvailable ? '<div class="absolute left-0 top-0 bottom-0 w-[4px] bg-emerald-500"></div>' : ''}
+                    <div class="p-2 sm:p-2.5 ${isAvailable ? 'pl-3' : ''}">
+                        <div class="mb-1 flex justify-between items-center gap-1">
+                            <span class="text-[9px] uppercase tracking-wider text-zinc-400 font-bold f1-font truncate">${item.district}</span>
+                            <div class="flex gap-1 items-center shrink-0">
+                                ${periodBadge}
+                                <button onclick="toggleFavoriteStreet('${encodeURIComponent(item.street)}')" class="text-xs p-0.5 text-zinc-400 hover:text-amber-500 transition" title="收藏至 GRID">
+                                    <i class="${isStreetFaved ? 'fa-solid fa-star text-amber-500' : 'fa-regular fa-star'}"></i>
+                                </button>
                             </div>
                         </div>
-
-                        <div class="bg-zinc-50 px-2 py-1.5 border-t border-zinc-100 flex justify-end items-center">
-                            <a href="${mapsUrl}" target="_blank" class="text-red-600 font-black tracking-widest uppercase flex items-center gap-1 bg-white border border-zinc-200 shadow-xs px-2.5 py-1 rounded text-[9px] hover:bg-red-600 hover:text-white transition active:scale-95 f1-font">
-                                <i class="fa-solid fa-crosshairs text-[8px]"></i> GPS NAV
-                            </a>
+                        <p class="text-zinc-900 text-xs font-black mb-0.5 truncate tracking-wide"><i class="fa-solid fa-location-crosshairs text-red-600 text-[10px] mr-1"></i>${item.street}</p>
+                        <p class="text-zinc-400 text-[9px] f1-font mb-2 font-bold uppercase">POLE ID: ${item.poleId}</p>
+                        <div class="space-y-1 mb-1.5 text-[11px] text-zinc-700 ${isAvailable ? 'bg-emerald-50/30 border-emerald-100' : 'bg-zinc-50 border-zinc-100'} p-1.5 border rounded">
+                            <div class="flex justify-between items-center"><span class="text-zinc-400 text-[9px] font-bold uppercase f1-font">METRIC STATION:</span><span>${meterText}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-zinc-400 text-[9px] font-bold uppercase f1-font">CIRCUIT STATUS:</span><span>${occText}</span></div>
                         </div>
                     </div>
+                    <div class="bg-zinc-50 px-2 py-1.5 border-t border-zinc-100 flex justify-end items-center">
+                        <a href="${mapsUrl}" target="_blank" class="text-red-600 font-black tracking-widest uppercase flex items-center gap-1 bg-white border border-zinc-200 shadow-xs px-2.5 py-1 rounded text-[9px] hover:bg-red-600 hover:text-white transition active:scale-95 f1-font">
+                            <i class="fa-solid fa-crosshairs text-[8px]"></i> GPS NAV
+                        </a>
+                    </div>
                 `;
-                container.insertAdjacentHTML('beforeend', cardHtml);
+                fragment.appendChild(tempDiv);
             });
 
+            container.appendChild(fragment);
             document.getElementById('displayed-count').innerText = endIndex;
+            
             const scrollTrigger = document.getElementById('infinite-scroll-trigger');
             const allLoadedText = document.getElementById('all-loaded-text');
-            
             if (endIndex < filteredDataGlobal.length) {
                 scrollTrigger.classList.remove('hidden');
                 allLoadedText.classList.add('hidden');
@@ -1130,10 +1038,9 @@
         }
 
         function setupRegionFilters() {
-            const buttons = document.querySelectorAll('.region-filter-btn');
-            buttons.forEach(btn => {
+            document.querySelectorAll('.region-filter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    buttons.forEach(b => {
+                    document.querySelectorAll('.region-filter-btn').forEach(b => {
                         b.className = "region-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
                     });
                     e.target.className = "region-filter-btn bg-red-600 text-white px-3.5 py-2 sm:py-1.5 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
@@ -1144,10 +1051,9 @@
         }
 
         function setupVehicleFilters() {
-            const buttons = document.querySelectorAll('.vehicle-filter-btn');
-            buttons.forEach(btn => {
+            document.querySelectorAll('.vehicle-filter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    buttons.forEach(b => {
+                    document.querySelectorAll('.vehicle-filter-btn').forEach(b => {
                         b.className = "vehicle-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
                     });
                     e.target.className = "vehicle-filter-btn bg-yellow-400 text-zinc-900 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
@@ -1158,10 +1064,9 @@
         }
 
         function setupPeriodFilters() {
-            const buttons = document.querySelectorAll('.period-filter-btn');
-            buttons.forEach(btn => {
+            document.querySelectorAll('.period-filter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    buttons.forEach(b => {
+                    document.querySelectorAll('.period-filter-btn').forEach(b => {
                         b.className = "period-filter-btn bg-zinc-200 text-zinc-700 hover:bg-zinc-300 px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition f1-font";
                     });
                     e.target.className = "period-filter-btn bg-orange-600 text-white px-3 py-1.5 sm:py-1 rounded text-[11px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm transition f1-font";
