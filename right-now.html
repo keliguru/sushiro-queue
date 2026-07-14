@@ -231,20 +231,60 @@
 
         .list-group { list-style: none; padding: 0; margin: 0; }
         
+        /* 支援左滑顯示 DELETE 的基地卡片外殼 */
         .list-item {
+            position: relative;
+            overflow: hidden;
+            border: 3px solid var(--border); 
+            border-radius: 16px; 
+            margin-bottom: 12px;
+            background: #ff4d4d; /* 底色為紅色，用以露出刪除背景 */
+            box-shadow: 4px 4px 0px var(--border);
+            padding: 0;
+            touch-action: pan-y; /* 允許原生上下捲動，交由 JS 精準控管左右滑動 */
+            user-select: none; /* 防止滑鼠拖拽時選取到藍色文字區塊 */
+        }
+        
+        /* 卡片內層（滑動主體） */
+        .list-item-inner {
             display: flex; 
             flex-direction: row; 
             align-items: center; 
             gap: 12px; 
             padding: 12px 16px;
-            border: 3px solid var(--border); 
-            border-radius: 16px; 
-            margin-bottom: 12px;
             background: var(--card); 
-            box-shadow: 4px 4px 0px var(--border);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+            position: relative;
+            z-index: 2;
         }
         
-        /* 🔧 優化：防止基地文字過長，若太長則自動平滑落入下一行 */
+        /* 當被標記為 swiped 時，內層往左推移 */
+        .list-item.swiped .list-item-inner {
+            transform: translateX(-85px);
+        }
+        
+        /* 後方絕對定位的 DELETE 區塊 */
+        .list-item-delete {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 85px;
+            background: #ff4d4d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 950;
+            font-size: 0.85rem;
+            cursor: pointer;
+            z-index: 1;
+            border-left: 3px solid var(--border);
+            letter-spacing: 0.5px;
+        }
+        
+        /* 防止基地文字過長，若太長則自動平滑落入下一行 */
         .list-item .item-title { 
             font-size: 1.2rem; 
             font-weight: 900; 
@@ -271,26 +311,6 @@
             transform: none;
             box-shadow: none;
         }
-        
-        /* ❌ 右側關閉按鈕（採用 Flexbox 完美置中右貼，不使用 Absolute） */
-        .btn-close-icon {
-            margin-left: auto; /* 自動將 ❌ 推至最右側 */
-            background: none;
-            border: none;
-            box-shadow: none;
-            padding: 4px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            line-height: 1;
-            transition: transform 0.1s ease;
-        }
-        .btn-close-icon:hover {
-            transform: scale(1.15);
-        }
-        .btn-close-icon:active {
-            transform: scale(0.9);
-            box-shadow: none;
-        }
 
         .element-item {
             display: flex; justify-content: space-between; align-items: center; gap: 6px;
@@ -298,7 +318,7 @@
             font-size: 0.9rem; font-weight: 800; box-shadow: 2px 2px 0px var(--border);
         }
         
-        /* 🔧 優化：防止已登記路線文字過長，自動落入下一行 */
+        /* 優化：防止已登記路線文字過長，自動落入下一行 */
         .element-item span {
             flex: 1;
             min-width: 0;
@@ -368,23 +388,23 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
 
-        /* 🆕 整合後的懸浮按鈕群組樣式（已去背景、縮小） */
+        /* 整合後的懸浮按鈕群組樣式 */
         .floating-btn-group {
             position: fixed;
             bottom: 20px;
-            right: 15px; /* 稍微往右靠更顯精緻 */
+            right: 15px; 
             z-index: 999;
-            display: none; /* 預設隱藏，由 JS 切換為 flex */
+            display: none; 
             background: transparent;
             border: none;
             box-shadow: none;
-            gap: 12px; /* 讓兩個無背景的圖示拉開適當距離 */
+            gap: 12px; 
         }
         
+        /* 🆕 修改為白色背景、圓形外觀與極具質感的粗邊框 */
         .floating-btn {
-            padding: 4px; /* 極小化內邊距 */
-            border: none;
-            font-size: 1.1rem; /* 縮小圖示字體大小 */
+            padding: 0; 
+            font-size: 1.2rem; 
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -392,28 +412,26 @@
             outline: none;
             -webkit-appearance: none;
             appearance: none;
-            background: transparent; /* 去除所有背景 */
+            background: #ffffff; 
+            border: 3px solid var(--border); 
+            border-radius: 50%; 
+            box-shadow: 3px 3px 0px var(--border); 
+            width: 44px;
+            height: 44px;
+            transition: transform 0.1s;
         }
         
-        .floating-btn.btn-home {
-            background: transparent;
-        }
-        
-        .floating-btn.btn-top {
-            background: transparent;
-        }
-        
-        /* 沒了外框背景，點擊改用靈活動態的縮放回饋 */
+        /* 🆕 統一的彈壓反饋 */
         .floating-btn:active {
-            transform: scale(0.8);
-            filter: brightness(0.8);
-            box-shadow: none;
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--border);
+            filter: brightness(0.9);
         }
     </style>
 </head>
 <body>
 
-<!-- 懸浮按鈕群組（去背景、縮小微型版） -->
+<!-- 懸浮按鈕群組 -->
 <div id="floatingBtnGroup" class="floating-btn-group">
     <button class="floating-btn btn-home" onclick="expandProfiles()" title="返回主頁基地">
         🏠
@@ -428,7 +446,8 @@
         <h3>🚦 玩具交通總部使用說明</h3>
         <div class="instructions-step">1. 🧱 <b>建立基地</b>：在下方輸入名稱並點「新增」，建立你的路線群組。</div>
         <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組的「⚙️」按鈕，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
-        <div class="instructions-step">3. 🚌 <b>出發看時間</b>：在主頁直接點擊群組大方塊，即可一秒召喚出所有車載實時到站時間 (ETA)！可在各車站點點擊「📌 置頂」優先顯示。</div>
+        <div class="instructions-step">3. 🚌 <b>出發看時間</b>：在主頁直接點擊群組方塊，即可一秒召喚出所有動態實時到站時間 (ETA)！</div>
+        <div class="instructions-step">💡 <b>秘密密技</b>：主頁的基地卡片<b>「往左一拉（手機滑動或電腦滑鼠拖曳）」</b>，就能隱藏開啟紅色 <b>DELETE</b> 鍵移除基地喔！</div>
     </div>
 
     <div class="card" id="profileContainer">
@@ -582,6 +601,7 @@
         loadStops();
     }
 
+    // 渲染群組基地函數
     function renderProfiles() {
         const profileList = document.getElementById('profileList');
         profileList.innerHTML = '';
@@ -591,17 +611,26 @@
         keys.forEach(id => {
             const li = document.createElement('li');
             li.className = `list-item ${id === currentProfileId ? 'active' : ''}`;
-            li.onclick = (e) => { if (e.target.tagName !== 'BUTTON') renderETA(id); };
 
+            // 內層滑動容器
+            const innerDiv = document.createElement('div');
+            innerDiv.className = 'list-item-inner';
+
+            // 設定配對按鈕
             const etaBtn = document.createElement('button'); 
             etaBtn.className = 'btn-eta'; 
             etaBtn.textContent = '⚙️'; 
-            etaBtn.onclick = (e) => { e.stopPropagation(); selectProfile(id); };
+            etaBtn.onclick = (e) => { 
+                if (li.classList.contains('swiped')) { li.classList.remove('swiped'); e.stopPropagation(); return; }
+                e.stopPropagation(); selectProfile(id); 
+            };
 
+            // 基地文字
             const titleDiv = document.createElement('div');
             titleDiv.className = 'item-title';
             titleDiv.innerHTML = profiles[id].name;
 
+            // 重新命名按鈕
             const renameBtn = document.createElement('button');
             renameBtn.style.background = 'none';
             renameBtn.style.border = 'none';
@@ -609,17 +638,83 @@
             renameBtn.style.padding = '0';
             renameBtn.style.cursor = 'pointer';
             renameBtn.textContent = '✏️';
-            renameBtn.onclick = (e) => { e.stopPropagation(); renameProfile(id); };
+            renameBtn.onclick = (e) => { 
+                if (li.classList.contains('swiped')) { li.classList.remove('swiped'); e.stopPropagation(); return; }
+                e.stopPropagation(); renameProfile(id); 
+            };
             
-            const deleteBtn = document.createElement('button'); 
-            deleteBtn.className = 'btn-close-icon'; 
-            deleteBtn.textContent = '❌'; 
-            deleteBtn.onclick = (e) => { e.stopPropagation(); deleteProfile(id); };
+            innerDiv.appendChild(etaBtn);
+            innerDiv.appendChild(titleDiv); 
+            innerDiv.appendChild(renameBtn);
 
-            li.appendChild(etaBtn);
-            li.appendChild(titleDiv); 
-            li.appendChild(renameBtn);
-            li.appendChild(deleteBtn);
+            // 後方被蓋住的 DELETE 按鈕
+            const deleteAction = document.createElement('div');
+            deleteAction.className = 'list-item-delete';
+            deleteAction.textContent = 'DELETE';
+            deleteAction.onclick = (e) => { 
+                e.stopPropagation(); 
+                deleteProfile(id); 
+            };
+
+            li.appendChild(innerDiv);
+            li.appendChild(deleteAction);
+
+            // 🆕 升級：支援滑鼠 + 觸控雙端的 Pointer 手勢左拉偵測
+            let startX = 0;
+            let startY = 0;
+            let dragHappened = false; // 用以判別是單純點擊還是拖拽滑動
+            
+            // 防止滑鼠原生拖動意圖干擾
+            li.addEventListener('dragstart', (e) => e.preventDefault());
+
+            li.addEventListener('pointerdown', (e) => {
+                // 如果是滑鼠操作，只允許滑鼠左鍵
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                startX = e.clientX;
+                startY = e.clientY;
+                dragHappened = false;
+            });
+
+            li.addEventListener('pointerup', (e) => {
+                let endX = e.clientX;
+                let endY = e.clientY;
+                let diffX = startX - endX;
+                let diffY = Math.abs(startY - endY);
+
+                // 水平向左划動判定（且垂直沒有大幅度滑動以防誤觸）
+                if (Math.abs(diffX) > 40 && diffY < 30) {
+                    dragHappened = true; // 標記發生了滑動
+                    if (diffX > 40) {
+                        // 先把其他所有打開的關掉
+                        document.querySelectorAll('.list-item.swiped').forEach(el => {
+                            if(el !== li) el.classList.remove('swiped');
+                        });
+                        li.classList.add('swiped');
+                    } 
+                    // 水平向右划動判定，收回
+                    else if (diffX < -40) {
+                        li.classList.remove('swiped');
+                    }
+                }
+            });
+
+            // 點擊事件控管
+            li.onclick = (e) => {
+                // 如果剛剛執行過拖拽滑動，阻斷這次 click 事件以防誤進入
+                if (dragHappened) {
+                    dragHappened = false;
+                    return;
+                }
+                // 如果是在開啟狀態下點擊卡片，直接執行收回，不進入下層
+                if (li.classList.contains('swiped')) {
+                    li.classList.remove('swiped');
+                    return;
+                }
+                if (e.target.tagName !== 'BUTTON' && !e.target.classList.contains('list-item-delete')) {
+                    renderETA(id);
+                }
+            };
+
             profileList.appendChild(li);
         });
     }
