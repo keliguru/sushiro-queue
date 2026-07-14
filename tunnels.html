@@ -489,7 +489,7 @@
             </div>
             <div class="next-sector">
                 <span class="next-label" id="next-label-tlt">NEXT @ 17:15</span>
-                <span class="flag-status flag-red" id="next-flag-tlt" style="font-size: 10px; padding: 2px 4px;">RED (繁忙)</span>
+                <span class="flag-status flag-red" id="next-flag-tlt" style="font-size: 10px; padding: 2px 4px;">RED FLAG (繁忙)</span>
                 <span class="next-price" id="next-price-tlt">$32-$45</span>
             </div>
         </div>
@@ -616,7 +616,7 @@
         }
 
         if (totalMin <= 434) {
-            return { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" };
+            return { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" };
         }
         if (totalMin <= 460) {
             let step = Math.floor((totalMin - 435) / 2);
@@ -624,7 +624,7 @@
             return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
         }
         if (totalMin <= 584) {
-            return { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" };
+            return { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" };
         }
         if (totalMin <= 598) {
             let step = Math.floor((totalMin - 585) / 2);
@@ -632,7 +632,7 @@
             return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
         }
         if (totalMin <= 1034) {
-            return { price: Math.round(30 * factor * 10) / 10, text: "YELLOW (一般)", class: "flag-yellow" };
+            return { price: Math.round(30 * factor * 10) / 10, text: "YELLOW FLAG (一般)", class: "flag-yellow" };
         }
         if (totalMin <= 1048) {
             let step = Math.floor((totalMin - 1035) / 2);
@@ -640,14 +640,14 @@
             return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
         }
         if (totalMin <= 1139) {
-            return { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" };
+            return { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" };
         }
         if (totalMin <= 1165) {
             let step = Math.floor((totalMin - 1140) / 2);
             let p = 43 - step * 2;
             return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
         }
-        return { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" };
+        return { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" };
     }
 
     function getNextTltInfo(vehicle, isSunday, hour, min) {
@@ -662,23 +662,23 @@
         }
 
         if (totalMin < 435) {
-            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" }, timeStr: "07:15" };
+            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" }, timeStr: "07:15" };
         } else if (totalMin < 461) {
             return { nextInfo: { price: Math.round(43 * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" }, timeStr: "07:41" };
         } else if (totalMin < 585) {
-            return { nextInfo: { price: Math.round(30 * factor * 10) / 10, text: "YELLOW (一般)", class: "flag-yellow" }, timeStr: "09:45" };
+            return { nextInfo: { price: Math.round(30 * factor * 10) / 10, text: "YELLOW FLAG (一般)", class: "flag-yellow" }, timeStr: "09:45" };
         } else if (totalMin < 599) {
-            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" }, timeStr: "09:59" };
+            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" }, timeStr: "09:59" };
         } else if (totalMin < 1035) {
-            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED (繁忙)", class: "flag-red" }, timeStr: "17:15" };
+            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" }, timeStr: "17:15" };
         } else if (totalMin < 1049) {
             return { nextInfo: { price: Math.round(43 * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" }, timeStr: "17:29" };
         } else if (totalMin < 1140) {
-            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" }, timeStr: "19:00" };
+            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" }, timeStr: "19:00" };
         } else if (totalMin < 1166) {
-            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" }, timeStr: "19:26" };
+            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" }, timeStr: "19:26" };
         } else {
-            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN (非繁忙)", class: "flag-green" }, timeStr: "Tmwr 00:00" };
+            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" }, timeStr: "Tmwr 00:00" };
         }
     }
 
