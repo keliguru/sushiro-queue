@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>個人動畫追番清單</title>
 
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favanimate-icon.png">
+    <link class="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favanimate-icon.png">
 	<meta property="og:type" content="website">
 	<meta property="og:title" content="個人動畫追番清單">
 	<meta property="og:description" content="個人動畫追番清單">
@@ -217,7 +217,6 @@
             <button class="btn primary" onclick="searchAnime()">搜尋</button>
             <button class="btn" onclick="exportData()">導出</button>
             <button class="btn" onclick="document.getElementById('importFile').click()">導入</button>
-            <!-- 這裡新增了重置按鈕 -->
             <button class="btn" onclick="resetData()" style="background: #2b2b2b; color: #ff5c5c;">🗑️ 重置</button>
             <input type="file" id="importFile" style="display:none" onchange="importData(event)">
         </div>
@@ -259,6 +258,9 @@
         let currentTab = 'home', currentSeason = 'SUMMER', currentYear = 2026;
         let currentPage = 1, hasNextPage = false, isLoading = false;
         let selectedDayFilter = 'ALL';
+        
+        // 用於記錄展開狀態的記憶集合 (Memory state for expanded panels)
+        let expandedIds = new Set();
 
         // 升級：引入分頁 PageInfo 機制
         const GQL_QUERY = `query ($search: String, $season: MediaSeason, $seasonYear: Int, $page: Int) { 
@@ -343,6 +345,7 @@
         }
 
         function selectSeason(element, season, year) {
+            expandedIds.clear(); // 清空展開記憶
             document.querySelectorAll('#season-filter .pill').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
             currentSeason = season; currentYear = year;
@@ -360,6 +363,7 @@
         async function searchAnime() {
             const term = document.getElementById('searchInput').value;
             if(!term) return;
+            expandedIds.clear(); // 清空展開記憶
             document.querySelectorAll('#season-filter .pill').forEach(el => el.classList.remove('active'));
             fetchGraphQL(GQL_QUERY, { search: term, page: 1 });
         }
@@ -370,6 +374,7 @@
 
         function switchTab(tab) {
             currentTab = tab;
+            expandedIds.clear(); // 清空展開記憶
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`nav-${tab}`).classList.add('active');
             
@@ -453,6 +458,9 @@
                     starsHtml += `<span class="${s <= review.rating ? 'active' : ''}" onclick="setRating(${anime.id}, ${s})">★</span>`;
                 }
 
+                // 檢查此卡片是否應維持展開狀態 (Checking memory state)
+                const isExpanded = expandedIds.has(anime.id);
+
                 container.innerHTML += `
                     <div class="anime-card ${hasNewEpisode ? 'new-update-effect' : ''}">
                         <button class="fav-btn ${favs.includes(anime.id) ? 'active' : ''}" onclick="toggleFav(${anime.id})">♥</button>
@@ -479,10 +487,11 @@
                                 <button class="platform-btn ${platformList.includes('ViuTV') ? 'active viu' : ''}" onclick="togglePlatform(${anime.id}, 'ViuTV')">ViuTV</button>
                             </div>
 
-                            <button class="expand-btn" onclick="this.nextElementSibling.classList.toggle('show')">
-                                <span>展開控制面板</span> <span>▼</span>
+                            <!-- 串接全新的 toggleExpand 記憶方法 -->
+                            <button class="expand-btn" onclick="toggleExpand(${anime.id})">
+                                <span>展開控制面板</span> <span id="expand-icon-${anime.id}">${isExpanded ? '▲' : '▼'}</span>
                             </button>
-                            <div class="collapsible">
+                            <div id="collapsible-${anime.id}" class="collapsible ${isExpanded ? 'show' : ''}">
                                 <div style="padding-top: 8px;">
                                     <!-- 升級：一鍵畢業/看完功能 -->
                                     <button class="btn primary" style="font-size:10px; padding:4px 8px; width:100%; margin-bottom:6px;" onclick="markAllWatched(${anime.id}, ${airedCount})">🚀 標記全集已看</button>
@@ -507,6 +516,22 @@
                     </div>
                 `;
             });
+        }
+
+        // 新增功能：控制卡片展開並記憶狀態
+        function toggleExpand(id) {
+            const panel = document.getElementById(`collapsible-${id}`);
+            const icon = document.getElementById(`expand-icon-${id}`);
+            
+            if (expandedIds.has(id)) {
+                expandedIds.delete(id);
+                if (panel) panel.classList.remove('show');
+                if (icon) icon.innerText = '▼';
+            } else {
+                expandedIds.add(id);
+                if (panel) panel.classList.add('show');
+                if (icon) icon.innerText = '▲';
+            }
         }
 
         function toggleFav(id) {
