@@ -141,6 +141,9 @@
         .fav-btn.active { color: var(--netflix-red); border-color: var(--netflix-red); }
 
         .card-content { padding: 10px; display: flex; flex-direction: column; flex: 1; }
+        
+        /* 暱稱顯示樣式 */
+        .nickname-display { font-size: 11px; color: #ffb300; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
         .editable-title { font-size: 14px; margin: 0 0 4px 0; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
         .meta-info { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
 
@@ -368,8 +371,8 @@
             fetchGraphQL(GQL_QUERY, { search: term, page: 1 });
         }
 
-        function getTitle(anime) {
-            return localStorage.getItem(`custom_title_${anime.id}`) || chineseTitles[anime.id]?.zh || anime.title.userPreferred;
+        function getOriginalTitle(anime) {
+            return chineseTitles[anime.id]?.zh || anime.title.userPreferred;
         }
 
         function switchTab(tab) {
@@ -427,6 +430,10 @@
                 const watchedList = JSON.parse(localStorage.getItem(`watched_${anime.id}`) || '[]');
                 const platformList = JSON.parse(localStorage.getItem(`platform_${anime.id}`) || '[]');
                 
+                // 讀取暱稱與原始名稱
+                const nickname = localStorage.getItem(`nickname_${anime.id}`) || '';
+                const originalTitle = getOriginalTitle(anime);
+
                 // 升級：評分與筆記讀取
                 const review = JSON.parse(localStorage.getItem(`review_${anime.id}`) || '{"rating":0,"note":""}');
                 
@@ -471,7 +478,11 @@
                             ${dateBadgeHtml}
                         </div>
                         <div class="card-content">
-                            <h3 class="editable-title" title="${getTitle(anime)}" onclick="editTitle(${anime.id})">${getTitle(anime)}</h3>
+                            <!-- 點擊此區塊可以新增/修改暱稱 -->
+                            <div onclick="editNickname(${anime.id})" title="點擊新增/修改暱稱" style="cursor: pointer;">
+                                ${nickname ? `<div class="nickname-display">🏷️ ${nickname}</div>` : ''}
+                                <h3 class="editable-title" title="${originalTitle}">${originalTitle}</h3>
+                            </div>
                             <div class="meta-info">${nextInfo}</div>
                             
                             <!-- 升級：視覺化追番進度條 -->
@@ -589,11 +600,12 @@
             renderList();
         }
 
-        function editTitle(id) { 
-            const newName = prompt("請輸入新名稱 (留空還原):"); 
-            if (newName !== null) { 
-                if (newName === "") localStorage.removeItem(`custom_title_${id}`); 
-                else localStorage.setItem(`custom_title_${id}`, newName); 
+        // 新增功能：修改為新增/編輯暱稱
+        function editNickname(id) { 
+            const newNickname = prompt("請輸入動畫暱稱 (留空刪除):"); 
+            if (newNickname !== null) { 
+                if (newNickname.trim() === "") localStorage.removeItem(`nickname_${id}`); 
+                else localStorage.setItem(`nickname_${id}`, newNickname.trim()); 
                 renderList(); 
             } 
         }
@@ -611,7 +623,7 @@
 
         // 新增功能：重置 Local Storage
         function resetData() {
-            const check = confirm("⚠️ 確定要重置所有資料嗎？\n\n這將會徹底清除所有：\n• 我的最愛清單及詳細快照\n• 自定義觀看連結及自定義名稱\n• 每一集數的觀看進度\n• 個人評分及追番心得筆記\n\n此操作無法還原，請確認是否繼續？");
+            const check = confirm("⚠️ 確定要重置所有資料嗎？\n\n這將會徹底清除所有：\n• 我的最愛清單及詳細快照\n• 自定義觀看連結及暱稱\n• 每一集數的觀看進度\n• 個人評分及追番心得筆記\n\n此操作無法還原，請確認是否繼續？");
             if (check) {
                 localStorage.clear();
                 alert("✨ 所有追番紀錄已成功重置歸零！");
