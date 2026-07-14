@@ -107,11 +107,16 @@
         .instructions-card h3 {
             color: #b45309;
             margin-top: 0;
-            margin-bottom: 8px;
+            margin-bottom: 0;
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: space-between;
             font-size: 1.1rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .instructions-content {
+            margin-top: 10px;
         }
         .instructions-step {
             font-size: 0.9rem;
@@ -509,11 +514,16 @@
 
 <div class="container" id="mainContainer">
     <div class="card instructions-card" id="guideCard">
-        <h3>🚦 玩具交通總部使用說明</h3>
-        <div class="instructions-step">1. 🧱 <b>建立基地</b>：在下方輸入名稱並點「新增」，建立你的路線群組。</div>
-        <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組的「⚙️」按鈕，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
-        <div class="instructions-step">3. 🚌 <b>出發看時間</b>：在主頁直接點擊群組方塊，即可一秒召喚出所有動態實時到站時間 (ETA)！</div>
-        <div class="instructions-step">💡 <b>秘密密技</b>：主頁的基地卡片<b>「往左一拉（手機滑動或電腦滑鼠拖曳）」</b>，就能隱藏開啟紅色 <b>DELETE</b> 鍵移除基地喔！</div>
+        <h3 onclick="toggleGuide()">
+            <span>🚦 玩具交通總部使用說明</span>
+            <span id="guideToggleIcon">+</span>
+        </h3>
+        <div class="instructions-content" id="guideContent" style="display: none;">
+            <div class="instructions-step">1. 🧱 <b>建立基地</b>：在下方輸入名稱並點「新增」，建立你的路線群組。</div>
+            <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組的「⚙️」按鈕，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
+            <div class="instructions-step">3. 🚌 <b>出發看時間</b>：在主頁直接點擊群組方塊，即可一秒召喚出所有動態實時到站時間 (ETA)！</div>
+            <div class="instructions-step">💡 <b>秘密密技</b>：主頁的基地卡片<b>「往左一拉（手機滑動或電腦滑鼠拖曳）」</b>，就能隱藏開啟紅色 <b>DELETE</b> 鍵移除基地喔！</div>
+        </div>
     </div>
 
     <div class="card" id="profileContainer">
@@ -649,6 +659,18 @@
         }
         renderProfiles();
     });
+
+    function toggleGuide() {
+        const content = document.getElementById('guideContent');
+        const icon = document.getElementById('guideToggleIcon');
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.textContent = '-';
+        } else {
+            content.style.display = 'none';
+            icon.textContent = '+';
+        }
+    }
 
     function saveToStorage() { localStorage.setItem('profiles_data', JSON.stringify(profiles)); }
     function savePinnedStorage() { localStorage.setItem('pinned_stops_data', JSON.stringify(pinnedStops)); }
@@ -1258,7 +1280,13 @@
 
     function exportProfiles() {        
         if (Object.keys(profiles).length === 0) { alert('目前沒有基地設定可導出！'); return; }                
-        const jsonString = JSON.stringify(profiles, null, 2);        
+        
+        const exportData = {
+            timestamp: new Date().toISOString(),
+            profiles: profiles
+        };
+        
+        const jsonString = JSON.stringify(exportData, null, 2);        
         const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });        
         const dataUrl = URL.createObjectURL(blob);                
         const downloadAnchor = document.createElement('a');        
@@ -1278,10 +1306,14 @@
             try {
                 const importedData = JSON.parse(e.target.result);
                 if (typeof importedData !== 'object' || importedData === null) throw new Error('格式不正確');
+                
+                const targetProfiles = importedData.profiles ? importedData.profiles : importedData;
+                if (typeof targetProfiles !== 'object' || targetProfiles === null) throw new Error('格式不正確');
+
                 if (Object.keys(profiles).length > 0) {
                     if (!confirm('這樣做會拆除目前的所有基地，確定要蓋過去嗎？')) { event.target.value = ''; return; }
                 }
-                profiles = importedData;
+                profiles = targetProfiles;
                 saveToStorage();
                 expandProfiles();
                 alert('基地數據成功載入！');
