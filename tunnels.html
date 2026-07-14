@@ -468,7 +468,7 @@
             </div>
             <div class="gauge-body">
                 <span class="flag-status flag-red" id="flag-whc">RED FLAG (繁忙)</span>
-                <div class="speedo-price">$<span id="price-whc">52</span><small>HKD</small></div>
+                <div class="speedo-price">$<span id="price-whc">60</span><small>HKD</small></div>
             </div>
             <div class="next-sector">
                 <span class="next-label" id="next-label-whc">NEXT @ 19:00</span>
@@ -573,31 +573,55 @@
     }
 
     function getCrossHarborToll(vehicle, isSunday, hour, min) {
-        const timeVal = hour + min / 60;
+        const totalMin = hour * 60 + min;
         if (vehicle === 'taxi') {
             return { text: "全日劃一", class: "flag-fixed", cht: 25, ehc: 25, whc: 25 };
         }
-        let pPeak = { text: "RED FLAG (繁忙)", class: "flag-red", cht: 40, ehc: 40, whc: 52 };
-        let pNorm = { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: 30, ehc: 30, whc: 30 };
-        let pOff  = { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: 20, ehc: 20, whc: 20 };
         
-        if (vehicle === 'motorcycle') {
-            pPeak = { text: "RED FLAG (繁忙)", class: "flag-red", cht: 16, ehc: 16, whc: 20.8 };
-            pNorm = { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: 12, ehc: 12, whc: 12 };
-            pOff  = { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: 8, ehc: 8, whc: 8 };
+        const isMoto = (vehicle === 'motorcycle');
+        const factor = isMoto ? 0.4 : 1.0;
+
+        const offPeakC = 20, normC = 30, peakC = 40;
+        const offPeakW = 20, normW = 30, peakW = 60; 
+
+        function calcTrans(startMin, startC, startW, endC, endW) {
+            let step = Math.floor((totalMin - startMin) / 2);
+            let dirC = endC > startC ? 1 : -1;
+            let dirW = endW > startW ? 1 : -1;
+            
+            let pC = startC + ((step + 1) * 2 * dirC);
+            let pW = startW + ((step + 1) * 2 * dirW);
+            
+            if (dirC > 0) pC = Math.min(endC, pC); else pC = Math.max(endC, pC);
+            if (dirW > 0) pW = Math.min(endW, pW); else pW = Math.max(endW, pW);
+            
+            return { 
+                text: "TRANSITION", 
+                class: "flag-yellow", 
+                cht: Math.round(pC * factor * 10) / 10, 
+                ehc: Math.round(pC * factor * 10) / 10, 
+                whc: Math.round(pW * factor * 10) / 10 
+            };
         }
-        
+
         if (isSunday) {
-            if (timeVal < 10.25) return pOff;
-            if (timeVal < 19.25) return pNorm;
-            return pOff;
+            if (totalMin < 615) return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
+            if (totalMin < 625) return calcTrans(615, offPeakC, offPeakW, normC, normW); 
+            if (totalMin < 1155) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
+            if (totalMin < 1165) return calcTrans(1155, normC, normW, offPeakC, offPeakW); 
+            return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
         } else {
-            if (timeVal < 7.5) return pOff;
-            if (timeVal < 10.25) return pPeak;
-            if (timeVal < 16.5) return pNorm;
-            if (timeVal < 19.0) return pPeak;
-            if (timeVal < 23.0) return pNorm;
-            return pOff;
+            if (totalMin < 450) return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
+            if (totalMin < 490) return calcTrans(450, offPeakC, offPeakW, peakC, peakW); 
+            if (totalMin < 615) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
+            if (totalMin < 645) return calcTrans(615, peakC, peakW, normC, normW); 
+            if (totalMin < 990) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
+            if (totalMin < 1020) return calcTrans(990, normC, normW, peakC, peakW); 
+            if (totalMin < 1140) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
+            if (totalMin < 1170) return calcTrans(1140, peakC, peakW, normC, normW); 
+            if (totalMin < 1380) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
+            if (totalMin < 1390) return calcTrans(1380, normC, normW, offPeakC, offPeakW); 
+            return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
         }
     }
 
