@@ -42,6 +42,31 @@
         .price-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; border-bottom: 1px dotted #ccc; padding: 4px 0; font-weight: bold; }
         .price { color: var(--donki-red); font-size: 1.3rem; font-weight: 900; }
         .offer-box { font-size: 0.9rem; color: var(--donki-red); background: #fff0f0; border: 2px dashed var(--donki-red); padding: 8px; margin-top: 8px; font-weight: bold; line-height: 1.4; }
+
+        /* 回到最上按鈕 (Back to Top Button) */
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--donki-red);
+            color: white;
+            border: 3px solid white;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.8);
+            font-size: 1.5rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: none; /* 預設隱藏 */
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: transform 0.1s;
+        }
+        .scroll-top-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px rgba(0,0,0,0.8);
+        }
     </style>
 </head>
 <body>
@@ -59,6 +84,9 @@
     
     <div id="countDisplay" class="item-count" style="display:none;">📦 顯示中商品數量: 0</div>
     <div id="data-container" style="text-align:center; padding:20px;">資料讀取中...</div>
+
+    <!-- 回到最上按鈕 -->
+    <button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTop()">▲</button>
 
     <script>
         let allData = [];
@@ -97,17 +125,14 @@
         }
 
         function resetFilter() {
-            // 清除輸入框與重置下拉選單
             document.getElementById('searchInput').value = '';
             document.getElementById('catFilter').value = 'all';
             
-            // 重置最愛與優惠按鈕的狀態與樣式
             filterFav = false;
             filterOffer = false;
             document.getElementById('favBtn').classList.remove('active');
             document.getElementById('offerBtn').classList.remove('active');
             
-            // 重新渲染畫面
             renderData();
         }
 
@@ -128,7 +153,6 @@
                        (!filterOffer || hasOffer);
             });
 
-            // 更新並顯示商品數量
             if (allData.length > 0) {
                 countDisplay.style.display = 'inline-block';
                 countDisplay.innerText = `📦 顯示中商品數量: ${filteredItems.length}`;
@@ -152,6 +176,25 @@
                 container.appendChild(card);
             });
         }
+
+        // 監聽網頁滾動事件以控制按鈕顯示
+        window.onscroll = function() {
+            const btn = document.getElementById("scrollTopBtn");
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                btn.style.display = "flex";
+            } else {
+                btn.style.display = "none";
+            }
+        };
+
+        // 回到最上功能（平滑滾動）
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
         fetchData();
     </script>
 </body>
