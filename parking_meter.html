@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>F1 PARKING // 香港智能錶位實時動態</title>
 	
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
+    <link class="fav-icon" rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/parking-meter-icon.png">
     <meta property="og:type" content="website">
     <meta property="og:title" content="F1 PARKING // 香港智能錶位實時">
@@ -964,13 +964,31 @@
             });
             document.getElementById('available-count').innerText = currentFilterAvailableCount;
 
+            // 🏎️ 重點升級：優化排序邏輯
             filteredDataGlobal.sort((a, b) => {
-                // 優先排序 1: 最愛街道
+                // 情境 1: 如果啟用了 GPS 定位排序
+                if (isGpsSorting && userLat !== null && userLng !== null) {
+                    const getGpsStatusPriority = (item) => {
+                        if (item.meterStatus !== 'N') return 3; // 暫停服務 (SUSPEND) 排最底
+                        if (item.occupancyStatus === 'V') return 1; // PIT OPEN (有空位) 排第一優先
+                        if (item.occupancyStatus === 'O') return 2; // OCCUPIED (已佔用) 排第二優先
+                        return 4;
+                    };
+                    const priA = getGpsStatusPriority(a);
+                    const priB = getGpsStatusPriority(b);
+
+                    // 優先按「車位狀態分組」：有空車位一律先置頂
+                    if (priA !== priB) return priA - priB;
+                    
+                    // 相同狀態下，按「距離最近」排序（最核心需求）
+                    return a.distanceToUser - b.distanceToUser;
+                }
+
+                // 情境 2: 未開啟 GPS 的默認排序（最愛優先 -> 狀態優先）
                 const aFav = favStreets.includes(a.street) ? 1 : 0;
                 const bFav = favStreets.includes(b.street) ? 1 : 0;
                 if (aFav !== bFav) return bFav - aFav;
 
-                // 優先排序 2: 狀態 (Available / PIT OPEN 的排前面)
                 const getOrder = (item) => {
                     if (item.meterStatus !== 'N') return 3; 
                     if (item.occupancyStatus === 'V') return 1; 
@@ -979,13 +997,7 @@
                 };
                 const orderA = getOrder(a);
                 const orderB = getOrder(b);
-                if (orderA !== orderB) return orderA - orderB;
-
-                // 優先排序 3: GPS 定位距離排序 (由近到遠)
-                if (isGpsSorting && userLat !== null && userLng !== null) {
-                    return a.distanceToUser - b.distanceToUser;
-                }
-                return 0;
+                return orderA - orderB;
             });
 
             document.getElementById('total-count').innerText = filteredDataGlobal.length;
@@ -1182,7 +1194,6 @@
             });
         }
 
-        // [優化] 修改為與其他篩選器相同邏輯
         function setupPeriodFilters() {
             document.querySelectorAll('.period-filter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
