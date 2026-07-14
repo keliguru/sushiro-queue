@@ -423,6 +423,9 @@
                 // 升級：評分與筆記讀取
                 const review = JSON.parse(localStorage.getItem(`review_${anime.id}`) || '{"rating":0,"note":""}');
                 
+                // 新增功能：自定義觀看連結讀取
+                const watchLink = localStorage.getItem(`watch_link_${anime.id}`) || '';
+
                 // 升級：精準實時進度條百分比計算
                 const validWatched = watchedList.filter(ep => ep <= airedCount).length;
                 const progressPercent = airedCount > 0 ? (validWatched / airedCount) * 100 : 0;
@@ -464,6 +467,9 @@
                             <!-- 升級：視覺化追番進度條 -->
                             <div class="progress-container"><div class="progress-bar" style="width: ${progressPercent}%"></div></div>
                             
+                            <!-- 新增功能：如果設定了自定義連結則顯示按鈕 -->
+                            ${watchLink ? `<a href="${watchLink}" target="_blank" style="display: block; background: #0077ff; color: #fff; text-align: center; font-size: 11px; font-weight: bold; padding: 6px; border-radius: 4px; text-decoration: none; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">📺 前往自定義連結</a>` : ''}
+
                             <div class="platform-grid">
                                 <button class="platform-btn ${platformList.includes('Netflix') ? 'active nf' : ''}" onclick="togglePlatform(${anime.id}, 'Netflix')">Netflix</button>
                                 <button class="platform-btn ${platformList.includes('Disney+') ? 'active dp' : ''}" onclick="togglePlatform(${anime.id}, 'Disney+')">Disney+</button>
@@ -481,6 +487,12 @@
                                     
                                     <div class="ep-grid">${epBadges || '<span style="font-size:11px;color:#666;">尚無公開集數</span>'}</div>
                                     
+                                    <!-- 新增功能：設定自定義觀看連結的輸入欄位 -->
+                                    <div style="margin-top:10px; border-top: 1px solid #222; padding-top:6px;">
+                                        <div style="font-size:11px; color:#aaa;">設定自定義觀看連結：</div>
+                                        <input type="text" class="note-input" placeholder="輸入或貼上專屬觀看網址..." value="${watchLink}" onchange="saveWatchLink(${anime.id}, this.value)">
+                                    </div>
+
                                     <!-- 升級：個人短評與五星評分區 -->
                                     <div style="margin-top:10px; border-top: 1px solid #222; padding-top:6px;">
                                         <div style="font-size:11px; color:#aaa;">我的評分：</div>
@@ -538,6 +550,16 @@
             let review = JSON.parse(localStorage.getItem(`review_${id}`) || '{"rating":0,"note":""}');
             review.note = noteText;
             localStorage.setItem(`review_${id}`, JSON.stringify(review));
+        }
+
+        // 新增功能：儲存自定義觀看連結
+        function saveWatchLink(id, url) {
+            if (!url.trim()) {
+                localStorage.removeItem(`watch_link_${id}`);
+            } else {
+                localStorage.setItem(`watch_link_${id}`, url.trim());
+            }
+            renderList();
         }
 
         function editTitle(id) { 
