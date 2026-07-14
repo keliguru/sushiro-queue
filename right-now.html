@@ -40,7 +40,6 @@
             --color-mib-bg: #f0fdf4;
         }
 
-        /* 🆕 黑夜模式變數與樣式 */
         body.dark-mode {
             --bg: #0f172a;
             --card: #1e293b;
@@ -66,7 +65,7 @@
             padding: 12px;
             display: flex;
             justify-content: center;
-            padding-bottom: 85px; /* 為雙懸浮按鈕留出充足空間 */
+            padding-bottom: 85px;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -124,7 +123,6 @@
         }
         .instructions-step:last-child { margin-bottom: 0; }
 
-        /* 🆕 黑夜模式下的說明欄 */
         body.dark-mode .instructions-card {
             background: #1e1b4b;
             border-color: #818cf8;
@@ -158,7 +156,6 @@
         .breadcrumb-separator { color: white; margin: 0 4px; }
         .breadcrumb-item.active { color: white; cursor: default; }
 
-        /* 防止標題文字過長溢出 */
         h1, h2, h3 { margin-top: 0; font-weight: 900; word-break: break-word; }
         h1 { font-size: 1.4rem; margin-bottom: 14px; color: var(--text); display: flex; align-items: center; gap: 6px; }
         h2 { font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 3px dashed #cbd5e1; color: var(--text); }
@@ -277,22 +274,20 @@
 
         .list-group { list-style: none; padding: 0; margin: 0; }
         
-        /* 支援左滑顯示 DELETE 的基地卡片外殼 */
         .list-item {
             position: relative;
             overflow: hidden;
             border: 3px solid var(--border); 
             border-radius: 16px; 
             margin-bottom: 12px;
-            background: #ff4d4d; /* 底色為紅色，用以露出刪除背景 */
+            background: #ff4d4d;
             box-shadow: 4px 4px 0px var(--border);
             padding: 0;
-            touch-action: pan-y; /* 允許原生上下捲動，交由 JS 精準控管左右滑動 */
-            user-select: none; /* 防止滑鼠拖拽時選取到藍色文字區塊 */
+            touch-action: pan-y;
+            user-select: none;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
         
-        /* 卡片內層（滑動主體） */
         .list-item-inner {
             display: flex; 
             flex-direction: row; 
@@ -306,12 +301,10 @@
             z-index: 2;
         }
         
-        /* 當被標記為 swiped 時，內層往左推移 */
         .list-item.swiped .list-item-inner {
             transform: translateX(-85px);
         }
         
-        /* 後方絕對定位的 DELETE 區塊 */
         .list-item-delete {
             position: absolute;
             right: 0;
@@ -332,7 +325,6 @@
             transition: border-color 0.3s;
         }
         
-        /* 防止基地文字過長，若太長則自動平滑落入下一行 */
         .list-item .item-title { 
             font-size: 1.2rem; 
             font-weight: 900; 
@@ -368,7 +360,6 @@
             transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
         
-        /* 優化：防止已登記路線文字過長，自動落入下一行 */
         .element-item span {
             flex: 1;
             min-width: 0;
@@ -397,7 +388,6 @@
 
         .element-item button { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; box-shadow: 1px 1px 0px var(--border); flex-shrink: 0; }
         
-        /* SortableJS Styles */
         .sortable-ghost { opacity: 0.4; border: 3px dashed #005a9c !important; }
 
         .divider { height: 3px; background-color: #cbd5e1; margin: 16px 0; }
@@ -439,7 +429,6 @@
         .card-mib .route-number { color: white; }
         .card-mib .route-direction { background: white; color: var(--color-mib); }
 
-        /* 🆕 黑夜模式專用巴士卡片描邊 */
         body.dark-mode .card-kmb { border-color: #f87171; box-shadow: 5px 5px 0px #f87171; }
         body.dark-mode .card-ctb, body.dark-mode .card-nwfb { border-color: #facc15; box-shadow: 5px 5px 0px #facc15; }
         body.dark-mode .card-mib { border-color: #4ade80; box-shadow: 5px 5px 0px #4ade80; }
@@ -461,13 +450,12 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
 
-        /* 整合後的懸浮按鈕群組樣式 */
         .floating-btn-group {
             position: fixed;
             bottom: 20px;
             right: 15px; 
             z-index: 999;
-            display: flex; /* 改為常駐 flex 以顯示黑夜切換按鈕 */
+            display: flex;
             flex-direction: column;
             background: transparent;
             border: none;
@@ -475,7 +463,6 @@
             gap: 12px; 
         }
         
-        /* 白色背景、圓形外觀與極具質感的粗邊框 */
         .floating-btn {
             padding: 0; 
             font-size: 1.2rem; 
@@ -499,7 +486,6 @@
             color: #fff;
         }
         
-        /* 統一的彈壓反饋 */
         .floating-btn:active {
             transform: translate(2px, 2px);
             box-shadow: 1px 1px 0px var(--border);
@@ -509,9 +495,7 @@
 </head>
 <body>
 
-<!-- 懸浮按鈕群組 -->
 <div id="floatingBtnGroup" class="floating-btn-group">
-    <!-- 🆕 黑夜模式切換 -->
     <button class="floating-btn btn-theme" id="themeBtn" onclick="toggleDarkMode()" title="切換黑夜模式">
         🌙
     </button>
@@ -651,14 +635,12 @@
     const allOriginsProxy = 'https://cors.freehi.workers.dev/?';
     const baseUrlMib = allOriginsProxy + ('https://data.etagmb.gov.hk');
 	
-    // 🆕 站名本地 Persistent Cache：初始化時從 localStorage 讀取，沒有才建空物件
     const stopNameCache = JSON.parse(localStorage.getItem('stop_name_cache')) || {};
     const busTargets = [];
     let debounceTimer;
     let autoRefreshTimer = null;
     let isEtaLoading = false;
 
-    // 🆕 初始化加載 (處理 Profiles 與 儲存的黑夜模式狀態)
     document.addEventListener('DOMContentLoaded', () => {
         const isDark = localStorage.getItem('dark_mode_enabled') === 'true';
         if (isDark) {
@@ -671,7 +653,6 @@
     function saveToStorage() { localStorage.setItem('profiles_data', JSON.stringify(profiles)); }
     function savePinnedStorage() { localStorage.setItem('pinned_stops_data', JSON.stringify(pinnedStops)); }
 
-    // 🆕 切換黑夜模式與本地偏好儲存
     function toggleDarkMode() {
         const body = document.body;
         body.classList.toggle('dark-mode');
@@ -701,7 +682,6 @@
         loadStops();
     }
 
-    // 渲染群組基地函數
     function renderProfiles() {
         const profileList = document.getElementById('profileList');
         profileList.innerHTML = '';
@@ -712,11 +692,9 @@
             const li = document.createElement('li');
             li.className = `list-item ${id === currentProfileId ? 'active' : ''}`;
 
-            // 內層滑動容器
             const innerDiv = document.createElement('div');
             innerDiv.className = 'list-item-inner';
 
-            // 設定配對按鈕
             const etaBtn = document.createElement('button'); 
             etaBtn.className = 'btn-eta'; 
             etaBtn.textContent = '⚙️'; 
@@ -725,12 +703,10 @@
                 e.stopPropagation(); selectProfile(id); 
             };
 
-            // 基地文字
             const titleDiv = document.createElement('div');
             titleDiv.className = 'item-title';
             titleDiv.innerHTML = profiles[id].name;
 
-            // 重新命名按鈕
             const renameBtn = document.createElement('button');
             renameBtn.style.background = 'none';
             renameBtn.style.border = 'none';
@@ -747,7 +723,6 @@
             innerDiv.appendChild(titleDiv); 
             innerDiv.appendChild(renameBtn);
 
-            // 後方被蓋住的 DELETE 按鈕
             const deleteAction = document.createElement('div');
             deleteAction.className = 'list-item-delete';
             deleteAction.textContent = 'DELETE';
@@ -759,16 +734,13 @@
             li.appendChild(innerDiv);
             li.appendChild(deleteAction);
 
-            // 🆕 支援滑鼠 + 觸控雙端的 Pointer 手勢左拉偵測
             let startX = 0;
             let startY = 0;
-            let dragHappened = false; // 用以判別是單純點擊還是拖拽滑動
+            let dragHappened = false;
             
-            // 防止滑鼠原生拖動意圖干擾
             li.addEventListener('dragstart', (e) => e.preventDefault());
 
             li.addEventListener('pointerdown', (e) => {
-                // 如果是滑鼠操作，只允許滑鼠左鍵
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
                 startX = e.clientX;
                 startY = e.clientY;
@@ -781,31 +753,25 @@
                 let diffX = startX - endX;
                 let diffY = Math.abs(startY - endY);
 
-                // 水平向左划動判定（且垂直沒有大幅度滑動以防誤觸）
                 if (Math.abs(diffX) > 40 && diffY < 30) {
-                    dragHappened = true; // 標記發生了滑動
+                    dragHappened = true;
                     if (diffX > 40) {
-                        // 先把其他所有打開的關掉
                         document.querySelectorAll('.list-item.swiped').forEach(el => {
                             if(el !== li) el.classList.remove('swiped');
                         });
                         li.classList.add('swiped');
                     } 
-                    // 水平向右划動判定，收回
                     else if (diffX < -40) {
                         li.classList.remove('swiped');
                     }
                 }
             });
 
-            // 點擊事件控管
             li.onclick = (e) => {
-                // 如果剛剛執行過拖拽滑動，阻斷這次 click 事件以防誤進入
                 if (dragHappened) {
                     dragHappened = false;
                     return;
                 }
-                // 如果是在開啟狀態下點擊卡片，直接執行收回，不進入下層
                 if (li.classList.contains('swiped')) {
                     li.classList.remove('swiped');
                     return;
@@ -910,7 +876,7 @@
         document.getElementById('guideCard').style.display = 'none';
         document.getElementById('breadcrumbCurrent').textContent = profileName;
         document.getElementById('breadcrumbArea').style.display = 'flex';
-        document.getElementById('floatingHomeBtn').style.display = 'inline-flex'; // 🆕 僅顯示 Home 鍵
+        document.getElementById('floatingHomeBtn').style.display = 'inline-flex';
         window.scrollTo(0, 0);
     }
 
@@ -923,7 +889,7 @@
         document.getElementById('profileSettingCard').style.display = 'none';
         document.getElementById('arrivalContainerCard').style.display = 'none';
         document.getElementById('fullRouteContainerCard').style.display = 'none';
-        document.getElementById('floatingHomeBtn').style.display = 'none'; // 🆕 隱藏 Home 鍵
+        document.getElementById('floatingHomeBtn').style.display = 'none';
         renderProfiles(); renderElements();
         window.scrollTo(0, 0);
     }
@@ -1087,7 +1053,6 @@
         }
     }
     
-    // 🆕 升級 getStopName 方法：每次請求成功後，會存入本地 localStorage 快取中
     async function getStopName(company, stopId) {
         const cacheKey = `${company}_${stopId}`; 
         if (stopNameCache[cacheKey]) return stopNameCache[cacheKey];
@@ -1098,7 +1063,6 @@
                 const resData = await response.json(); 
                 const name = resData.data.name_tc || `車站 ${stopId}`;
                 stopNameCache[cacheKey] = name; 
-                // 同步寫入本地快取，防止重新整理頁面時重新 Call API
                 localStorage.setItem('stop_name_cache', JSON.stringify(stopNameCache)); 
                 return name;
             }
@@ -1463,10 +1427,25 @@
 				let isCurrentTarget = (String(sd.stopId) === String(targetStopId));
 				let itemClass = `element-item ${isCurrentTarget ? 'current-target-stop' : ''}`;
 
+				const isDarkMode = document.body.classList.contains('dark-mode');
+				let seqBgColor = 'var(--border)';
+				let seqTextColor = '#fff';
+
+				if (isCurrentTarget) {
+					seqBgColor = '#2563eb';
+					seqTextColor = '#fff';
+				} else if (isDarkMode) {
+					seqBgColor = '#334155';
+					seqTextColor = '#facc15';
+				} else {
+					seqBgColor = '#000000';
+					seqTextColor = '#ffffff';
+				}
+
 				html += `
 					<li class="${itemClass}" style="flex-direction: column; align-items: flex-start; padding: 12px;">
 						<div style="font-weight: 900; margin-bottom: 8px; color: var(--text);">
-							<span style="background: ${isCurrentTarget ? '#2563eb' : 'var(--border)'}; color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 0.8rem; margin-right: 6px;">${sd.stopSeq}</span>
+							<span style="background: ${seqBgColor}; color: ${seqTextColor}; padding: 2px 6px; border-radius: 6px; font-size: 0.8rem; margin-right: 6px; border: 1.5px solid var(--border);">${sd.stopSeq}</span>
 							${sd.stopName} ${isCurrentTarget ? '<span class="pinned-tag" style="background-color: #2563eb;">📍 當前登記站</span>' : ''}
 						</div>
 						<div style="display: flex; flex-wrap: wrap; width: 100%;">
