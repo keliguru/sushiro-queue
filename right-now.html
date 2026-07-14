@@ -541,6 +541,21 @@
             <button class="btn-primary" onclick="addProfile()">新增</button>
         </div>
         <ul id="profileList" class="list-group"></ul>
+
+        <!-- 🔧 新增：預設立即打開特定交通基地的功能設定區 -->
+        <div class="divider"></div>
+        <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; border: 2px dashed var(--border);">
+            <label for="autoOpenToggle" style="margin: 0; cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: space-between; font-weight: 900;">
+                <span>🚀 啟動時自動打開指定群組</span>
+                <input type="checkbox" id="autoOpenToggle" onchange="toggleAutoOpenSetting()" style="width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary);">
+            </label>
+        </div>
+        <div class="form-group" id="autoOpenSelectGroup" style="display: none; margin-top: 10px;">
+            <label for="autoOpenProfileSelect">🎯 預設打開的群組基地：</label>
+            <select id="autoOpenProfileSelect" onchange="saveAutoOpenSetting()">
+                <option value="">-- 請選擇群組 --</option>
+            </select>
+        </div>
     </div>
 
     <div class="right-panels">
@@ -657,7 +672,18 @@
             document.body.classList.add('dark-mode');
             document.getElementById('themeBtn').textContent = '☀️';
         }
+
+        // 初始化自動開啟設定狀態與介面
+        initAutoOpenSettings();
+
         renderProfiles();
+
+        // 檢查是否開啟自動預設開啟功能
+        const autoOpenEnabled = localStorage.getItem('auto_open_enabled') === 'true';
+        const autoOpenProfileId = localStorage.getItem('auto_open_profile_id');
+        if (autoOpenEnabled && autoOpenProfileId && profiles[autoOpenProfileId]) {
+            renderETA(autoOpenProfileId);
+        }
     });
 
     function toggleGuide() {
@@ -708,7 +734,11 @@
         const profileList = document.getElementById('profileList');
         profileList.innerHTML = '';
         const keys = Object.keys(profiles);
-        if (keys.length === 0) { profileList.innerHTML = '<li class="no-data">目前空空如也，快建立新基地吧！</li>'; return; }
+        if (keys.length === 0) { 
+            profileList.innerHTML = '<li class="no-data">目前空空如也，快建立新基地吧！</li>'; 
+            populateAutoOpenSelect(); // 確保無群組時下拉選單同步清空
+            return; 
+        }
 
         keys.forEach(id => {
             const li = document.createElement('li');
@@ -805,6 +835,9 @@
 
             profileList.appendChild(li);
         });
+
+        // 動態重新填充預設載入設定檔下拉選單
+        populateAutoOpenSelect();
     }
 
     function renderElements() {
@@ -889,7 +922,14 @@
 
     function deleteProfile(id) {
         if (!confirm('確定要拆除此基地群組嗎？')) return;
-        delete profiles[id]; if (currentProfileId === id) { currentProfileId = null; expandProfiles(); }
+        delete profiles[id]; 
+        
+        // 如果被刪除的群組是設為「預設立即開啟」，則清除該預設設定
+        if (localStorage.getItem('auto_open_profile_id') === id) {
+            localStorage.removeItem('auto_open_profile_id');
+        }
+
+        if (currentProfileId === id) { currentProfileId = null; expandProfiles(); }
         saveToStorage(); renderProfiles(); renderElements();
     }
 
@@ -1493,6 +1533,55 @@
 			container.innerHTML = `<div class="error">🚨 無法載入全線數據：${err.message}</div>`;
 		}
 	}
+
+    // 🚀 新增自動載入設定的輔助函式
+    function initAutoOpenSettings() {
+        const toggle = document.getElementById('autoOpenToggle');
+        const selectGroup = document.getElementById('autoOpenSelectGroup');
+        const isEnabled = localStorage.getItem('auto_open_enabled') === 'true';
+        
+        toggle.checked = isEnabled;
+        selectGroup.style.display = isEnabled ? 'block' : 'none';
+    }
+
+    function populateAutoOpenSelect() {
+        const select = document.getElementById('autoOpenProfileSelect');
+        if (!select) return;
+        
+        const currentSel = localStorage.getItem('auto_open_profile_id') || "";
+        
+        select.innerHTML = '<option value="">-- 請選擇群組 --</option>';
+        Object.keys(profiles).forEach(id => {
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = profiles[id].name;
+            if (id === currentSel) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+    }
+
+    function toggleAutoOpenSetting() {
+        const toggle = document.getElementById('autoOpenToggle');
+        const selectGroup = document.getElementById('autoOpenSelectGroup');
+        const isEnabled = toggle.checked;
+        
+        localStorage.setItem('auto_open_enabled', isEnabled ? 'true' : 'false');
+        selectGroup.style.display = isEnabled ? 'block' : 'none';
+        
+        if (isEnabled) {
+            populateAutoOpenSelect();
+            saveAutoOpenSetting();
+        } else {
+            localStorage.removeItem('auto_open_profile_id');
+        }
+    }
+
+    function saveAutoOpenSetting() {
+        const select = document.getElementById('autoOpenProfileSelect');
+        localStorage.setItem('auto_open_profile_id', select.value);
+    }
 </script>
 
 </body>
