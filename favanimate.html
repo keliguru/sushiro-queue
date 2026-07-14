@@ -293,7 +293,7 @@
     </nav>
 
     <script>
-        let animeData = [], chineseTitles = {};
+        let animeData = [];
         let currentTab = 'home', currentSeason = 'SUMMER', currentYear = 2026;
         let currentPage = 1, hasNextPage = false, isLoading = false;
         let selectedDayFilter = 'ALL';
@@ -301,22 +301,17 @@
         // 用於記錄展開狀態的記憶集合 (Memory state for expanded panels)
         let expandedIds = new Set();
 
-        // 升級：引入分頁 PageInfo 機制
+        // 升級：引入分頁 PageInfo 機制，擴展 title 獲取多國語言
         const GQL_QUERY = `query ($search: String, $season: MediaSeason, $seasonYear: Int, $page: Int) { 
             Page(page: $page, perPage: 30) { 
                 pageInfo { hasNextPage currentPage }
                 media(search: $search, season: $season, seasonYear: $seasonYear, type: ANIME, sort: POPULARITY_DESC) { 
-                    id title { userPreferred } coverImage { large } description episodes nextAiringEpisode { episode airingAt } 
+                    id title { native romaji english userPreferred } coverImage { large } description episodes nextAiringEpisode { episode airingAt } 
                 } 
             } 
         }`;
 
         async function init() {
-            try {
-                const res = await fetch('https://raw.githubusercontent.com/soruly/anilist-chinese/master/media.json');
-                chineseTitles = await res.json();
-            } catch (e) { console.error("無法載入中文資料", e); }
-            
             setupDynamicSeasonFilter();
             setupInfiniteScroll();
             fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear, page: 1 });
@@ -420,8 +415,10 @@
             fetchGraphQL(GQL_QUERY, { search: term, page: 1 });
         }
 
+        // 取得日文原名，無日文則以羅馬拼音或預設名稱遞補
         function getOriginalTitle(anime) {
-            return chineseTitles[anime.id]?.zh || anime.title.userPreferred;
+            if (!anime || !anime.title) return "未知動畫";
+            return anime.title.native || anime.title.romaji || anime.title.userPreferred;
         }
 
         function switchTab(tab) {
