@@ -55,7 +55,7 @@
             padding: 12px;
             display: flex;
             justify-content: center;
-            padding-bottom: 80px; /* 為懸浮按鈕留出空間 */
+            padding-bottom: 85px; /* 為雙懸浮按鈕留出充足空間 */
         }
 
         .container {
@@ -135,7 +135,8 @@
         .breadcrumb-separator { color: white; margin: 0 4px; }
         .breadcrumb-item.active { color: white; cursor: default; }
 
-        h1, h2, h3 { margin-top: 0; font-weight: 900; }
+        /* 防止標題文字過長溢出 */
+        h1, h2, h3 { margin-top: 0; font-weight: 900; word-break: break-word; }
         h1 { font-size: 1.4rem; margin-bottom: 14px; color: var(--border); display: flex; align-items: center; gap: 6px; }
         h2 { font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 3px dashed #cbd5e1; color: #000; }
 
@@ -231,12 +232,29 @@
         .list-group { list-style: none; padding: 0; margin: 0; }
         
         .list-item {
-            position: relative;
-            display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 14px;
-            border: 3px solid var(--border); border-radius: 16px; margin-bottom: 12px;
-            background: var(--card); box-shadow: 4px 4px 0px var(--border);
+            display: flex; 
+            flex-direction: row; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 12px 16px;
+            border: 3px solid var(--border); 
+            border-radius: 16px; 
+            margin-bottom: 12px;
+            background: var(--card); 
+            box-shadow: 4px 4px 0px var(--border);
         }
-        .list-item .item-title { font-size: 1.2rem; font-weight: 900; color: #005a9c; display: flex; align-items: center; gap: 6px; }
+        
+        /* 🔧 優化：防止基地文字過長，若太長則自動平滑落入下一行 */
+        .list-item .item-title { 
+            font-size: 1.2rem; 
+            font-weight: 900; 
+            color: #005a9c; 
+            flex: 1; 
+            min-width: 0; 
+            word-break: break-word; 
+            overflow-wrap: break-word; 
+        }
+        
         .list-item .btn-group { display: flex; gap: 6px; align-items: center; }
         .list-item .btn-group button { padding: 6px 10px; font-size: 0.85rem; border-radius: 10px; }
         
@@ -254,10 +272,9 @@
             box-shadow: none;
         }
         
+        /* ❌ 右側關閉按鈕（採用 Flexbox 完美置中右貼，不使用 Absolute） */
         .btn-close-icon {
-            position: absolute;
-            top: 6px;
-            right: 6px;
+            margin-left: auto; /* 自動將 ❌ 推至最右側 */
             background: none;
             border: none;
             box-shadow: none;
@@ -265,9 +282,13 @@
             font-size: 1.2rem;
             cursor: pointer;
             line-height: 1;
+            transition: transform 0.1s ease;
+        }
+        .btn-close-icon:hover {
+            transform: scale(1.15);
         }
         .btn-close-icon:active {
-            transform: none;
+            transform: scale(0.9);
             box-shadow: none;
         }
 
@@ -276,6 +297,15 @@
             padding: 10px; border: 3px solid var(--border); border-radius: 12px; margin-bottom: 8px; 
             font-size: 0.9rem; font-weight: 800; box-shadow: 2px 2px 0px var(--border);
         }
+        
+        /* 🔧 優化：防止已登記路線文字過長，自動落入下一行 */
+        .element-item span {
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
         .element-item.el-kmb { background: var(--color-kmb-bg); border-color: var(--color-kmb); color: var(--color-kmb); }
         .element-item.el-ctb, .element-item.el-nwfb { background: var(--color-ctb-bg); border-color: #ccaa00; color: var(--color-ctb-text); }
         .element-item.el-mib { background: var(--color-mib-bg); border-color: var(--color-mib); color: var(--color-mib); }
@@ -286,7 +316,7 @@
             box-shadow: 3px 3px 0px #1d4ed8 !important;
         }
 
-        .element-item button { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; box-shadow: 1px 1px 0px var(--border); }
+        .element-item button { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; box-shadow: 1px 1px 0px var(--border); flex-shrink: 0; }
         
         /* SortableJS Styles */
         .sortable-ghost { opacity: 0.4; border: 3px dashed #005a9c !important; }
@@ -338,27 +368,41 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
 
-        /* 懸浮返回主頁按鈕樣式 */
-        .floating-home-btn {
+        /* 🆕 懸浮按鈕群組樣式 */
+        .floating-btn-group {
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 999;
-            background-color: #ffd200;
-            color: #000;
+            display: none; /* 預設隱藏，進入群組時顯示 */
+            gap: 10px;
+        }
+        
+        .floating-btn {
             padding: 14px 20px;
             border: 3px solid var(--border);
             border-radius: 50px;
             box-shadow: 4px 4px 0px var(--border);
             font-size: 1.05rem;
             font-weight: 950;
-            display: none; /* 預設隱藏，進入群組時顯示 */
+            display: inline-flex;
             align-items: center;
             gap: 6px;
             cursor: pointer;
             transition: transform 0.1s;
         }
-        .floating-home-btn:active {
+        
+        .floating-btn.btn-home {
+            background-color: #ffd200;
+            color: #000;
+        }
+        
+        .floating-btn.btn-top {
+            background-color: #ffffff;
+            color: #000;
+        }
+        
+        .floating-btn:active {
             transform: translate(2px, 2px);
             box-shadow: 2px 2px 0px var(--border);
         }
@@ -366,10 +410,15 @@
 </head>
 <body>
 
-<!-- 懸浮返回主頁圖示 -->
-<button id="floatingHomeBtn" class="floating-home-btn" onclick="expandProfiles()">
-    🏠 主頁基地
-</button>
+<!-- 懸浮按鈕群組（並排設計：返回主頁 + 回到最上） -->
+<div id="floatingBtnGroup" class="floating-btn-group">
+    <button class="floating-btn btn-home" onclick="expandProfiles()">
+        🏠
+    </button>
+    <button class="floating-btn btn-top" onclick="scrollToTop()">
+        🔝
+    </button>
+</div>
 
 <div class="container" id="mainContainer">
     <div class="card instructions-card" id="guideCard">
@@ -663,7 +712,7 @@
         document.getElementById('guideCard').style.display = 'none';
         document.getElementById('breadcrumbCurrent').textContent = profileName;
         document.getElementById('breadcrumbArea').style.display = 'flex';
-        document.getElementById('floatingHomeBtn').style.display = 'flex'; // 顯示懸浮按鈕
+        document.getElementById('floatingBtnGroup').style.display = 'flex'; // 同步顯示懸浮按鈕群組
         window.scrollTo(0, 0);
     }
 
@@ -676,9 +725,17 @@
         document.getElementById('profileSettingCard').style.display = 'none';
         document.getElementById('arrivalContainerCard').style.display = 'none';
         document.getElementById('fullRouteContainerCard').style.display = 'none';
-        document.getElementById('floatingHomeBtn').style.display = 'none'; // 隱藏懸浮按鈕
+        document.getElementById('floatingBtnGroup').style.display = 'none'; // 同步隱藏懸浮按鈕群組
         renderProfiles(); renderElements();
         window.scrollTo(0, 0);
+    }
+
+    /* 平滑回滾到最頂端 */
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     }
 
     function selectProfile(id) {
@@ -1127,7 +1184,6 @@
 				const stopJson = await stopRes.json();
 				stopList = stopJson.data?.route_stops || [];
 				
-				// 💡 註：小巴不支援一次性獲取全線，此處不執行無效的全線 fetch，改到下方併行處理。
 			} else if (company === 'KMB') {
 				const kmbDir = direction === 'outbound' ? 'outbound' : 'inbound';
 				const stopRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`);
@@ -1144,7 +1200,7 @@
 				stopList = stopJson.data || [];
 			}
 
-			// 2. 🔥 【核心優化】使用 Promise.all 同步併行請求全線車站的 ETA 與名稱
+			// 2. 使用 Promise.all 同步併行請求全線車站的 ETA 與名稱
 			const stopDetailsPromises = stopList.map(async (stop) => {
 				const stopId = stop.stop || stop.stop_id;
 				const stopSeq = stop.seq || stop.stop_seq;
