@@ -368,54 +368,57 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
 
-        /* 🆕 懸浮按鈕群組樣式 */
+        /* 🆕 整合後的懸浮按鈕群組樣式（已去背景、縮小） */
         .floating-btn-group {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            right: 15px; /* 稍微往右靠更顯精緻 */
             z-index: 999;
-            display: none; /* 預設隱藏，進入群組時顯示 */
-            gap: 10px;
+            display: none; /* 預設隱藏，由 JS 切換為 flex */
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            gap: 12px; /* 讓兩個無背景的圖示拉開適當距離 */
         }
         
         .floating-btn {
-            padding: 14px 20px;
-            border: 3px solid var(--border);
-            border-radius: 50px;
-            box-shadow: 4px 4px 0px var(--border);
-            font-size: 1.05rem;
-            font-weight: 950;
+            padding: 4px; /* 極小化內邊距 */
+            border: none;
+            font-size: 1.1rem; /* 縮小圖示字體大小 */
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
             cursor: pointer;
-            transition: transform 0.1s;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent; /* 去除所有背景 */
         }
         
         .floating-btn.btn-home {
-            background-color: #ffd200;
-            color: #000;
+            background: transparent;
         }
         
         .floating-btn.btn-top {
-            background-color: #ffffff;
-            color: #000;
+            background: transparent;
         }
         
+        /* 沒了外框背景，點擊改用靈活動態的縮放回饋 */
         .floating-btn:active {
-            transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0px var(--border);
+            transform: scale(0.8);
+            filter: brightness(0.8);
+            box-shadow: none;
         }
     </style>
 </head>
 <body>
 
-<!-- 懸浮按鈕群組（並排設計：返回主頁 + 回到最上） -->
+<!-- 懸浮按鈕群組（去背景、縮小微型版） -->
 <div id="floatingBtnGroup" class="floating-btn-group">
-    <button class="floating-btn btn-home" onclick="expandProfiles()">
+    <button class="floating-btn btn-home" onclick="expandProfiles()" title="返回主頁基地">
         🏠
     </button>
-    <button class="floating-btn btn-top" onclick="scrollToTop()">
+    <button class="floating-btn btn-top" onclick="scrollToTop()" title="回到最頂端">
         🔝
     </button>
 </div>
@@ -712,7 +715,7 @@
         document.getElementById('guideCard').style.display = 'none';
         document.getElementById('breadcrumbCurrent').textContent = profileName;
         document.getElementById('breadcrumbArea').style.display = 'flex';
-        document.getElementById('floatingBtnGroup').style.display = 'flex'; // 同步顯示懸浮按鈕群組
+        document.getElementById('floatingBtnGroup').style.display = 'flex'; 
         window.scrollTo(0, 0);
     }
 
@@ -725,12 +728,11 @@
         document.getElementById('profileSettingCard').style.display = 'none';
         document.getElementById('arrivalContainerCard').style.display = 'none';
         document.getElementById('fullRouteContainerCard').style.display = 'none';
-        document.getElementById('floatingBtnGroup').style.display = 'none'; // 同步隱藏懸浮按鈕群組
+        document.getElementById('floatingBtnGroup').style.display = 'none'; 
         renderProfiles(); renderElements();
         window.scrollTo(0, 0);
     }
 
-    /* 平滑回滾到最頂端 */
     function scrollToTop() {
         window.scrollTo({
             top: 0,
@@ -1074,7 +1076,6 @@
         currentProfileId = profileId; const elements = profiles[currentProfileId].elements;
         const profileName = profiles[currentProfileId].name;
         
-        // 動態更改 ETA 標題文字
         document.getElementById('etaMainTitle').innerText = `⏰ 實時到站時間 - ${profileName}`;
 
         document.getElementById('profileSettingCard').style.display = 'none';
@@ -1143,16 +1144,14 @@
 
 		try {
 			let stopList = [];
-			let etaData = []; // 僅 KMB 使用全線預載
+			let etaData = []; 
 			let actualRouteId = routeId;
 			const targetGroupId = direction === 'outbound' ? 1 : 2;
 
-			// 1. 取得各家營運商的車站列表
 			if (company === 'MIB') {
 				let activeRegion = region;
 				let mibRouteData = null;
 
-				// 自動相容機制：若舊數據無 region 則自動探測
 				if (!activeRegion) {
 					const regions = ['HKI', 'KLN', 'NT'];
 					const fetchPromises = regions.map(async (r) => {
@@ -1190,7 +1189,6 @@
 				const stopJson = await stopRes.json();
 				stopList = stopJson.data || [];
 
-				// 九巴支援全線大包裝 API
 				const etaRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-eta/${route}/1`);
 				const etaJson = await etaRes.json();
 				etaData = etaJson.data || [];
@@ -1200,7 +1198,6 @@
 				stopList = stopJson.data || [];
 			}
 
-			// 2. 使用 Promise.all 同步併行請求全線車站的 ETA 與名稱
 			const stopDetailsPromises = stopList.map(async (stop) => {
 				const stopId = stop.stop || stop.stop_id;
 				const stopSeq = stop.seq || stop.stop_seq;
@@ -1209,7 +1206,6 @@
 
 				if (company === 'MIB') {
 					try {
-						// 套用正確的 /eta/route-stop/{route_id}/{stop_id} 進行單站精準查詢
 						const etaRes = await fetch(`${baseUrlMib}/eta/route-stop/${actualRouteId}/${stopId}`);
 						if (etaRes.ok) {
 							const etaJson = await etaRes.json();
@@ -1241,10 +1237,8 @@
 				return { stopId, stopSeq, stopName, etas: stopETAs };
 			});
 
-			// 等待所有車站的數據同時回傳
 			const stopDetails = await Promise.all(stopDetailsPromises);
 
-			// 3. 渲染全線 UI 面板
 			let html = '<ul class="list-group" style="display: flex; flex-direction: column; gap: 8px;">';
 			stopDetails.forEach(sd => {
 				let etaHtml = '';
