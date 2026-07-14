@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>個人動畫追番清單 Pro</title>
+    <title>個人動畫追番清單</title>
+
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favanimate-icon.png">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="個人動畫追番清單">
+	<meta property="og:description" content="個人動畫追番清單">
+	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favanimate-icon.png"> 
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favanimate-icon.png">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="個人動畫追番清單">
+    
     <style>
         :root {
             --netflix-red: #E50914;
@@ -204,7 +216,7 @@
                 <path d="M 120 256 A 136 136 0 0 1 340 150" fill="none" stroke="url(#logoRed)" stroke-width="26" stroke-linecap="round"/>
                 <path d="M 210 165 C 210 155 222 148 232 154 L 360 242 C 369 248 369 262 360 268 L 232 356 C 222 362 210 355 210 345 Z" fill="url(#logoRed)"/>
             </svg>
-            <h1 id="page-title" style="line-height: 1;">新番首頁</h1>
+            <h1 id="page-title" style="line-height: 1;">動畫列表</h1>
         </div>
 
         <div id="search-controls" class="controls">
@@ -240,10 +252,10 @@
     <!-- 底部導航 -->
     <nav class="bottom-nav">
         <button id="nav-home" class="nav-item active" onclick="switchTab('home')">
-            <span class="nav-icon">🏠</span><span>新番首頁</span>
+            <span class="nav-icon">🏯</span><span>首頁</span>
         </button>
         <button id="nav-favorites" class="nav-item" onclick="switchTab('favorites')">
-            <span class="nav-icon">❤️</span><span>我的最愛</span>
+            <span class="nav-icon">🏰</span><span>我的最愛</span>
         </button>
     </nav>
 
