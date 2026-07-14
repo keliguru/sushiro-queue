@@ -40,13 +40,24 @@
             --color-mib-bg: #f0fdf4;
         }
 
+        /* 🆕 黑夜模式變數與樣式 */
+        body.dark-mode {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-light: #94a3b8;
+            --border: #ffffff;
+            background-color: #0f172a;
+            background-image: radial-gradient(#334155 25%, transparent 25%);
+        }
+
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: "Comic Sans MS", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: "Comic Sans MS", "Quicksand", "M PLUS Round 1c", "PingFang HK", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #e2e8f0;
             background-image: radial-gradient(#cbd5e1 25%, transparent 25%);
             background-size: 18px 18px;
@@ -56,6 +67,7 @@
             display: flex;
             justify-content: center;
             padding-bottom: 85px; /* 為雙懸浮按鈕留出充足空間 */
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
@@ -85,6 +97,7 @@
             box-shadow: 4px 4px 0px var(--border);
             width: 100%;
             position: relative;
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
 
         .instructions-card {
@@ -111,6 +124,15 @@
         }
         .instructions-step:last-child { margin-bottom: 0; }
 
+        /* 🆕 黑夜模式下的說明欄 */
+        body.dark-mode .instructions-card {
+            background: #1e1b4b;
+            border-color: #818cf8;
+            box-shadow: 4px 4px 0px #818cf8;
+        }
+        body.dark-mode .instructions-card h3 { color: #a5b4fc; }
+        body.dark-mode .instructions-step { color: #e0e7ff; }
+
         .breadcrumb {
             display: flex;
             align-items: center;
@@ -123,6 +145,7 @@
             font-size: 1.1rem;
             font-weight: 900;
         }
+        body.dark-mode .breadcrumb { background: #1e40af; }
 
         .breadcrumb-item {
             color: #ffd200;
@@ -137,8 +160,9 @@
 
         /* 防止標題文字過長溢出 */
         h1, h2, h3 { margin-top: 0; font-weight: 900; word-break: break-word; }
-        h1 { font-size: 1.4rem; margin-bottom: 14px; color: var(--border); display: flex; align-items: center; gap: 6px; }
-        h2 { font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 3px dashed #cbd5e1; color: #000; }
+        h1 { font-size: 1.4rem; margin-bottom: 14px; color: var(--text); display: flex; align-items: center; gap: 6px; }
+        h2 { font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 3px dashed #cbd5e1; color: var(--text); }
+        body.dark-mode h2 { border-bottom-color: #475569; }
 
         .profile-header-area {
             display: flex;
@@ -148,6 +172,7 @@
             margin-bottom: 14px;
             padding-bottom: 8px;
         }
+        body.dark-mode .profile-header-area { border-bottom-color: #475569; }
         .profile-header-area h2 { margin: 0; padding: 0; border-bottom: none; }
         .title-backup-group { display: flex; gap: 4px; }
         
@@ -162,12 +187,13 @@
             box-shadow: 2px 2px 0px var(--border);
         }
         .btn-backup-mini:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px var(--border); }
+        body.dark-mode .btn-backup-mini { background-color: #334155; color: #fff; }
 
         .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
         .form-group.inline { flex-direction: row; gap: 6px; }
         .form-group.inline input[type="text"] { flex: 1; }
 
-        label { font-size: 0.9rem; font-weight: 900; color: #000; display: flex; align-items: center; gap: 4px; }
+        label { font-size: 0.9rem; font-weight: 900; color: var(--text); display: flex; align-items: center; gap: 4px; }
 
         input[type="text"], select {
             width: 100%;
@@ -177,12 +203,20 @@
             font-size: 16px;
             outline: none;
             background-color: #fff;
+            color: #000;
             font-weight: 700;
             box-shadow: inset 2px 2px 0px rgba(0,0,0,0.1);
-            transition: transform 0.1s;
+            transition: transform 0.1s, background-color 0.3s, color 0.3s;
         }
         input[type="text"]:focus, select:focus {
             background-color: #fffdf4;
+        }
+        body.dark-mode input[type="text"], body.dark-mode select {
+            background-color: #0f172a;
+            color: #fff;
+        }
+        body.dark-mode input[type="text"]:focus, body.dark-mode select:focus {
+            background-color: #1e293b;
         }
 
         select {
@@ -191,6 +225,9 @@
             background-position: right 14px center;
             background-size: 16px;
             padding-right: 40px;
+        }
+        body.dark-mode select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
         }
 
         .radio-group { display: flex; flex-direction: column; gap: 6px; }
@@ -203,14 +240,20 @@
             cursor: pointer;
             padding: 12px;
             background: #fff;
+            color: #000;
             border: 3px solid var(--border);
             border-radius: 12px;
             box-shadow: 3px 3px 0px var(--border);
+            transition: background-color 0.3s, color 0.3s;
         }
         .radio-label:has(input:checked) {
             background-color: #ffd200;
         }
         .radio-label input[type="radio"] { width: 20px; height: 20px; margin: 0; accent-color: #000; }
+        
+        body.dark-mode .radio-label { background: #0f172a; color: #fff; }
+        body.dark-mode .radio-label:has(input:checked) { background-color: #005a9c; }
+        body.dark-mode .radio-label input[type="radio"] { accent-color: #fff; }
 
         button {
             padding: 12px 16px; border: 3px solid var(--border); border-radius: 12px; cursor: pointer;
@@ -218,6 +261,7 @@
             display: inline-flex; align-items: center; justify-content: center; gap: 6px;
             box-shadow: 3px 3px 0px var(--border);
             -webkit-appearance: none; appearance: none;
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
         button:active {
             transform: translate(2px, 2px);
@@ -225,9 +269,11 @@
         }
 
         .btn-primary { background-color: #ffd200; color: #000; }
+        body.dark-mode .btn-primary { background-color: #005a9c; color: #fff; }
         .btn-danger { background-color: #ff4d4d; color: white; padding: 8px 12px; font-size: 0.85rem; }
         .btn-pin { background-color: #e2e8f0; color: #000; border: 2px solid #000; padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; box-shadow: 1px 1px 0px #000; cursor: pointer; }
         .btn-pin.pinned { background-color: #f31111; color: white; }
+        body.dark-mode .btn-pin { background-color: #334155; color: #fff; border-color: #fff; box-shadow: 1px 1px 0px #fff; }
 
         .list-group { list-style: none; padding: 0; margin: 0; }
         
@@ -243,6 +289,7 @@
             padding: 0;
             touch-action: pan-y; /* 允許原生上下捲動，交由 JS 精準控管左右滑動 */
             user-select: none; /* 防止滑鼠拖拽時選取到藍色文字區塊 */
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
         
         /* 卡片內層（滑動主體） */
@@ -253,7 +300,7 @@
             gap: 12px; 
             padding: 12px 16px;
             background: var(--card); 
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s;
             width: 100%;
             position: relative;
             z-index: 2;
@@ -282,6 +329,7 @@
             z-index: 1;
             border-left: 3px solid var(--border);
             letter-spacing: 0.5px;
+            transition: border-color 0.3s;
         }
         
         /* 防止基地文字過長，若太長則自動平滑落入下一行 */
@@ -294,6 +342,7 @@
             word-break: break-word; 
             overflow-wrap: break-word; 
         }
+        body.dark-mode .list-item .item-title { color: #38bdf8; }
         
         .list-item .btn-group { display: flex; gap: 6px; align-items: center; }
         .list-item .btn-group button { padding: 6px 10px; font-size: 0.85rem; border-radius: 10px; }
@@ -316,6 +365,7 @@
             display: flex; justify-content: space-between; align-items: center; gap: 6px;
             padding: 10px; border: 3px solid var(--border); border-radius: 12px; margin-bottom: 8px; 
             font-size: 0.9rem; font-weight: 800; box-shadow: 2px 2px 0px var(--border);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
         
         /* 優化：防止已登記路線文字過長，自動落入下一行 */
@@ -330,10 +380,19 @@
         .element-item.el-ctb, .element-item.el-nwfb { background: var(--color-ctb-bg); border-color: #ccaa00; color: var(--color-ctb-text); }
         .element-item.el-mib { background: var(--color-mib-bg); border-color: var(--color-mib); color: var(--color-mib); }
         
+        body.dark-mode .element-item.el-kmb { background: #450a0a; color: #fca5a5; }
+        body.dark-mode .element-item.el-ctb, body.dark-mode .element-item.el-nwfb { background: #422006; color: #fef08a; }
+        body.dark-mode .element-item.el-mib { background: #064e3b; color: #6ee7b7; }
+
         .element-item.current-target-stop {
             background-color: #dbeafe !important;
             border-color: #2563eb !important;
             box-shadow: 3px 3px 0px #1d4ed8 !important;
+        }
+        body.dark-mode .element-item.current-target-stop {
+            background-color: #1e3a8a !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 3px 3px 0px #2563eb !important;
         }
 
         .element-item button { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; box-shadow: 1px 1px 0px var(--border); flex-shrink: 0; }
@@ -342,13 +401,17 @@
         .sortable-ghost { opacity: 0.4; border: 3px dashed #005a9c !important; }
 
         .divider { height: 3px; background-color: #cbd5e1; margin: 16px 0; }
+        body.dark-mode .divider { background-color: #475569; }
         .no-data { color: var(--text-light); font-style: italic; text-align: center; padding: 20px; font-size: 0.95rem; font-weight: 700; }
         .error { color: white; background-color: var(--danger); padding: 12px; border-radius: 12px; border: 3px solid #000; font-weight: 800; box-shadow: 3px 3px 0px #000; text-align: center; }
         .loading { color: #000; background-color: #ffd200; padding: 12px; border-radius: 12px; border: 3px solid #000; font-weight: 800; box-shadow: 3px 3px 0px #000; text-align: center; }
 
         .controls { display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: #fff; border: 3px solid #000; padding: 10px; border-radius: 12px; box-shadow: 3px 3px 0px #000; gap: 8px; flex-wrap: wrap; }
+        body.dark-mode .controls { background: #1e293b; border-color: #fff; box-shadow: 3px 3px 0px #fff; }
         .update-status { font-size: 0.85rem; color: #000; font-weight: 900; flex: 1; }
+        body.dark-mode .update-status { color: #fff; }
         .refresh-btn { background-color: #ffd200; border: 2px solid #000; padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; box-shadow: 2px 2px 0px #000; }
+        body.dark-mode .refresh-btn { background-color: #005a9c; border-color: #fff; box-shadow: 2px 2px 0px #fff; color: #fff; }
 
         #bus-container { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
         #bus-container .card { padding: 0; overflow: hidden; }
@@ -376,13 +439,23 @@
         .card-mib .route-number { color: white; }
         .card-mib .route-direction { background: white; color: var(--color-mib); }
 
+        /* 🆕 黑夜模式專用巴士卡片描邊 */
+        body.dark-mode .card-kmb { border-color: #f87171; box-shadow: 5px 5px 0px #f87171; }
+        body.dark-mode .card-ctb, body.dark-mode .card-nwfb { border-color: #facc15; box-shadow: 5px 5px 0px #facc15; }
+        body.dark-mode .card-mib { border-color: #4ade80; box-shadow: 5px 5px 0px #4ade80; }
+
         .eta-list { list-style: none; padding: 0; margin: 0; background: #fafafa; }
+        body.dark-mode .eta-list { background: #0f172a; }
         .eta-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 2px dashed #cbd5e1; }
         .eta-item:last-child { border-bottom: none; }
+        body.dark-mode .eta-item { border-bottom-color: #334155; }
         .destination { font-size: 1rem; font-weight: 800; }
+        body.dark-mode .destination { color: #fff; }
         
         .time-badge { font-size: 0.95rem; font-weight: 900; background-color: #fff; color: #000; padding: 6px 10px; border-radius: 8px; border: 2px solid var(--border); box-shadow: 2px 2px 0px var(--border); }
         .time-badge.urgent { background-color: #ff4d4d; color: white; animation: pulse 1.2s infinite; font-size: 1rem; }
+        body.dark-mode .time-badge { background-color: #1e293b; color: #fff; }
+        body.dark-mode .time-badge.urgent { background-color: #ef4444; color: #fff; }
 
         .spinning .refresh-icon { display: inline-block; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -394,14 +467,15 @@
             bottom: 20px;
             right: 15px; 
             z-index: 999;
-            display: none; 
+            display: flex; /* 改為常駐 flex 以顯示黑夜切換按鈕 */
+            flex-direction: column;
             background: transparent;
             border: none;
             box-shadow: none;
             gap: 12px; 
         }
         
-        /* 🆕 修改為白色背景、圓形外觀與極具質感的粗邊框 */
+        /* 白色背景、圓形外觀與極具質感的粗邊框 */
         .floating-btn {
             padding: 0; 
             font-size: 1.2rem; 
@@ -418,10 +492,14 @@
             box-shadow: 3px 3px 0px var(--border); 
             width: 44px;
             height: 44px;
-            transition: transform 0.1s;
+            transition: transform 0.1s, background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        body.dark-mode .floating-btn {
+            background: #1e293b;
+            color: #fff;
         }
         
-        /* 🆕 統一的彈壓反饋 */
+        /* 統一的彈壓反饋 */
         .floating-btn:active {
             transform: translate(2px, 2px);
             box-shadow: 1px 1px 0px var(--border);
@@ -433,7 +511,11 @@
 
 <!-- 懸浮按鈕群組 -->
 <div id="floatingBtnGroup" class="floating-btn-group">
-    <button class="floating-btn btn-home" onclick="expandProfiles()" title="返回主頁基地">
+    <!-- 🆕 黑夜模式切換 -->
+    <button class="floating-btn btn-theme" id="themeBtn" onclick="toggleDarkMode()" title="切換黑夜模式">
+        🌙
+    </button>
+    <button class="floating-btn btn-home" id="floatingHomeBtn" onclick="expandProfiles()" title="返回主頁基地" style="display: none;">
         🏠
     </button>
     <button class="floating-btn btn-top" onclick="scrollToTop()" title="回到最頂端">
@@ -569,16 +651,34 @@
     const allOriginsProxy = 'https://cors.freehi.workers.dev/?';
     const baseUrlMib = allOriginsProxy + ('https://data.etagmb.gov.hk');
 	
-    const stopNameCache = {};
+    // 🆕 站名本地 Persistent Cache：初始化時從 localStorage 讀取，沒有才建空物件
+    const stopNameCache = JSON.parse(localStorage.getItem('stop_name_cache')) || {};
     const busTargets = [];
     let debounceTimer;
     let autoRefreshTimer = null;
     let isEtaLoading = false;
 
-    document.addEventListener('DOMContentLoaded', () => renderProfiles());
+    // 🆕 初始化加載 (處理 Profiles 與 儲存的黑夜模式狀態)
+    document.addEventListener('DOMContentLoaded', () => {
+        const isDark = localStorage.getItem('dark_mode_enabled') === 'true';
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeBtn').textContent = '☀️';
+        }
+        renderProfiles();
+    });
 
     function saveToStorage() { localStorage.setItem('profiles_data', JSON.stringify(profiles)); }
     function savePinnedStorage() { localStorage.setItem('pinned_stops_data', JSON.stringify(pinnedStops)); }
+
+    // 🆕 切換黑夜模式與本地偏好儲存
+    function toggleDarkMode() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('dark_mode_enabled', isDark ? 'true' : 'false');
+        document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+    }
 
     function getStopKey(target) {
         return `${target.company}_${target.route}_${target.direction}_${target.stopValue}`;
@@ -659,7 +759,7 @@
             li.appendChild(innerDiv);
             li.appendChild(deleteAction);
 
-            // 🆕 升級：支援滑鼠 + 觸控雙端的 Pointer 手勢左拉偵測
+            // 🆕 支援滑鼠 + 觸控雙端的 Pointer 手勢左拉偵測
             let startX = 0;
             let startY = 0;
             let dragHappened = false; // 用以判別是單純點擊還是拖拽滑動
@@ -810,7 +910,7 @@
         document.getElementById('guideCard').style.display = 'none';
         document.getElementById('breadcrumbCurrent').textContent = profileName;
         document.getElementById('breadcrumbArea').style.display = 'flex';
-        document.getElementById('floatingBtnGroup').style.display = 'flex'; 
+        document.getElementById('floatingHomeBtn').style.display = 'inline-flex'; // 🆕 僅顯示 Home 鍵
         window.scrollTo(0, 0);
     }
 
@@ -823,7 +923,7 @@
         document.getElementById('profileSettingCard').style.display = 'none';
         document.getElementById('arrivalContainerCard').style.display = 'none';
         document.getElementById('fullRouteContainerCard').style.display = 'none';
-        document.getElementById('floatingBtnGroup').style.display = 'none'; 
+        document.getElementById('floatingHomeBtn').style.display = 'none'; // 🆕 隱藏 Home 鍵
         renderProfiles(); renderElements();
         window.scrollTo(0, 0);
     }
@@ -987,14 +1087,20 @@
         }
     }
     
+    // 🆕 升級 getStopName 方法：每次請求成功後，會存入本地 localStorage 快取中
     async function getStopName(company, stopId) {
-        const cacheKey = `${company}_${stopId}`; if (stopNameCache[cacheKey]) return stopNameCache[cacheKey];
+        const cacheKey = `${company}_${stopId}`; 
+        if (stopNameCache[cacheKey]) return stopNameCache[cacheKey];
         let url = company === 'KMB' ? `${baseUrlKmb}/v1/transport/kmb/stop/${stopId}` : `${baseUrlCtb}/v1/transport/citybus-nwfb/stop/${stopId}`;
         try {
             const response = await fetch(url);
             if (response.ok) {
-                const resData = await response.json(); const name = resData.data.name_tc || `車站 ${stopId}`;
-                stopNameCache[cacheKey] = name; return name;
+                const resData = await response.json(); 
+                const name = resData.data.name_tc || `車站 ${stopId}`;
+                stopNameCache[cacheKey] = name; 
+                // 同步寫入本地快取，防止重新整理頁面時重新 Call API
+                localStorage.setItem('stop_name_cache', JSON.stringify(stopNameCache)); 
+                return name;
             }
         } catch (e) {}
         return `車站 ${stopId}`;
@@ -1130,8 +1236,8 @@
                     }
 
                     cardHtml += `</ul>
-                            <div style="padding: 10px; background: #fafafa; border-top: 2px dashed #cbd5e1; border-radius: 0 0 12px 12px; text-align: center;">
-                                <button class="btn-primary" style="width: 100%; border-radius: 8px; font-size: 0.95rem; background-color: #fffdf4;" onclick="viewFullRoute('${target.company}', '${target.route}', '${target.direction}', '${target.stopValue}', '${target.routeId || ''}', '${target.region || ''}')">
+                            <div style="padding: 10px; background: var(--card); border-top: 2px dashed var(--border); border-radius: 0 0 12px 12px; text-align: center;">
+                                <button class="btn-primary" style="width: 100%; border-radius: 8px; font-size: 0.95rem;" onclick="viewFullRoute('${target.company}', '${target.route}', '${target.direction}', '${target.stopValue}', '${target.routeId || ''}', '${target.region || ''}')">
                                     🗺️ 展開全線車站時間
                                 </button>
                             </div>
