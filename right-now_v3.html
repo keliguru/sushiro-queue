@@ -700,22 +700,22 @@
                     </label>
                 </div>
                 <div class="vip-desc-box">
-                    💡 <b>VIP 專屬說明</b>：請先設定你的專屬 Pipedream URL (必須為 https://*.m.pipedream.net 格式)。開啟後，當車輛接近時可直接點擊進行倒數推播排程！最後5分鐘會每分鐘進行推播。
+                    💡 <b>VIP 專屬說明</b>：請先輸入魔法咒語開啟通知功能 [當車輛接近時可直接點擊進行倒數推播排程！最後5分鐘會每分鐘進行推播。]
                 </div>
                 
                 <!-- Pipedream URL 設定欄位區 -->
                 <div style="margin-top: 10px;">
-                    <label style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔗 自定義 Pipedream URL：</label>
+                    <label style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔗 魔法咒語：</label>
                     
                     <!-- 輸入框容器 -->
                     <div id="webhookInputContainer">
-                        <input type="text" id="webhookUrlInput" placeholder="輸入網址 (如 https://xxx.m.pipedream.net)" oninput="savePushoverSettings()">
+                        <input type="text" id="webhookUrlInput" placeholder="魔法咒語..." oninput="savePushoverSettings()">
                     </div>
                     
                     <!-- 成功提示與修改按鈕容器 (預設隱藏) -->
                     <div id="webhookSuccessContainer" class="webhook-success-container" style="display: none;">
-                        <span>✅ Pipedream URL 輸入成功</span>
-                        <button type="button" class="btn-edit-url" onclick="editWebhookUrl()" title="修改網址">✏️</button>
+                        <span>✅ 魔法咒語 輸入成功</span>
+                        <button type="button" class="btn-edit-url" onclick="editWebhookUrl()" title="修改魔法咒語">✏️</button>
                     </div>
                 </div>
 
@@ -961,7 +961,7 @@
         if (vipEnabled && !isValidWebhookUrl(webhookUrl)) {
             document.getElementById('vipToggleSwitch').checked = false;
             localStorage.setItem('vip_notifications_enabled', 'false');
-            alert('⚠️ URL 格式不正確，已自動關閉 VIP 通知功能。請確保輸入的網址符合 https://*.m.pipedream.net 格式。');
+            alert('⚠️ 魔法咒語不正確，已自動關閉 VIP 通知功能。請確保輸入正確。');
             fetchETA();
         }
     }
@@ -973,7 +973,7 @@
         // 啟用時強制驗證 URL
         if (toggle.checked) {
             if (!isValidWebhookUrl(webhookUrl)) {
-                alert('⚠️ 請先輸入正確的自定義 Pipedream URL (格式必須為 https://*.m.pipedream.net) 才能開啟 VIP 功能！');
+                alert('⚠️ 請先輸入正確的魔法咒語才能開啟 VIP 功能！');
                 toggle.checked = false;
                 return;
             }
@@ -1454,7 +1454,7 @@
 
         const webhookUrl = localStorage.getItem('custom_webhook_url') || "";
         if (!isValidWebhookUrl(webhookUrl)) {
-            alert('⚠️ 無效的 Pipedream URL，無法發送通知！請確認已在主頁設定中填寫正確網址。');
+            alert('⚠️ 無效的 魔法咒語，無法發送通知！請確認已在主頁設定中填寫正確魔法咒語。');
             return;
         }
 
@@ -1516,7 +1516,7 @@
         } else {
             button.innerText = '❌';
             button.disabled = false;
-            alert(`🚨 報告指揮官，部分排程發送失敗 (成功: ${successCount}/5)，請檢查網路或 Pipedream 狀態！`);
+            alert(`🚨 報告指揮官，部分排程發送失敗 (成功: ${successCount}/5)，請檢查網路或 魔法咒語 狀態！`);
         }
     }
 
