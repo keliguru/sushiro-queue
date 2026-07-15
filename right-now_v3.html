@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>實時交通到站提示 - 玩具指揮部</title>
+	
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/right-now-icon.png">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="實時交通到站提示">
+	<meta property="og:description" content="實時交通到站提示">
+	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/right-now-icon.png"> 
+
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="實時交通到站提示">
+	<meta name="twitter:description" content="實時交通到站提示">
+	
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/right-now-icon.png">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="實時交通提示">
+    <style>
+        :root {
+            --primary: #005a9c;
+            --primary-hover: #004475;
+            --danger: #f31111;
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #475569;
+            --border: #000000;
+
+            --color-kmb: #e30013;
+            --color-kmb-bg: #fff5f5;
+            --color-ctb: #ffd200;
+            --color-ctb-text: #002f6c;
+            --color-ctb-bg: #fffde6;
+            --color-mib: #00a651;
+            --color-mib-bg: #f0fdf4;
+        }
+
+        body.dark-mode {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-light: #94a3b8;
+            --border: #ffffff;
+            background-color: #0f172a;
+            background-image: radial-gradient(#334155 25%, transparent 25%);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: "Comic Sans MS", "Quicksand", "M PLUS Round 1c", "PingFang HK", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #e2e8f0;
+            background-image: radial-gradient(#cbd5e1 25%, transparent 25%);
+            background-size: 18px 18px;
+            color: var(--text);
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            padding-bottom: 85px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        #profileContainer.collapsed {
+            display: none !important;
+        }
+
+        .right-panels {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 16px;
+            border-radius: 16px;
+            border: 3px solid var(--border);
+            box-shadow: 4px 4px 0px var(--border);
+            width: 100%;
+            position: relative;
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .instructions-card {
+            background: #fffbeb;
+            border: 3px dashed #b45309;
+            box-shadow: 4px 4px 0px #b45309;
+        }
+        .instructions-card h3 {
+            color: #b45309;
+            margin-top: 0;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .instructions-content {
+            margin-top: 10px;
+        }
+        .instructions-step {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #78350f;
+            margin-bottom: 6px;
+            padding-left: 4px;
+            font-weight: 600;
+        }
+        .instructions-step:last-child { margin-bottom: 0; }
+
+        body.dark-mode .instructions-card {
+            background: #1e1b4b;
+            border-color: #818cf8;
+            box-shadow: 4px 4px 0px #818cf8;
+        }
+        body.dark-mode .instructions-card h3 { color: #a5b4fc; }
+        body.dark-mode .instructions-step { color: #e0e7ff; }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            background: #005a9c;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 3px solid var(--border);
+            box-shadow: 4px 4px 0px var(--border);
+            font-size: 1.1rem;
+            font-weight: 900;
+        }
+        body.dark-mode .breadcrumb { background: #1e40af; }
+
+        .breadcrumb-item {
+            color: #ffd200;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .breadcrumb-separator { color: white; margin: 0 4px; }
+        .breadcrumb-item.active { color: white; cursor: default; }
+
+        h1, h2, h3 { margin-top: 0; font-weight: 900; word-break: break-word; }
+        h1 { font-size: 1.4rem; margin-bottom: 14px; color: var(--text); display: flex; align-items: center; gap: 6px; }
+        h2 { font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 3px dashed #cbd5e1; color: var(--text); }
+        body.dark-mode h2 { border-bottom-color: #475569; }
+
+        .profile-header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px dashed #cbd5e1;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+        }
+        body.dark-mode .profile-header-area { border-bottom-color: #475569; }
+        .profile-header-area h2 { margin: 0; padding: 0; border-bottom: none; }
+        .title-backup-group { display: flex; gap: 4px; }
+        
+        .btn-backup-mini {
+            background-color: #f1f5f9;
+            color: #000;
+            border: 2px solid var(--border);
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            font-weight: 800;
+            box-shadow: 2px 2px 0px var(--border);
+        }
+        .btn-backup-mini:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px var(--border); }
+        body.dark-mode .btn-backup-mini { background-color: #334155; color: #fff; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .form-group.inline { flex-direction: row; gap: 6px; }
+        .form-group.inline input[type="text"] { flex: 1; }
+
+        label { font-size: 0.9rem; font-weight: 900; color: var(--text); display: flex; align-items: center; gap: 4px; }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 3px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            background-color: #fff;
+            color: #000;
+            font-weight: 700;
+            box-shadow: inset 2px 2px 0px rgba(0,0,0,0.1);
+            transition: transform 0.1s, background-color 0.3s, color 0.3s;
+        }
+        input[type="text"]:focus, select:focus {
+            background-color: #fffdf4;
+        }
+        body.dark-mode input[type="text"], body.dark-mode select {
+            background-color: #0f172a;
+            color: #fff;
+        }
+        body.dark-mode input[type="text"]:focus, body.dark-mode select:focus {
+            background-color: #1e293b;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+        body.dark-mode select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        }
+
+        .radio-group { display: flex; flex-direction: column; gap: 6px; }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            padding: 12px;
+            background: #fff;
+            color: #000;
+            border: 3px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 3px 3px 0px var(--border);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .radio-label:has(input:checked) {
+            background-color: #ffd200;
+        }
+        .radio-label input[type="radio"] { width: 20px; height: 20px; margin: 0; accent-color: #000; }
+        
+        body.dark-mode .radio-label { background: #0f172a; color: #fff; }
+        body.dark-mode .radio-label:has(input:checked) { background-color: #005a9c; }
+        body.dark-mode .radio-label input[type="radio"] { accent-color: #fff; }
+
+        button {
+            padding: 12px 16px; border: 3px solid var(--border); border-radius: 12px; cursor: pointer;
+            font-weight: 900; font-size: 1rem;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            box-shadow: 3px 3px 0px var(--border);
+            -webkit-appearance: none; appearance: none;
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--border);
+        }
+
+        .btn-primary { background-color: #ffd200; color: #000; }
+        body.dark-mode .btn-primary { background-color: #005a9c; color: #fff; }
+        .btn-danger { background-color: #ff4d4d; color: white; padding: 8px 12px; font-size: 0.85rem; }
+        .btn-pin { background-color: #e2e8f0; color: #000; border: 2px solid #000; padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; box-shadow: 1px 1px 0px #000; cursor: pointer; }
+        .btn-pin.pinned { background-color: #f31111; color: white; }
+        body.dark-mode .btn-pin { background-color: #334155; color: #fff; border-color: #fff; box-shadow: 1px 1px 0px #fff; }
+
+        .list-group { list-style: none; padding: 0; margin: 0; }
+        
+        .list-item {
+            position: relative;
+            overflow: hidden;
+            border: 3px solid var(--border); 
+            border-radius: 16px; 
+            margin-bottom: 12px;
+            background: #ff4d4d;
+            box-shadow: 4px 4px 0px var(--border);
+            padding: 0;
+            touch-action: pan-y;
+            user-select: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .list-item-inner {
+            display: flex; 
+            flex-direction: row; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 12px 16px;
+            background: var(--card); 
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .list-item.swiped .list-item-inner {
+            transform: translateX(-85px);
+        }
+        
+        .list-item-delete {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 85px;
+            background: #ff4d4d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 950;
+            font-size: 0.85rem;
+            cursor: pointer;
+            z-index: 1;
+            border-left: 3px solid var(--border);
+            letter-spacing: 0.5px;
+            transition: border-color 0.3s;
+        }
+        
+        .list-item .item-title { 
+            font-size: 1.2rem; 
+            font-weight: 900; 
+            color: #005a9c; 
+            flex: 1; 
+            min-width: 0; 
+            word-break: break-word; 
+            overflow-wrap: break-word; 
+        }
+        body.dark-mode .list-item .item-title { color: #38bdf8; }
+        
+        .list-item .btn-group { display: flex; gap: 6px; align-items: center; }
+        .list-item .btn-group button { padding: 6px 10px; font-size: 0.85rem; border-radius: 10px; }
+        
+        .btn-eta {
+            background: none;
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            font-size: 1.2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .btn-eta:active {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .element-item {
+            display: flex; justify-content: space-between; align-items: center; gap: 6px;
+            padding: 10px; border: 3px solid var(--border); border-radius: 12px; margin-bottom: 8px; 
+            font-size: 0.9rem; font-weight: 800; box-shadow: 2px 2px 0px var(--border);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .element-item span {
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .element-item.el-kmb { background: var(--color-kmb-bg); border-color: var(--color-kmb); color: var(--color-kmb); }
+        .element-item.el-ctb, .element-item.el-nwfb { background: var(--color-ctb-bg); border-color: #ccaa00; color: var(--color-ctb-text); }
+        .element-item.el-mib { background: var(--color-mib-bg); border-color: var(--color-mib); color: var(--color-mib); }
+        
+        body.dark-mode .element-item.el-kmb { background: #450a0a; color: #fca5a5; }
+        body.dark-mode .element-item.el-ctb, body.dark-mode .element-item.el-nwfb { background: #422006; color: #fef08a; }
+        body.dark-mode .element-item.el-mib { background: #064e3b; color: #6ee7b7; }
+
+        .element-item.current-target-stop {
+            background-color: #dbeafe !important;
+            border-color: #2563eb !important;
+            box-shadow: 3px 3px 0px #1d4ed8 !important;
+        }
+        body.dark-mode .element-item.current-target-stop {
+            background-color: #1e3a8a !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 3px 3px 0px #2563eb !important;
+        }
+
+        .element-item button { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; box-shadow: 1px 1px 0px var(--border); flex-shrink: 0; }
+        
+        .sortable-ghost { opacity: 0.4; border: 3px dashed #005a9c !important; }
+
+        .divider { height: 3px; background-color: #cbd5e1; margin: 16px 0; }
+        body.dark-mode .divider { background-color: #475569; }
+        .no-data { color: var(--text-light); font-style: italic; text-align: center; padding: 20px; font-size: 0.95rem; font-weight: 700; }
+        .error { color: white; background-color: var(--danger); padding: 12px; border-radius: 12px; border: 3px solid #000; font-weight: 800; box-shadow: 3px 3px 0px #000; text-align: center; }
+        .loading { color: #000; background-color: #ffd200; padding: 12px; border-radius: 12px; border: 3px solid #000; font-weight: 800; box-shadow: 3px 3px 0px #000; text-align: center; }
+
+        .controls { display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: #fff; border: 3px solid #000; padding: 10px; border-radius: 12px; box-shadow: 3px 3px 0px #000; gap: 8px; flex-wrap: wrap; }
+        body.dark-mode .controls { background: #1e293b; border-color: #fff; box-shadow: 3px 3px 0px #fff; }
+        .update-status { font-size: 0.85rem; color: #000; font-weight: 900; flex: 1; }
+        body.dark-mode .update-status { color: #fff; }
+        .refresh-btn { background-color: #ffd200; border: 2px solid #000; padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; box-shadow: 2px 2px 0px #000; }
+        body.dark-mode .refresh-btn { background-color: #005a9c; border-color: #fff; box-shadow: 2px 2px 0px #fff; color: #fff; }
+
+        #bus-container { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+        #bus-container .card { padding: 0; overflow: hidden; }
+        
+        .card-header { padding: 12px 14px; border-bottom: 3px solid var(--border); }
+        .route-title-area { display: flex; align-items: center; justify-content: space-between; }
+        .route-number { font-size: 2.2rem; font-weight: 950; -webkit-text-stroke: 1px rgba(0,0,0,0.2); }
+        .route-direction { font-size: 0.85rem; padding: 4px 8px; border-radius: 8px; font-weight: 900; border: 2px solid var(--border); }
+        .stop-info { font-size: 1.1rem; font-weight: 900; margin-top: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .stop-id-label { font-size: 0.75rem; margin-top: 4px; font-weight: 700; opacity: 0.9; }
+        .pinned-tag { display: inline-block; background-color: #f31111; color: white; font-size: 0.70rem; padding: 2px 6px; border-radius: 6px; margin-left: 6px; font-weight: 900; border: 1px solid #000; vertical-align: middle; }
+
+        .card-kmb { border-color: var(--color-kmb); box-shadow: 5px 5px 0px var(--color-kmb); }
+        .card-kmb .card-header { background: var(--color-kmb); color: white; }
+        .card-kmb .route-number { color: white; }
+        .card-kmb .route-direction { background: white; color: var(--color-kmb); }
+
+        .card-ctb, .card-nwfb { border-color: #e6b800; box-shadow: 5px 5px 0px #e6b800; }
+        .card-ctb .card-header, .card-nwfb .card-header { background: var(--color-ctb); color: var(--color-ctb-text); }
+        .card-ctb .route-number, .card-nwfb .route-number { color: var(--color-ctb-text); }
+        .card-ctb .route-direction, .card-nwfb .route-direction { background: var(--color-ctb-text); color: var(--color-ctb); border-color: var(--color-ctb-text); }
+
+        .card-mib { border-color: var(--color-mib); box-shadow: 5px 5px 0px var(--color-mib); }
+        .card-mib .card-header { background: var(--color-mib); color: white; }
+        .card-mib .route-number { color: white; }
+        .card-mib .route-direction { background: white; color: var(--color-mib); }
+
+        body.dark-mode .card-kmb { border-color: #f87171; box-shadow: 5px 5px 0px #f87171; }
+        body.dark-mode .card-ctb, body.dark-mode .card-nwfb { border-color: #facc15; box-shadow: 5px 5px 0px #facc15; }
+        body.dark-mode .card-mib { border-color: #4ade80; box-shadow: 5px 5px 0px #4ade80; }
+
+        .eta-list { list-style: none; padding: 0; margin: 0; background: #fafafa; }
+        body.dark-mode .eta-list { background: #0f172a; }
+        .eta-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 2px dashed #cbd5e1; }
+        .eta-item:last-child { border-bottom: none; }
+        body.dark-mode .eta-item { border-bottom-color: #334155; }
+        .destination { font-size: 1rem; font-weight: 800; }
+        body.dark-mode .destination { color: #fff; }
+        
+        .time-badge { font-size: 0.95rem; font-weight: 900; background-color: #fff; color: #000; padding: 6px 10px; border-radius: 8px; border: 2px solid var(--border); box-shadow: 2px 2px 0px var(--border); }
+        .time-badge.urgent { background-color: #ff4d4d; color: white; animation: pulse 1.2s infinite; font-size: 1rem; }
+        body.dark-mode .time-badge { background-color: #1e293b; color: #fff; }
+        body.dark-mode .time-badge.urgent { background-color: #ef4444; color: #fff; }
+
+        .btn-schedule-noti {
+            background-color: #00c753;
+            color: white;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            padding: 6px 10px;
+            font-weight: 900;
+            box-shadow: 2px 2px 0px var(--border);
+            cursor: pointer;
+            margin-left: 8px;
+            transition: opacity 0.3s ease, transform 0.1s;
+        }
+        .btn-schedule-noti:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px var(--border);
+        }
+        .btn-schedule-noti.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinning .refresh-icon { display: inline-block; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
+
+        .floating-btn-group {
+            position: fixed;
+            bottom: 20px;
+            right: 15px; 
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            gap: 12px; 
+        }
+        
+        .floating-btn {
+            padding: 0; 
+            font-size: 1.2rem; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ffffff; 
+            border: 3px solid var(--border); 
+            border-radius: 50%; 
+            box-shadow: 3px 3px 0px var(--border); 
+            width: 44px;
+            height: 44px;
+            transition: transform 0.1s, background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        body.dark-mode .floating-btn {
+            background: #1e293b;
+            color: #fff;
+        }
+        
+        .floating-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--border);
+            filter: brightness(0.9);
+        }
+
+        /* 👑 升級版高質感 VIP 通知功能區樣式 */
+        .vip-details {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            padding: 16px;
+            border-radius: 16px;
+            border: 3px solid #d97706;
+            box-shadow: 4px 4px 0px #d97706;
+            transition: all 0.3s ease;
+        }
+        body.dark-mode .vip-details {
+            background: linear-gradient(135deg, #451a03 0%, #1e1b4b 100%);
+            border-color: #fbbf24;
+            box-shadow: 4px 4px 0px #fbbf24;
+        }
+        .vip-summary {
+            font-size: 1.05rem;
+            font-weight: 950;
+            color: #b45309;
+            cursor: pointer; 
+            user-select: none;
+            outline: none;
+            list-style: none; /* 隱藏預設箭頭 */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        body.dark-mode .vip-summary {
+            color: #fde68a;
+        }
+        .vip-summary::-webkit-details-marker {
+            display: none; /* 針對 Safari 隱藏預設箭頭 */
+        }
+        .vip-badge-tag {
+            background-color: #f59e0b;
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 2px 7px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            font-weight: 900;
+            box-shadow: 1px 1px 0px var(--border);
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.5px;
+        }
+        body.dark-mode .vip-badge-tag {
+            border-color: #fff;
+            box-shadow: 1px 1px 0px #fff;
+        }
+        .vip-desc-box {
+            margin-top: 10px;
+            background-color: #ffffff; 
+            border: 2px solid #d97706; 
+            color: #78350f;
+            padding: 12px; 
+            border-radius: 10px; 
+            font-size: 0.9rem;
+            font-weight: 800;
+            box-shadow: inset 2px 2px 0px rgba(0,0,0,0.05);
+        }
+        body.dark-mode .vip-desc-box {
+            background-color: #1e293b;
+            border-color: #fbbf24;
+            color: #fef3c7;
+        }
+
+        /* 新增 Pipedream 輸入顯示樣式 */
+        .webhook-success-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #e6f4ea;
+            border: 2px solid #137333;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: #137333;
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+        body.dark-mode .webhook-success-container {
+            background-color: #072714;
+            border-color: #34a853;
+            color: #34a853;
+        }
+        .btn-edit-url {
+            background: #ffffff;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 0.9rem;
+            box-shadow: 1.5px 1.5px 0px var(--border);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        body.dark-mode .btn-edit-url {
+            background: #1e293b;
+            color: #fff;
+            border-color: #fff;
+            box-shadow: 1.5px 1.5px 0px #fff;
+        }
+        .btn-edit-url:active {
+            transform: translate(1px, 1px);
+            box-shadow: 0.5px 0.5px 0px var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div id="floatingBtnGroup" class="floating-btn-group">
+    <button class="floating-btn btn-theme" id="themeBtn" onclick="toggleDarkMode()" title="切換黑夜模式">
+        🌙
+    </button>
+    <button class="floating-btn btn-home" id="floatingHomeBtn" onclick="expandProfiles()" title="返回主頁基地" style="display: none;">
+        🏠
+    </button>
+    <button class="floating-btn btn-top" onclick="scrollToTop()" title="回到最頂端">
+        🔝
+    </button>
+</div>
+
+<div class="container" id="mainContainer">
+    <div class="card instructions-card" id="guideCard">
+        <h3 onclick="toggleGuide()">
+            <span>🚦 玩具交通總部使用說明</span>
+            <span id="guideToggleIcon">+</span>
+        </h3>
+        <div class="instructions-content" id="guideContent" style="display: none;">
+            <div class="instructions-step">1. 🧱 <b>建立基地</b>：在下方輸入名稱並點「新增」，建立你的路線群組。</div>
+            <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組的「⚙️」按鈕，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
+            <div class="instructions-step">3. 🚌 <b>出發看時間</b>：在主頁直接點擊群組方塊，即可一秒召喚出所有動態實時到站時間 (ETA)！</div>
+            <div class="instructions-step">💡 <b>秘密密技</b>：主頁的基地卡片<b>「往左一拉（手機滑動或電腦滑鼠拖曳）」</b>，就能隱藏開啟紅色 <b>DELETE</b> 鍵移除基地喔！</div>
+        </div>
+    </div>
+
+    <div class="card" id="profileContainer">
+        <div class="profile-header-area">
+            <h2>🧱 交通群組基地</h2>
+            <div class="title-backup-group">
+                <button class="btn-backup-mini" onclick="exportProfiles()" title="匯出備份">📤 匯出</button>
+                <button class="btn-backup-mini" onclick="document.getElementById('importFile').click()" title="匯入備份">📥 匯入</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importProfiles(event)">
+            </div>
+        </div>
+
+        <div class="form-group inline">
+            <input type="text" id="profileInput" placeholder="輸入基地名稱（例如：返工、放學）...">
+            <button class="btn-primary" onclick="addProfile()">新增</button>
+        </div>
+        <ul id="profileList" class="list-group"></ul>
+
+        <div class="divider"></div>
+        <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; border: 2px dashed var(--border);">
+            <label for="autoOpenToggle" style="margin: 0; cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: space-between; font-weight: 900;">
+                <span>🚀 啟動時自動打開指定群組</span>
+                <input type="checkbox" id="autoOpenToggle" onchange="toggleAutoOpenSetting()" style="width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary);">
+            </label>
+        </div>
+        <div class="form-group" id="autoOpenSelectGroup" style="display: none; margin-top: 10px;">
+            <label for="autoOpenProfileSelect">🎯 預設打開的群組基地：</label>
+            <select id="autoOpenProfileSelect" onchange="saveAutoOpenSetting()">
+                <option value="">-- 請選擇群組 --</option>
+            </select>
+        </div>
+
+        <div class="divider"></div>
+        <!-- 👑 特别突顯高質感的 VIP 通知功能區 -->
+        <details class="vip-details" id="vipNotificationGroup">
+            <summary class="vip-summary" id="vipSummaryTitle">
+                <span>👑 VIP 通知功能 <span class="vip-badge-tag">EXECUTIVE</span></span>
+                <span id="vipToggleSign">[+]</span>
+            </summary>
+            <div style="margin-top: 12px;">
+                <div class="form-group" style="margin-bottom: 12px; background: rgba(217, 119, 6, 0.08); padding: 10px 12px; border-radius: 10px; border: 2px dashed #d97706;">
+                    <label for="vipToggleSwitch" style="margin: 0; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 900; color: #b45309;">
+                        <span>⚡ 啟用 VIP 自動推播功能</span>
+                        <input type="checkbox" id="vipToggleSwitch" onchange="toggleVipSetting()" style="width: 22px; height: 22px; cursor: pointer; accent-color: #d97706;">
+                    </label>
+                </div>
+                <div class="vip-desc-box">
+                    💡 <b>VIP 專屬說明</b>：請先設定你的專屬 Pipedream URL (必須為 https://*.m.pipedream.net 格式)。開啟後，當車輛接近時可直接點擊進行倒數推播排程！最後5分鐘會每分鐘進行推播。
+                </div>
+                
+                <!-- Pipedream URL 設定欄位區 -->
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔗 自定義 Pipedream URL：</label>
+                    
+                    <!-- 輸入框容器 -->
+                    <div id="webhookInputContainer">
+                        <input type="text" id="webhookUrlInput" placeholder="輸入網址 (如 https://xxx.m.pipedream.net)" oninput="savePushoverSettings()">
+                    </div>
+                    
+                    <!-- 成功提示與修改按鈕容器 (預設隱藏) -->
+                    <div id="webhookSuccessContainer" class="webhook-success-container" style="display: none;">
+                        <span>✅ Pipedream URL 輸入成功</span>
+                        <button type="button" class="btn-edit-url" onclick="editWebhookUrl()" title="修改網址">✏️</button>
+                    </div>
+                </div>
+
+                <!-- Pushover 設定欄位區 (Pipedream 輸入成功後才顯示) -->
+                <div id="pushoverFieldsContainer" style="display: none;">
+                    <div style="margin-top: 10px;">
+                        <label for="pushoverUserKeyInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">👤 Pushover User Key：</label>
+                        <input type="text" id="pushoverUserKeyInput" placeholder="請輸入 Pushover User Key..." oninput="savePushoverSettings()">
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <label for="pushoverApiTokenInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔑 Pushover API Token：</label>
+                        <input type="text" id="pushoverApiTokenInput" placeholder="請輸入 Pushover API Token..." oninput="savePushoverSettings()">
+                    </div>
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <div class="right-panels">
+        <div class="breadcrumb" id="breadcrumbArea" style="display: none;">
+            <span class="breadcrumb-item" onclick="expandProfiles()">🏠 返回主頁基地</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item active" id="breadcrumbCurrent">未選取</span>
+        </div>
+
+        <div class="card" id="profileSettingCard" name="profileSetting" style="display: none;">
+            <h2>⚙️ 內容管理：<span id="currentProfileName">請先選取項目</span></h2>
+            
+            <div id="elementSection" style="display: none;">
+                <div class="form-group">
+                    <label for="companyId">🚗 選擇車型營運商：</label>
+                    <select id="companyId" onchange="toggleOperatorFields()">
+                        <option value="KMB" selected>🔴 KMB - 九龍巴士</option>
+                        <option value="CTB">🟡 CTB - 城巴有限公司</option>
+                        <option value="NWFB">🟡 NWFB - 新世界第一巴士</option>
+                        <option value="MIB">🟢 GMB/MIB - 專線小巴</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="regionField" style="display: none;">
+                    <label for="regionSelect">🗺️ 小巴地區：</label>
+                    <select id="regionSelect" onchange="loadStops()">
+                        <option value="HKI">香港島</option>
+                        <option value="KLN">九龍</option>
+                        <option value="NT">新界</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="route">🔢 路線編號：</label>
+                    <input type="text" id="route" value="" placeholder="輸入號碼，例如：2A, 107, 58X..." oninput="debounceLoadStops()">
+                </div>
+
+                <div class="form-group">
+                    <label>↔️ 行駛方向：</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="direction" value="outbound" checked onchange="loadStops()"> 🟩 去程 (往目的地)</label>
+                        <label class="radio-label"><input type="radio" name="direction" value="inbound" onchange="loadStops()"> 🟨 回程 (往起點)</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="stopSelect">📍 選擇巴士 / 小巴站點：</label>
+                    <select id="stopSelect" disabled>
+                        <option value="">-- 請先在上方輸入路線編號 --</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-top: 16px;">
+                    <button class="btn-primary" style="width: 100%;" onclick="addElement()">➕ 登記到此群組基地</button>
+                </div>
+
+                <div class="divider"></div>
+                <h3>📋 已登記的車輛路線</h3>
+                <ul id="elementList" class="list-group"></ul>
+            </div>
+            
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            <div id="statusMessage" class="loading" style="display: none;">正在連線到交通總部...</div>
+            <div id="placeholderText" class="no-data">請返回主頁點擊群組的「⚙️」進行路線配對。</div>
+        </div>
+        
+        <div class="card" id="arrivalContainerCard" name="arrivalContainer" style="display: none;">
+            <h1 id="etaMainTitle">⏰ 實時到站時間</h1>
+            <div class="form-group controls">
+                <div class="update-status" id="update-time">未加載</div>
+                <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
+                    <span class="refresh-icon">🔄</span> 刷新重整
+                </button>
+            </div>
+            <div id="bus-container">
+                <div class="no-data">暫無即時數據。</div>
+            </div>
+        </div>
+
+        <div class="card" id="fullRouteContainerCard" name="fullRouteContainer" style="display: none;">
+            <h2 id="fullRouteTitle" style="color: var(--primary);">🗺️ 全線實時預報</h2>
+            <button class="btn-primary" onclick="backToETA()" style="margin-bottom: 14px; font-size: 0.9rem;">
+                ⬅️ 返回基地 ETA
+            </button>
+            <div id="full-route-bus-container">
+                <div class="loading">正在載入全線車站數據...</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+    let profiles = JSON.parse(localStorage.getItem('profiles_data')) || {};
+    let currentProfileId = null;
+    let pinnedStops = JSON.parse(localStorage.getItem('pinned_stops_data')) || {};
+    let sortableInstance = null;
+    
+    const baseUrlCtb = 'https://rt.data.gov.hk';
+    const baseUrlKmb = 'https://data.etabus.gov.hk';
+	
+    const allOriginsProxy = 'https://cors.freehi.workers.dev/?';
+    const baseUrlMib = allOriginsProxy + ('https://data.etagmb.gov.hk');
+	
+    const stopNameCache = JSON.parse(localStorage.getItem('stop_name_cache')) || {};
+    const busTargets = [];
+    let debounceTimer;
+    let autoRefreshTimer = null;
+    let isEtaLoading = false;
+
+    // 驗證 Pipedream URL 格式的函數
+    function isValidWebhookUrl(url) {
+        const regex = /^https:\/\/[a-zA-Z0-9-]+\.m\.pipedream\.net\/?$/;
+        return regex.test(url);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const isDark = localStorage.getItem('dark_mode_enabled') === 'true';
+        if (isDark) {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeBtn').textContent = '☀️';
+        }
+
+        const savedUserKey = localStorage.getItem('pushoveruserkey') || "";
+        document.getElementById('pushoverUserKeyInput').value = savedUserKey;
+
+        const savedApiToken = localStorage.getItem('pushoverapitoken') || "";
+        document.getElementById('pushoverApiTokenInput').value = savedApiToken;
+
+        const savedWebhookUrl = localStorage.getItem('custom_webhook_url') || "";
+        document.getElementById('webhookUrlInput').value = savedWebhookUrl;
+
+        // 頁面初始化時，檢查並渲染 Pipedream URL 的輸入狀態與 Pushover 欄位
+        updateWebhookDisplayState();
+
+        // 初始化 VIP ON/OFF 開關狀態
+        const savedVipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
+        document.getElementById('vipToggleSwitch').checked = savedVipEnabled;
+
+        initAutoOpenSettings();
+        renderProfiles();
+
+        const autoOpenEnabled = localStorage.getItem('auto_open_enabled') === 'true';
+        const autoOpenProfileId = localStorage.getItem('auto_open_profile_id');
+        if (autoOpenEnabled && autoOpenProfileId && profiles[autoOpenProfileId]) {
+            renderETA(autoOpenProfileId);
+        }
+
+        // 初始化與監聽 VIP 折疊標題動態切換狀態
+        const vipGroup = document.getElementById('vipNotificationGroup');
+        const vipSummaryTitle = document.getElementById('vipSummaryTitle');
+        if (vipGroup && vipSummaryTitle) {
+            const updateVipTitle = () => {
+                const sign = vipGroup.open ? '[-]' : '[+]';
+                vipSummaryTitle.innerHTML = `<span>👑 VIP 通知功能 <span class="vip-badge-tag">EXECUTIVE</span></span> <span id="vipToggleSign">${sign}</span>`;
+            };
+            updateVipTitle();
+            vipGroup.addEventListener('toggle', updateVipTitle);
+        }
+    });
+
+    // 根據目前的 Webhook 網址是否合法，決定顯示「輸入框」還是「成功文字及修改按鈕」，並連動顯示/隱藏 Pushover 欄位
+    function updateWebhookDisplayState() {
+        const webhookUrl = localStorage.getItem('custom_webhook_url') || "";
+        const inputContainer = document.getElementById('webhookInputContainer');
+        const successContainer = document.getElementById('webhookSuccessContainer');
+        const pushoverFields = document.getElementById('pushoverFieldsContainer');
+
+        if (isValidWebhookUrl(webhookUrl)) {
+            inputContainer.style.display = 'none';
+            successContainer.style.display = 'flex';
+            pushoverFields.style.display = 'block';
+        } else {
+            inputContainer.style.display = 'block';
+            successContainer.style.display = 'none';
+            pushoverFields.style.display = 'none';
+        }
+    }
+
+    // 當按下筆型(✏️)修改按鈕時，清除當前儲存，切換回輸入框狀態並獲得焦點
+    function editWebhookUrl() {
+        localStorage.removeItem('custom_webhook_url');
+        const input = document.getElementById('webhookUrlInput');
+        input.value = "";
+        
+        // 如果原本開啟了 VIP 通知，修改網址時自動關閉
+        if (localStorage.getItem('vip_notifications_enabled') === 'true') {
+            document.getElementById('vipToggleSwitch').checked = false;
+            localStorage.setItem('vip_notifications_enabled', 'false');
+        }
+        
+        updateWebhookDisplayState();
+        input.focus();
+        fetchETA();
+    }
+
+    function toggleGuide() {
+        const content = document.getElementById('guideContent');
+        const icon = document.getElementById('guideToggleIcon');
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.textContent = '-';
+        } else {
+            content.style.display = 'none';
+            icon.textContent = '+';
+        }
+    }
+
+    function saveToStorage() { localStorage.setItem('profiles_data', JSON.stringify(profiles)); }
+    function savePinnedStorage() { localStorage.setItem('pinned_stops_data', JSON.stringify(pinnedStops)); }
+
+    function savePushoverSettings() {
+        const userKey = document.getElementById('pushoverUserKeyInput').value.trim();
+        const apiToken = document.getElementById('pushoverApiTokenInput').value.trim();
+        const webhookUrl = document.getElementById('webhookUrlInput').value.trim();
+
+        localStorage.setItem('pushoveruserkey', userKey);
+        localStorage.setItem('pushoverapitoken', apiToken);
+        localStorage.setItem('custom_webhook_url', webhookUrl);
+        
+        // 每次輸入更新顯示狀態
+        updateWebhookDisplayState();
+        
+        // 若修改 URL 導致格式不正確，則自動關閉 VIP 狀態
+        const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
+        if (vipEnabled && !isValidWebhookUrl(webhookUrl)) {
+            document.getElementById('vipToggleSwitch').checked = false;
+            localStorage.setItem('vip_notifications_enabled', 'false');
+            alert('⚠️ URL 格式不正確，已自動關閉 VIP 通知功能。請確保輸入的網址符合 https://*.m.pipedream.net 格式。');
+            fetchETA();
+        }
+    }
+
+    function toggleVipSetting() {
+        const toggle = document.getElementById('vipToggleSwitch');
+        const webhookUrl = document.getElementById('webhookUrlInput').value.trim();
+        
+        // 啟用時強制驗證 URL
+        if (toggle.checked) {
+            if (!isValidWebhookUrl(webhookUrl)) {
+                alert('⚠️ 請先輸入正確的自定義 Pipedream URL (格式必須為 https://*.m.pipedream.net) 才能開啟 VIP 功能！');
+                toggle.checked = false;
+                return;
+            }
+        }
+        
+        localStorage.setItem('vip_notifications_enabled', toggle.checked ? 'true' : 'false');
+        fetchETA(); // 即時重新刷新畫面以顯示或隱藏推播按鈕
+    }
+
+    function toggleDarkMode() {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('dark_mode_enabled', isDark ? 'true' : 'false');
+        document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+    }
+
+    function getStopKey(target) {
+        return `${target.company}_${target.route}_${target.direction}_${target.stopValue}`;
+    }
+
+    function togglePinStop(stopKey) {
+        pinnedStops[stopKey] = !pinnedStops[stopKey];
+        savePinnedStorage();
+        fetchETA();
+    }
+
+    function toggleOperatorFields() {
+        const companyId = document.getElementById('companyId').value;
+        const regionField = document.getElementById('regionField');
+        if (companyId === 'MIB') {
+            regionField.style.display = 'flex';
+        } else {
+            regionField.style.display = 'none';
+        }
+        loadStops();
+    }
+
+    function renderProfiles() {
+        const profileList = document.getElementById('profileList');
+        profileList.innerHTML = '';
+        const keys = Object.keys(profiles);
+        if (keys.length === 0) { 
+            profileList.innerHTML = '<li class="no-data">目前空空如也，快建立新基地吧！</li>'; 
+            populateAutoOpenSelect();
+            return; 
+        }
+
+        keys.forEach(id => {
+            const li = document.createElement('li');
+            li.className = `list-item ${id === currentProfileId ? 'active' : ''}`;
+
+            const innerDiv = document.createElement('div');
+            innerDiv.className = 'list-item-inner';
+
+            const etaBtn = document.createElement('button'); 
+            etaBtn.className = 'btn-eta'; 
+            etaBtn.textContent = '⚙️'; 
+            etaBtn.onclick = (e) => { 
+                if (li.classList.contains('swiped')) { li.classList.remove('swiped'); e.stopPropagation(); return; }
+                e.stopPropagation(); selectProfile(id); 
+            };
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'item-title';
+            titleDiv.innerHTML = profiles[id].name;
+
+            const renameBtn = document.createElement('button');
+            renameBtn.style.background = 'none';
+            renameBtn.style.border = 'none';
+            renameBtn.style.boxShadow = 'none';
+            renameBtn.style.padding = '0';
+            renameBtn.style.cursor = 'pointer';
+            renameBtn.textContent = '✏️';
+            renameBtn.onclick = (e) => { 
+                if (li.classList.contains('swiped')) { li.classList.remove('swiped'); e.stopPropagation(); return; }
+                e.stopPropagation(); renameProfile(id); 
+            };
+            
+            innerDiv.appendChild(etaBtn);
+            innerDiv.appendChild(titleDiv); 
+            innerDiv.appendChild(renameBtn);
+
+            const deleteAction = document.createElement('div');
+            deleteAction.className = 'list-item-delete';
+            deleteAction.textContent = 'DELETE';
+            deleteAction.onclick = (e) => { 
+                e.stopPropagation(); 
+                deleteProfile(id); 
+            };
+
+            li.appendChild(innerDiv);
+            li.appendChild(deleteAction);
+
+            let startX = 0;
+            let startY = 0;
+            let dragHappened = false;
+            
+            li.addEventListener('dragstart', (e) => e.preventDefault());
+
+            li.addEventListener('pointerdown', (e) => {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                startX = e.clientX;
+                startY = e.clientY;
+                dragHappened = false;
+            });
+
+            li.addEventListener('pointerup', (e) => {
+                let endX = e.clientX;
+                let endY = e.clientY;
+                let diffX = startX - endX;
+                let diffY = Math.abs(startY - endY);
+
+                if (Math.abs(diffX) > 40 && diffY < 30) {
+                    dragHappened = true;
+                    if (diffX > 40) {
+                        document.querySelectorAll('.list-item.swiped').forEach(el => {
+                            if(el !== li) el.classList.remove('swiped');
+                        });
+                        li.classList.add('swiped');
+                    } 
+                    else if (diffX < -40) {
+                        li.classList.remove('swiped');
+                    }
+                }
+            });
+
+            li.onclick = (e) => {
+                if (dragHappened) {
+                    dragHappened = false;
+                    return;
+                }
+                if (li.classList.contains('swiped')) {
+                    li.classList.remove('swiped');
+                    return;
+                }
+                if (e.target.tagName !== 'BUTTON' && !e.target.classList.contains('list-item-delete')) {
+                    renderETA(id);
+                }
+            };
+
+            profileList.appendChild(li);
+        });
+
+        populateAutoOpenSelect();
+    }
+
+    function renderElements() {
+        const elementList = document.getElementById('elementList');
+        const elementSection = document.getElementById('elementSection');
+        const placeholderText = document.getElementById('placeholderText');
+        const currentProfileName = document.getElementById('currentProfileName');
+
+        if (sortableInstance) {
+            sortableInstance.destroy();
+            sortableInstance = null;
+        }
+
+        if (!currentProfileId || !profiles[currentProfileId]) {
+            elementSection.style.display = 'none'; placeholderText.style.display = 'block'; currentProfileName.textContent = '請先選取項目'; return;
+        }
+
+        elementSection.style.display = 'block'; placeholderText.style.display = 'none';
+        currentProfileName.textContent = profiles[currentProfileId].name;
+        elementList.innerHTML = '';
+
+        profiles[currentProfileId].elements.forEach((element, index) => {
+            const li = document.createElement('li'); 
+            li.style.cursor = 'grab';
+            let compClass = 'el-generic';
+            
+            try {
+                const obj = JSON.parse(element);
+                if (obj.company) compClass = `el-${obj.company.toLowerCase()}`;
+                li.className = `element-item ${compClass}`;
+                
+                const span = document.createElement('span');
+                span.textContent = `[${obj.company}] 線路 ${obj.route} (${obj.direction === 'outbound' ? '去程' : '回程'}) - ${obj.stopName || '未知站名'}`;
+                li.appendChild(span);
+            } catch(e) { 
+                li.className = `element-item ${compClass}`;
+                const span = document.createElement('span');
+                span.textContent = element; 
+                li.appendChild(span);
+            }
+
+            const deleteBtn = document.createElement('button'); deleteBtn.className = 'btn-danger'; deleteBtn.textContent = '刪除'; deleteBtn.onclick = () => deleteElement(index);
+            li.appendChild(deleteBtn); 
+            elementList.appendChild(li);
+        });
+
+        sortableInstance = new Sortable(elementList, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            forceFallback: true,
+            fallbackTolerance: 4,
+            onEnd: function (evt) {
+                const item = profiles[currentProfileId].elements.splice(evt.oldIndex, 1)[0];
+                profiles[currentProfileId].elements.splice(evt.newIndex, 0, item);
+                saveToStorage();
+            },
+        });
+    }
+
+    function addProfile() {
+        const input = document.getElementById('profileInput'); const name = input.value.trim(); if (!name) { alert('請輸入名稱！'); return; }
+        
+        const isDuplicate = Object.values(profiles).some(p => p.name === name);
+        if (isDuplicate) { alert('⚠️ 報告指揮官！這個基地名稱已經存在，請換個不一樣的名字！'); return; }
+        
+        const id = 'prof_' + Date.now(); profiles[id] = { name: name, elements: [] };
+        saveToStorage(); input.value = ''; currentProfileId = id; renderProfiles(); selectProfile(id);
+    }
+
+    function renameProfile(id) {
+        const oldName = profiles[id].name;
+        const newName = prompt('請輸入新的基地名稱：', oldName);
+        if (newName === null) return; 
+        const trimmedName = newName.trim();
+        if (!trimmedName) { alert('基地名稱不可以是空白喔！'); return; }
+        if (trimmedName === oldName) return; 
+        
+        const isDuplicate = Object.keys(profiles).some(pId => pId !== id && profiles[pId].name === trimmedName);
+        if (isDuplicate) { alert('⚠️ 報告指揮官！這個名字跟別的基地撞名了，請換個名稱！'); return; }
+        
+        profiles[id].name = trimmedName;
+        saveToStorage();
+        renderProfiles();
+        if (currentProfileId === id) {
+            document.getElementById('currentProfileName').textContent = trimmedName;
+            document.getElementById('breadcrumbCurrent').textContent = trimmedName + " (配置)";
+        }
+    }
+
+    function deleteProfile(id) {
+        if (!confirm('確定要拆除此基地群組嗎？')) return;
+        delete profiles[id]; 
+        
+        if (localStorage.getItem('auto_open_profile_id') === id) {
+            localStorage.removeItem('auto_open_profile_id');
+        }
+
+        if (currentProfileId === id) { currentProfileId = null; expandProfiles(); }
+        saveToStorage(); renderProfiles(); renderElements();
+    }
+
+    function collapseProfiles(profileName) {
+        document.getElementById('profileContainer').classList.add('collapsed');
+        document.getElementById('guideCard').style.display = 'none';
+        document.getElementById('breadcrumbCurrent').textContent = profileName;
+        document.getElementById('breadcrumbArea').style.display = 'flex';
+        document.getElementById('floatingHomeBtn').style.display = 'inline-flex';
+        window.scrollTo(0, 0);
+    }
+
+    function expandProfiles() {
+        if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+        currentProfileId = null;
+        document.getElementById('profileContainer').classList.remove('collapsed');
+        document.getElementById('guideCard').style.display = 'block';
+        document.getElementById('breadcrumbArea').style.display = 'none';
+        document.getElementById('profileSettingCard').style.display = 'none';
+        document.getElementById('arrivalContainerCard').style.display = 'none';
+        document.getElementById('fullRouteContainerCard').style.display = 'none';
+        document.getElementById('floatingHomeBtn').style.display = 'none';
+        renderProfiles(); renderElements();
+        window.scrollTo(0, 0);
+    }
+
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    // 更新 selectProfile 行為，切換頁面時重新整理 Webhook 與 Pushover 欄位顯示狀態
+    function selectProfile(id) {
+        currentProfileId = id; 
+        document.getElementById('profileSettingCard').style.display = 'block';
+        document.getElementById('arrivalContainerCard').style.display = 'none';
+        document.getElementById('fullRouteContainerCard').style.display = 'none';
+        collapseProfiles(profiles[id].name + " (配置)"); 
+        renderProfiles(); 
+        renderElements();
+    }
+
+    function addElement() {
+        if (!currentProfileId) return;
+        const company = document.getElementById('companyId').value;
+        const route = document.getElementById('route').value.trim().toUpperCase();
+        const direction = document.querySelector('input[name="direction"]:checked').value;
+        const stopSelect = document.getElementById('stopSelect');
+        const stopValue = stopSelect.options[stopSelect.selectedIndex]?.value || '';
+        const stopName = stopSelect.options[stopSelect.selectedIndex]?.text || '';
+        const region = document.getElementById('regionSelect').value;
+        
+        if (!route) { alert('請填寫正確路線編號！'); return; }
+        if (!stopValue) { alert('請選擇有效的站點！'); return; }
+        
+        let routeId = ""; let vSeq = "";
+        if (company === 'MIB') {
+            routeId = stopSelect.options[stopSelect.selectedIndex]?.getAttribute('data-route-id') || '';
+            vSeq = stopSelect.options[stopSelect.selectedIndex]?.getAttribute('data-vseq') || '';
+        }
+
+        const isDuplicateElement = profiles[currentProfileId].elements.some(el => {
+            try {
+                const obj = JSON.parse(el);
+                return obj.company === company && 
+                       obj.route === route && 
+                       obj.direction === direction && 
+                       obj.stopValue === stopValue;
+            } catch(e) { return false; }
+        });
+
+        if (isDuplicateElement) {
+            alert('🚨 報告指揮官！此路線與站點已經裝配在基地清單中，無法重複登記！');
+            return;
+        }
+
+        const elementObj = { company, route, direction, stopValue, stopName, routeId, vSeq, region };
+        profiles[currentProfileId].elements.push(JSON.stringify(elementObj));
+        saveToStorage(); renderElements();
+    }
+
+    function deleteElement(index) {
+        if (!currentProfileId) return; profiles[currentProfileId].elements.splice(index, 1); saveToStorage(); renderElements();
+    }
+    
+    function debounceLoadStops() { clearTimeout(debounceTimer); debounceTimer = setTimeout(loadStops, 500); }
+
+    async function loadStops() {
+        const companyId = document.getElementById('companyId').value;
+        const route = document.getElementById('route').value.trim().toUpperCase();
+        const direction = document.querySelector('input[name="direction"]:checked').value;
+        const stopSelect = document.getElementById('stopSelect');
+        const statusMessage = document.getElementById('statusMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        stopSelect.innerHTML = '<option value="">-- 正在呼叫路線圖... --</option>';
+        stopSelect.disabled = true; errorMessage.style.display = 'none';
+
+        if (!route) { stopSelect.innerHTML = '<option value="">-- 請先輸入正確路線 --</option>'; return; }
+        statusMessage.style.display = 'block'; statusMessage.innerText = `正在尋找 ${companyId} 路線站點列表...`;
+
+        try {
+            stopSelect.innerHTML = '';
+            
+            if (companyId === 'MIB') {
+                const selectedRegion = document.getElementById('regionSelect').value;
+                const response = await fetch(`${baseUrlMib}/route/${selectedRegion}/${route}`);
+                if (!response.ok) throw new Error(`找不到小巴路線 ${route}`);
+                const mibJson = await response.json();
+                
+                if (!mibJson.data || mibJson.data.length === 0) {
+                    throw new Error(`在選擇的區域中找不到小巴路線 ${route}`);
+                }
+                
+                const targetGroupId = direction === 'outbound' ? 1 : 2;
+                const mibRouteData = mibJson.data.find(item => parseInt(item.group_id) === targetGroupId) || mibJson.data[0];
+                if (!mibRouteData) throw new Error(`找不到對應的方向資料`);
+                const routeId = mibRouteData.route_id;
+
+                const stopRes = await fetch(`${baseUrlMib}/route-stop/${routeId}/${targetGroupId}`);
+                if (!stopRes.ok) throw new Error("無法載入小巴站點");
+                const stopJson = await stopRes.json();
+                const routeStops = stopJson.data?.route_stops || [];
+
+                if(routeStops.length === 0) throw new Error("此小巴線路暫無站點數據");
+
+                stopSelect.disabled = false;
+                routeStops.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.stop_id;
+                    option.text = `${item.stop_seq}. ${item.name_tc}`;
+                    option.setAttribute('data-route-id', routeId);
+                    option.setAttribute('data-vseq', item.stop_seq);
+                    stopSelect.appendChild(option);
+                });
+
+            } else if (companyId === 'KMB') {
+                const kmbDir = direction === 'outbound' ? 'outbound' : 'inbound';
+                const res = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`);
+                if (!res.ok) throw new Error(`九巴路線不支援或輸入錯誤`);
+                const json = await res.json();
+                const stopList = json.data || [];
+
+                if (stopList.length === 0) throw new Error(`找不到九巴路線 ${route}`);
+                
+                stopSelect.disabled = false;
+                const namePromises = stopList.map(async (item) => {
+                    const name = await getStopName('KMB', item.stop);
+                    return { stopId: item.stop, text: `${item.seq}. (${name})` };
+                });
+                const resolved = await Promise.all(namePromises);
+                resolved.forEach(opt => {
+                    const option = document.createElement('option'); option.value = opt.stopId; option.text = opt.text;
+                    stopSelect.appendChild(option);
+                });
+
+            } else {
+                const res = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/route-stop/${companyId}/${route}/${direction}`);
+                if (!res.ok) throw new Error(`城巴數據請求失敗`);
+                const json = await res.json();
+                const stopList = json.data || [];
+
+                if (stopList.length === 0) throw new Error(`找不到城巴路線 ${route}`);
+                
+                stopSelect.disabled = false;
+                const namePromises = stopList.map(async (item) => {
+                    const name = await getStopName(companyId, item.stop);
+                    return { stopId: item.stop, text: `${item.seq}. (${name})` };
+                });
+                const resolved = await Promise.all(namePromises);
+                resolved.forEach(opt => {
+                    const option = document.createElement('option'); option.value = opt.stopId; option.text = opt.text;
+                    stopSelect.appendChild(option);
+                });
+            }
+
+            statusMessage.style.display = 'none';
+        } catch (error) {
+            statusMessage.style.display = 'none';
+            stopSelect.innerHTML = '<option value="">-- 沒有找到數據 --</option>';
+            errorMessage.style.display = 'block'; errorMessage.innerText = `提示: ${error.message}`;
+        }
+    }
+    
+    async function getStopName(company, stopId) {
+        const cacheKey = `${company}_${stopId}`; 
+        if (stopNameCache[cacheKey]) return stopNameCache[cacheKey];
+        let url = company === 'KMB' ? `${baseUrlKmb}/v1/transport/kmb/stop/${stopId}` : `${baseUrlCtb}/v1/transport/citybus-nwfb/stop/${stopId}`;
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const resData = await response.json(); 
+                const name = resData.data.name_tc || `車站 ${stopId}`;
+                stopNameCache[cacheKey] = name; 
+                localStorage.setItem('stop_name_cache', JSON.stringify(stopNameCache)); 
+                return name;
+            }
+        } catch (e) {}
+        return `車站 ${stopId}`;
+    }
+
+    function getMinutesDiff(etaString) {
+        if (!etaString) return null;
+        let cleanEtaString = etaString;
+        if (cleanEtaString.includes('.') && (cleanEtaString.includes('+') || cleanEtaString.toUpperCase().includes('Z'))) {
+            cleanEtaString = cleanEtaString.replace(/\.\d+/, '');
+        }
+        const now = new Date(); 
+        const etaTime = new Date(cleanEtaString);
+        if (isNaN(etaTime.getTime())) return null;
+        const diffMins = Math.floor((etaTime - now) / 1000 / 60);
+        return diffMins < 0 ? 0 : diffMins;
+    }
+
+    function formatTime(etaString) {
+        if (!etaString) return "暫無資料";
+        let cleanEtaString = etaString;
+        if (cleanEtaString.includes('.') && (cleanEtaString.includes('+') || cleanEtaString.toUpperCase().includes('Z'))) {
+            cleanEtaString = cleanEtaString.replace(/\.\d+/, '');
+        }
+        const dateObj = new Date(cleanEtaString);
+        if (isNaN(dateObj.getTime())) return "格式錯誤";
+        return dateObj.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+
+    // 連續發送 5 次通知給 Pipedream WEBHOOK
+    async function sendMakeNotification(button, mins, route, stopName, company, stopValue, rawEtaTime) {
+        const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
+        if (!vipEnabled) {
+            alert('⚠️ VIP 推播通知功能目前為【OFF】關閉狀態，請先至主頁展開 VIP 功能並開啟開關！');
+            return;
+        }
+
+        const webhookUrl = localStorage.getItem('custom_webhook_url') || "";
+        if (!isValidWebhookUrl(webhookUrl)) {
+            alert('⚠️ 無效的 Pipedream URL，無法發送通知！請確認已在主頁設定中填寫正確網址。');
+            return;
+        }
+
+        if (mins < 5) {
+            alert('⚠️ 剩餘時間小於 5 分鐘，無法啟動倒數通知！');
+            return;
+        }
+
+        const pushoverUserKey = localStorage.getItem('pushoveruserkey') || "";
+        const pushoverApiToken = localStorage.getItem('pushoverapitoken') || "";
+
+        button.innerText = '⏳';
+        button.disabled = true;
+
+        let successCount = 0;
+        const targetMinsLeft = [5, 4, 3, 2, 1];
+
+        for (let i = 0; i < targetMinsLeft.length; i++) {
+            const targetLeft = targetMinsLeft[i]; // 5, 4, 3, 2, 1
+            const totalSecondsToWait = Math.max(0, (mins - targetLeft) * 60);
+
+            const payload = {
+                title: `🚌 玩具交通總部 (${route})`,
+                message: `指揮官！${route} 還有大約 ${targetLeft} 分鐘抵達 [${stopName}]！`,
+                delay: totalSecondsToWait,
+                sequence: i + 1,
+                target_remaining_minutes: targetLeft,
+                pushoveruserkey: pushoverUserKey,
+                pushoverapitoken: pushoverApiToken
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    successCount++;
+                }
+            } catch (e) {
+                console.error(`第 ${i+1} 次排程發送失敗:`, e);
+            }
+        }
+
+        if (successCount === 5) {
+            button.innerText = '✅';
+            button.style.backgroundColor = '#8e8e93';
+            
+            const notifiedKey = `notified_${company}_${route}_${stopValue}`;
+            let notifiedTrips = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+            const etaMs = new Date(rawEtaTime).getTime();
+            notifiedTrips.push(etaMs);
+            localStorage.setItem(notifiedKey, JSON.stringify(notifiedTrips));
+
+            setTimeout(() => {
+                button.outerHTML = `<span class="time-badge" style="font-size: 0.8rem; background: #e2e8f0; border-color: #cbd5e1; color: #64748b; margin-left: 8px;">已排程</span>`;
+            }, 1500);
+        } else {
+            button.innerText = '❌';
+            button.disabled = false;
+            alert(`🚨 報告指揮官，部分排程發送失敗 (成功: ${successCount}/5)，請檢查網路或 Pipedream 狀態！`);
+        }
+    }
+
+    async function fetchETA() {
+        if (isEtaLoading) return;
+        const container = document.getElementById('bus-container');
+        const statusText = document.getElementById('update-time');
+        isEtaLoading = true;
+        container.innerHTML = `<div class="loading">🚗 正在發送遙控訊號獲取動態...</div>`;
+
+        const companyMeta = {
+            'CTB': { name: '城巴', icon: '🚌' },
+            'NWFB': { name: '新巴', icon: '🚌' },
+            'KMB': { name: '九巴', icon: '🚌' },
+            'MIB': { name: '專線小巴', icon: '🚐' }
+        };
+
+        const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
+        const webhookUrl = vipEnabled ? (localStorage.getItem('custom_webhook_url') || "") : "";
+
+        try {
+            let sortedTargets = [...busTargets];
+            sortedTargets.sort((a, b) => {
+                const pinA = pinnedStops[getStopKey(a)] ? 1 : 0;
+                const pinB = pinnedStops[getStopKey(b)] ? 1 : 0;
+                return pinB - pinA;
+            });
+
+            const fetchPromises = sortedTargets.map(async (target) => {
+                const dirText = target.direction === "outbound" ? "去程" : "回程";
+                const stopKey = getStopKey(target);
+                const isPinned = pinnedStops[stopKey];
+                let url = '';
+                if (target.company === 'MIB') {
+                    url = `${baseUrlMib}/eta/route-stop/${target.routeId}/${target.stopValue}`;
+                } else if (target.company === 'KMB') {
+                    url = `${baseUrlKmb}/v1/transport/kmb/eta/${target.stopValue}/${target.route}/1`;
+                } else {
+                    url = `${baseUrlCtb}/v1/transport/citybus-nwfb/eta/${target.company}/${target.stopValue}/${target.route}`;
+                }
+
+                try {
+                    const res = await fetch(url); if (!res.ok) throw new Error('連線失敗');
+                    const resData = await res.json();
+                    
+                    let filteredEta = [];
+                    let stopCleanName = target.stopName ? target.stopName.replace(/^\d+\.\s*\((.*)\)$/, '$1').replace(/^\d+\.\s*/, '') : `站點 ${target.stopValue}`;
+
+                    if (target.company === 'MIB') {
+                        if (resData.data && resData.data.length > 0 && resData.data[0].eta) {
+                            filteredEta = resData.data[0].eta;
+                        }
+                    } else {
+                        const etaArray = resData.data || [];
+                        const dirCode = target.direction === "outbound" ? "O" : "I";
+                        filteredEta = etaArray.filter(item => item.dir === dirCode);
+                    }
+
+                    const meta = companyMeta[target.company] || { name: target.company, icon: '🚌' };
+                    const compClass = `card-${target.company.toLowerCase()}`;
+                    const pinBtnClass = isPinned ? 'btn-pin pinned' : 'btn-pin';
+                    const pinBtnText = isPinned ? '📌 已置頂' : '📌 置頂';
+
+                    let cardHtml = `
+                        <div class="card ${compClass}">
+                            <div class="card-header">
+                                <div class="route-title-area">
+                                    <div class="route-number">${meta.icon} ${target.route}</div>
+                                    <div class="route-direction">${dirText}</div>
+                                </div>
+                                <div class="stop-info">
+                                    <span>📍 ${stopCleanName} </span>
+                                    <button class="${pinBtnClass}" onclick="togglePinStop('${stopKey}')">${pinBtnText}</button>
+                                </div>
+                                <div class="stop-id-label">系統: ${meta.name} | ID: ${target.stopValue}</div>
+                            </div>
+                            <ul class="eta-list">
+                    `;
+
+                    if (filteredEta.length === 0) {
+                        cardHtml += `<li class="eta-item" style="color: #64748b; font-weight:800;">🚦 暫無班次或服務已結束</li>`;
+                    } else {
+                        filteredEta.forEach((info, idx) => {
+                            const rawEtaTime = info.timestamp || info.eta; 
+                            const dest = info.dest_tc || info.dest_en || '終點站';
+                            const mins = getMinutesDiff(rawEtaTime);
+                            const formattedClock = formatTime(rawEtaTime);
+                            
+                            let timeDisplay = '';
+                            let urgentClass = (mins !== null && mins <= 3) ? 'urgent' : '';
+
+                            if (target.company === 'MIB' && info.remarks_tc) {
+                                timeDisplay = `${mins} 分 (${info.remarks_tc})`;
+                            } else if (mins === 0) {
+                                timeDisplay = '馬上到站！';
+                                urgentClass = 'urgent';
+                            } else if (mins !== null) {
+                                timeDisplay = `${mins} 分 (${formattedClock})`;
+                            } else {
+                                timeDisplay = '未明時間';
+                            }
+
+                            // 只有當 VIP 開關開啟且有填寫 Webhook 且時間大於等於 5 分鐘時才顯示通知按鈕
+                            let actionBtnHtml = '';
+                            if (vipEnabled && isValidWebhookUrl(webhookUrl) && mins !== null && mins >= 5) {
+                                const notifiedKey = `notified_${target.company}_${target.route}_${target.stopValue}`;
+                                let notifiedTrips = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+                                const currentEtaMs = new Date(rawEtaTime).getTime();
+                                
+                                notifiedTrips = notifiedTrips.filter(t => (Date.now() - t) < 30 * 60 * 1000);
+                                localStorage.setItem(notifiedKey, JSON.stringify(notifiedTrips));
+                                
+                                let isNotified = notifiedTrips.some(t => Math.abs(t - currentEtaMs) < 5 * 60 * 1000);
+
+                                if (isNotified) {
+                                    actionBtnHtml = `<span class="time-badge" style="font-size: 0.8rem; background: #e2e8f0; border-color: #cbd5e1; color: #64748b; margin-left: 8px;">已排程</span>`;
+                                } else {
+                                    actionBtnHtml = `
+                                        <button class="btn-schedule-noti" onclick="sendMakeNotification(this, ${mins}, '${target.route}', '${stopCleanName}', '${target.company}', '${target.stopValue}', '${rawEtaTime}')">
+                                            🔔
+                                        </button>
+                                    `;
+                                }
+                            }
+
+                            cardHtml += `
+                                <li class="eta-item">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div class="destination">往 ${dest}</div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;">
+                                        <div class="time-badge ${urgentClass}">${timeDisplay}</div>
+                                        ${actionBtnHtml}
+                                    </div>
+                                </li>
+                            `;
+                        });
+                    }
+
+                    cardHtml += `</ul>
+                            <div style="padding: 10px; background: var(--card); border-top: 2px dashed var(--border); border-radius: 0 0 12px 12px; text-align: center;">
+                                <button class="btn-primary" style="width: 100%; border-radius: 8px; font-size: 0.95rem;" onclick="viewFullRoute('${target.company}', '${target.route}', '${target.direction}', '${target.stopValue}', '${target.routeId || ''}', '${target.region || ''}')">
+                                    🗺️ 展開全線車站時間
+                                </button>
+                            </div>
+                        </div>`; 
+                    return cardHtml;
+
+                } catch (error) {
+                    return `
+                        <div class="card" style="border: 3px solid var(--danger);">
+                            <div class="card-header" style="background:var(--danger); color:white">
+                                <div class="route-title-area"><div class="route-number">⚠️ ${target.route}</div></div>
+                                <div class="stop-info">📍 站點 ID: ${target.stopValue}</div>
+                            </div>
+                            <p style="color: var(--danger); font-size:0.95rem; padding: 12px; margin: 0; font-weight:800;">連線失敗。</p>
+                        </div>
+                    `;
+                }
+            });
+
+            const htmlResultsArray = await Promise.all(fetchPromises);
+            container.innerHTML = htmlResultsArray.length ? htmlResultsArray.join('') : '<div class="no-data">此基地還未登記任何車輛。</div>';
+            statusText.innerText = `更新時間: ${new Date().toLocaleTimeString('zh-HK', { hour12: false })}`;
+
+        } catch (globalError) {
+            container.innerHTML = `<div class="error">連線出錯，請再重試。</div>`;
+        } finally {
+            isEtaLoading = false; 
+        }
+    }
+
+    async function manualRefresh() {
+        const btn = document.getElementById('refresh-btn'); btn.classList.add('spinning'); btn.disabled = true;
+        await fetchETA(); btn.classList.remove('spinning'); btn.disabled = false;
+    }
+    
+    function renderETA(profileId) {
+        currentProfileId = profileId; const elements = profiles[currentProfileId].elements;
+        const profileName = profiles[currentProfileId].name;
+        
+        document.getElementById('etaMainTitle').innerText = `⏰ 實時到站時間 - ${profileName}`;
+
+        document.getElementById('profileSettingCard').style.display = 'none';
+        document.getElementById('fullRouteContainerCard').style.display = 'none';
+        document.getElementById('arrivalContainerCard').style.display = 'block';
+
+        collapseProfiles(profileName + " (即時)");
+        busTargets.length = 0; 
+        elements.forEach((element) => { try { busTargets.push(JSON.parse(element)); } catch(e) {} });
+        
+        fetchETA();
+        if(autoRefreshTimer) clearInterval(autoRefreshTimer);
+        autoRefreshTimer = setInterval(fetchETA, 30000);
+    }
+
+    function exportProfiles() {        
+        if (Object.keys(profiles).length === 0) { 
+            alert('目前沒有基地設定可導出！'); 
+            return; 
+        }                
+        
+        const exportData = {
+            timestamp: new Date().toISOString(),
+            profiles: profiles,
+            vipSettings: {
+                enabled: localStorage.getItem('vip_notifications_enabled') === 'true',
+                pushoverUserKey: localStorage.getItem('pushoveruserkey') || "",
+                pushoverApiToken: localStorage.getItem('pushoverapitoken') || "",
+                customWebhookUrl: localStorage.getItem('custom_webhook_url') || ""
+            }
+        };
+        
+        const jsonString = JSON.stringify(exportData, null, 2);        
+        const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });        
+        const dataUrl = URL.createObjectURL(blob);                
+        const downloadAnchor = document.createElement('a');        
+        downloadAnchor.setAttribute("href", dataUrl);        
+        downloadAnchor.setAttribute("download", `toy_transport_backup_${Date.now()}.json`);                
+        document.body.appendChild(downloadAnchor);        
+        downloadAnchor.click();                
+        URL.revokeObjectURL(dataUrl);        
+        downloadAnchor.remove();    
+    }
+
+    function importProfiles(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (typeof importedData !== 'object' || importedData === null) throw new Error('格式不正確');
+                
+                const targetProfiles = importedData.profiles ? importedData.profiles : importedData;
+                if (typeof targetProfiles !== 'object' || targetProfiles === null) throw new Error('格式不正確');
+
+                if (Object.keys(profiles).length > 0) {
+                    if (!confirm('這樣做會拆除目前的所有基地與設定，確定要蓋過去嗎？')) { event.target.value = ''; return; }
+                }
+                
+                profiles = targetProfiles;
+                saveToStorage();
+
+                // 恢復 VIP 資料與設定
+                if (importedData.vipSettings) {
+                    localStorage.setItem('vip_notifications_enabled', importedData.vipSettings.enabled ? 'true' : 'false');
+                    localStorage.setItem('pushoveruserkey', importedData.vipSettings.pushoverUserKey || '');
+                    localStorage.setItem('pushoverapitoken', importedData.vipSettings.pushoverApiToken || '');
+                    localStorage.setItem('custom_webhook_url', importedData.vipSettings.customWebhookUrl || '');
+                    
+                    // 同步更新介面上的 UI 欄位與顯示狀態
+                    const toggle = document.getElementById('vipToggleSwitch');
+                    if (toggle) toggle.checked = !!importedData.vipSettings.enabled;
+                    const userKeyInput = document.getElementById('pushoverUserKeyInput');
+                    if (userKeyInput) userKeyInput.value = importedData.vipSettings.pushoverUserKey || '';
+                    const apiTokenInput = document.getElementById('pushoverApiTokenInput');
+                    if (apiTokenInput) apiTokenInput.value = importedData.vipSettings.pushoverApiToken || '';
+                    const webhookUrlInput = document.getElementById('webhookUrlInput');
+                    if (webhookUrlInput) webhookUrlInput.value = importedData.vipSettings.customWebhookUrl || '';
+                }
+
+                updateWebhookDisplayState();
+                expandProfiles();
+                alert('基地數據與 VIP 資料成功載入！');
+            } catch (err) {
+                alert('載入失敗：請確認使用的是正確的備份 .json 檔案。');
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function backToETA() {
+        document.getElementById('fullRouteContainerCard').style.display = 'none';
+        document.getElementById('arrivalContainerCard').style.display = 'block';
+    }
+
+	async function viewFullRoute(company, route, direction, targetStopId, routeId, region) {
+		document.getElementById('arrivalContainerCard').style.display = 'none';
+		document.getElementById('fullRouteContainerCard').style.display = 'block';
+		const container = document.getElementById('full-route-bus-container');
+		const dirText = direction === "outbound" ? "去程" : "回程";
+		document.getElementById('fullRouteTitle').innerText = `🗺️ ${company} ${route} (${dirText})`;
+		
+		container.innerHTML = '<div class="loading">🚜 正在同步鋪設全線軌道與即時數據...</div>';
+
+		try {
+			let stopList = [];
+			let etaData = []; 
+			let actualRouteId = routeId;
+			const targetGroupId = direction === 'outbound' ? 1 : 2;
+
+			if (company === 'MIB') {
+				let activeRegion = region;
+				let mibRouteData = null;
+
+				if (!activeRegion) {
+					const regions = ['HKI', 'KLN', 'NT'];
+					const fetchPromises = regions.map(async (r) => {
+						try {
+							const res = await fetch(`${baseUrlMib}/route/${r}/${route}`);
+							if (res.ok) {
+								const json = await res.json();
+								if (json.data && json.data.length > 0) return { region: r, data: json.data };
+							}
+						} catch (e) {}
+						return null;
+					});
+					const results = await Promise.all(fetchPromises);
+					const found = results.find(res => res !== null);
+					if (found) {
+						activeRegion = found.region;
+						mibRouteData = found.data.find(item => parseInt(item.group_id) === targetGroupId) || found.data[0];
+					}
+				} else {
+					const routeRes = await fetch(`${baseUrlMib}/route/${activeRegion}/${route}`);
+					const routeJson = await routeRes.json();
+					mibRouteData = routeJson.data?.find(item => parseInt(item.group_id) === targetGroupId) || routeJson.data?.[0];
+				}
+				
+				if (!mibRouteData) throw new Error(`找不到小巴路線 ${route} 的方向資料`);
+				actualRouteId = mibRouteData.route_id;
+
+				const stopRes = await fetch(`${baseUrlMib}/route-stop/${actualRouteId}/${targetGroupId}`);
+				const stopJson = await stopRes.json();
+				stopList = stopJson.data?.route_stops || [];
+				
+			} else if (company === 'KMB') {
+				const kmbDir = direction === 'outbound' ? 'outbound' : 'inbound';
+				const stopRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`);
+				const stopJson = await stopRes.json();
+				stopList = stopJson.data || [];
+
+				const etaRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-eta/${route}/1`);
+				const etaJson = await etaRes.json();
+				etaData = etaJson.data || [];
+			} else { 
+				const stopRes = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/route-stop/${company}/${route}/${direction}`);
+				const stopJson = await stopRes.json();
+				stopList = stopJson.data || [];
+			}
+
+			const stopDetailsPromises = stopList.map(async (stop) => {
+				const stopId = stop.stop || stop.stop_id;
+				const stopSeq = stop.seq || stop.stop_seq;
+				const stopName = stop.name_tc || await getStopName(company, stopId);
+				let stopETAs = [];
+
+				if (company === 'MIB') {
+					try {
+						const etaRes = await fetch(`${baseUrlMib}/eta/route-stop/${actualRouteId}/${stopId}`);
+						if (etaRes.ok) {
+							const etaJson = await etaRes.json();
+							if (etaJson.data && etaJson.data.length > 0) {
+								stopETAs = etaJson.data[0].eta || [];
+							}
+						}
+					} catch (error) {
+						console.error(`無法獲取小巴站點 ${stopId} 的 ETA:`, error);
+					}
+				} else if (company === 'KMB') {
+					const dirCode = direction === 'outbound' ? 'O' : 'I';
+					stopETAs = etaData.filter(e => (e.seq == stopSeq) && (e.dir === dirCode));
+				} else if (company === 'CTB' || company === 'NWFB') {
+					try {
+						const etaRes = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/eta/${company}/${stopId}/${route}`);
+						if (etaRes.ok) {
+							const etaJson = await etaRes.json();
+							const dirCode = direction === 'outbound' ? 'O' : 'I';
+							if (etaJson.data) {
+								stopETAs = etaJson.data.filter(e => e.dir === dirCode);
+							}
+						}
+					} catch (error) {
+						console.error(`無法獲取城巴站點 ${stopId} 的 ETA:`, error);
+					}
+				}
+
+				return { stopId, stopSeq, stopName, etas: stopETAs };
+			});
+
+			const stopDetails = await Promise.all(stopDetailsPromises);
+
+			let html = '<ul class="list-group" style="display: flex; flex-direction: column; gap: 8px;">';
+			stopDetails.forEach(sd => {
+				let etaHtml = '';
+				if (sd.etas.length === 0) {
+					etaHtml = '<span class="time-badge">暫無服務</span>';
+				} else {
+					sd.etas.slice(0, 3).forEach(info => {
+						const rawEtaTime = info.timestamp || info.eta; 
+						const mins = getMinutesDiff(rawEtaTime);
+						if (mins !== null) {
+							let urgentClass = mins <= 3 ? 'urgent' : '';
+							let display = mins === 0 ? '馬上到' : `${mins}分`;
+							if (company === 'MIB' && info.remarks_tc) {
+								display += ` (${info.remarks_tc})`;
+							}
+							etaHtml += `<span class="time-badge ${urgentClass}" style="margin-right:6px; font-size: 0.85rem; margin-bottom:4px;">${display}</span>`;
+						}
+					});
+				}
+
+				let isCurrentTarget = (String(sd.stopId) === String(targetStopId));
+				let itemClass = `element-item ${isCurrentTarget ? 'current-target-stop' : ''}`;
+
+				const isDarkMode = document.body.classList.contains('dark-mode');
+				let seqBgColor = 'var(--border)';
+				let seqTextColor = '#fff';
+
+				if (isCurrentTarget) {
+					seqBgColor = '#2563eb';
+					seqTextColor = '#fff';
+				} else if (isDarkMode) {
+					seqBgColor = '#334155';
+					seqTextColor = '#facc15';
+				} else {
+					seqBgColor = '#000000';
+					seqTextColor = '#ffffff';
+				}
+
+				html += `
+					<li class="${itemClass}" style="flex-direction: column; align-items: flex-start; padding: 12px;">
+						<div style="font-weight: 900; margin-bottom: 8px; color: var(--text);">
+							<span style="background: ${seqBgColor}; color: ${seqTextColor}; padding: 2px 6px; border-radius: 6px; font-size: 0.8rem; margin-right: 6px; border: 1.5px solid var(--border);">${sd.stopSeq}</span>
+							${sd.stopName} ${isCurrentTarget ? '<span class="pinned-tag" style="background-color: #2563eb;">📍 當前登記站</span>' : ''}
+						</div>
+						<div style="display: flex; flex-wrap: wrap; width: 100%;">
+							${etaHtml || '<span class="time-badge">未明時間</span>'}
+						</div>
+					</li>
+				`;
+			});
+			html += '</ul>';
+			container.innerHTML = html;
+
+		} catch (err) {
+			container.innerHTML = `<div class="error">🚨 無法載入全線數據：${err.message}</div>`;
+		}
+	}
+
+    function initAutoOpenSettings() {
+        const toggle = document.getElementById('autoOpenToggle');
+        const selectGroup = document.getElementById('autoOpenSelectGroup');
+        const isEnabled = localStorage.getItem('auto_open_enabled') === 'true';
+        
+        toggle.checked = isEnabled;
+        selectGroup.style.display = isEnabled ? 'block' : 'none';
+    }
+
+    function populateAutoOpenSelect() {
+        const select = document.getElementById('autoOpenProfileSelect');
+        if (!select) return;
+        
+        const currentSel = localStorage.getItem('auto_open_profile_id') || "";
+        
+        select.innerHTML = '<option value="">-- 請選擇群組 --</option>';
+        Object.keys(profiles).forEach(id => {
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = profiles[id].name;
+            if (id === currentSel) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+    }
+
+    function toggleAutoOpenSetting() {
+        const toggle = document.getElementById('autoOpenToggle');
+        const selectGroup = document.getElementById('autoOpenSelectGroup');
+        const isEnabled = toggle.checked;
+        
+        localStorage.setItem('auto_open_enabled', isEnabled ? 'true' : 'false');
+        selectGroup.style.display = isEnabled ? 'block' : 'none';
+        
+        if (isEnabled) {
+            populateAutoOpenSelect();
+            saveAutoOpenSetting();
+        } else {
+            localStorage.removeItem('auto_open_profile_id');
+        }
+    }
+
+    function saveAutoOpenSetting() {
+        const select = document.getElementById('autoOpenProfileSelect');
+        localStorage.setItem('auto_open_profile_id', select.value);
+    }
+</script>
+
+</body>
+</html>
