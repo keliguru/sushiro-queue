@@ -22,7 +22,6 @@
             --mcqueen-red: #d31010;
             --mcqueen-dark: #8b0000;
             --rusteze-yellow: #fbc02d;
-            --rusteze-brown: #8d4004;
             --chrome-1: #e0e0e0;
             --chrome-2: #9e9e9e;
             --chrome-3: #ffffff;
@@ -65,25 +64,6 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.2);
             position: relative;
             overflow: hidden;
-        }
-
-        .dashboard-container::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 10%;
-            width: 30px; height: 100%;
-            background: rgba(255,255,255,0.15);
-            transform: skewX(-15deg);
-            pointer-events: none;
-        }
-        .dashboard-container::after {
-            content: '';
-            position: absolute;
-            top: 0; left: calc(10% + 40px);
-            width: 10px; height: 100%;
-            background: rgba(255,255,255,0.15);
-            transform: skewX(-15deg);
-            pointer-events: none;
         }
 
         .chequered-flag {
@@ -255,12 +235,6 @@
             pointer-events: none;
         }
 
-        .gauge-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 16px rgba(0,0,0,0.7);
-            border-color: var(--chrome-3);
-        }
-
         .gauge-header {
             display: flex;
             justify-content: space-between;
@@ -356,6 +330,31 @@
             text-shadow: 1px 1px 2px #000;
         }
 
+        /* Calculator Styles */
+        .calculator-box {
+            background: linear-gradient(145deg, #222, #000);
+            border: 2px solid var(--rusteze-yellow);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #fff;
+            font-family: var(--font-mono);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .calc-row { display: flex; gap: 8px; margin-bottom: 15px; }
+        .calc-row select, .calc-row input { 
+            padding: 12px; border-radius: 8px; border: 2px solid #444; 
+            background: #2a2a2a; color: #fff; flex: 1; font-size: 16px; font-family: var(--font-mono);
+        }
+        
+        .calc-result { 
+            margin-top: 15px; padding: 15px; background: #111; border-radius: 8px; 
+            border-left: 5px solid var(--rusteze-yellow);
+        }
+
         .info-box {
             background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
             border: 2px solid var(--chrome-2);
@@ -403,6 +402,7 @@
             .sector-title { font-size: 15px; margin: 15px 0 8px 0; }
             .gauge-card { padding: 12px; }
             .speedo-price { font-size: 28px; }
+            .calc-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -524,11 +524,25 @@
         </div>
     </div>
 
+    <!-- 計算機區塊 -->
+    <div class="sector-title">CALCULATOR: 手動收費預測</div>
+    <div class="calculator-box">
+        <div class="calc-row">
+            <select id="calc-day">
+                <option value="1">星期一至六</option>
+                <option value="0">星期日及公眾假期</option>
+            </select>
+            <input type="time" id="calc-time" value="08:00" required>
+        </div>
+        <button class="mode-btn" style="width: 100%; min-height: 50px;" onclick="runCalculator()">開始預測計算</button>
+        <div id="calc-result" class="calc-result">請選擇時間並點擊計算，將依據上方所選之車種（私家車/的士/電單車）進行運算。</div>
+    </div>
+
     <!-- 說明 -->
     <div class="sector-title">CREW CHIEF BRIEFING: 系統說明</div>
     <div class="info-box">
         <p>⚡ <strong>時段收費機制 (TVT):</strong> 過海及大欖隧道現已實施分時段收費。系統除了顯示實時收費，亦會預測及顯示<strong>下一個即將轉換的時段及價錢</strong> (NEXT LAP)。</p>
-        <p>⚡ <strong>過渡時段:</strong> 於不同收費時段之間切換時，設有過渡性安排，收費以每 2 分鐘 $2（或比例）平穩遞增或遞減。</p>
+        <p>⚡ <strong>過渡時段:</strong> 於不同收費時段之間切換時，設有過渡性安排，收費以每 2 分鐘 $2（或比例）平穩遞增或遞減[span_0](start_span)[span_0](end_span)。</p>
         <p>⚡ <strong>大欖與的士:</strong> 大欖隧道私家車/電單車設動態分時段收費，的士全日收 $28，其他商用車 $43。</p>
         <p style="text-align: right; margin-top: 8px; color: var(--rusteze-yellow); font-family: var(--font-racing); font-size: 16px;">Ka-Chow!</p>
     </div>
@@ -572,6 +586,7 @@
         calculateTolls(new Date());
     }
 
+    // 核心過海隧道收費演算法 (支援 step+1 起步加減機制)
     function getCrossHarborToll(vehicle, isSunday, hour, min) {
         const totalMin = hour * 60 + min;
         if (vehicle === 'taxi') {
@@ -589,6 +604,7 @@
             let dirC = endC > startC ? 1 : -1;
             let dirW = endW > startW ? 1 : -1;
             
+            // 修正：踏入切換時間那一刻，收費已經立即開始 +$2 (或 -$2)
             let pC = startC + ((step + 1) * 2 * dirC);
             let pW = startW + ((step + 1) * 2 * dirW);
             
@@ -639,33 +655,25 @@
             return { price: Math.round(18 * factor * 10) / 10, text: "HOLIDAY FIXED", class: "flag-green" };
         }
 
-        if (totalMin <= 434) {
-            return { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" };
-        }
+        if (totalMin <= 434) return { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" };
         if (totalMin <= 460) {
             let step = Math.floor((totalMin - 435) / 2);
             let p = 19 + step * 2;
             return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
         }
-        if (totalMin <= 584) {
-            return { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" };
-        }
+        if (totalMin <= 584) return { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" };
         if (totalMin <= 598) {
             let step = Math.floor((totalMin - 585) / 2);
             let p = 43 - step * 2;
             return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
         }
-        if (totalMin <= 1034) {
-            return { price: Math.round(30 * factor * 10) / 10, text: "YELLOW FLAG (一般)", class: "flag-yellow" };
-        }
+        if (totalMin <= 1034) return { price: Math.round(30 * factor * 10) / 10, text: "YELLOW FLAG (一般)", class: "flag-yellow" };
         if (totalMin <= 1048) {
             let step = Math.floor((totalMin - 1035) / 2);
             let p = 31 + step * 2;
             return { price: Math.round(p * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" };
         }
-        if (totalMin <= 1139) {
-            return { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" };
-        }
+        if (totalMin <= 1139) return { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" };
         if (totalMin <= 1165) {
             let step = Math.floor((totalMin - 1140) / 2);
             let p = 43 - step * 2;
@@ -685,25 +693,15 @@
             return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "NO CHANGE", class: "flag-fixed" }, timeStr: "NEXT LAP" };
         }
 
-        if (totalMin < 435) {
-            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" }, timeStr: "07:15" };
-        } else if (totalMin < 461) {
-            return { nextInfo: { price: Math.round(43 * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" }, timeStr: "07:41" };
-        } else if (totalMin < 585) {
-            return { nextInfo: { price: Math.round(30 * factor * 10) / 10, text: "YELLOW FLAG (一般)", class: "flag-yellow" }, timeStr: "09:45" };
-        } else if (totalMin < 599) {
-            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" }, timeStr: "09:59" };
-        } else if (totalMin < 1035) {
-            return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" }, timeStr: "17:15" };
-        } else if (totalMin < 1049) {
-            return { nextInfo: { price: Math.round(43 * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" }, timeStr: "17:29" };
-        } else if (totalMin < 1140) {
-            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" }, timeStr: "19:00" };
-        } else if (totalMin < 1166) {
-            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" }, timeStr: "19:26" };
-        } else {
-            return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" }, timeStr: "Tmwr 00:00" };
-        }
+        if (totalMin < 435) return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" }, timeStr: "07:15" };
+        else if (totalMin < 461) return { nextInfo: { price: Math.round(43 * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" }, timeStr: "07:41" };
+        else if (totalMin < 585) return { nextInfo: { price: Math.round(30 * factor * 10) / 10, text: "YELLOW FLAG (一般)", class: "flag-yellow" }, timeStr: "09:45" };
+        else if (totalMin < 599) return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" }, timeStr: "09:59" };
+        else if (totalMin < 1035) return { nextInfo: { price: Math.round(45 * factor * 10) / 10, text: "RED FLAG (繁忙)", class: "flag-red" }, timeStr: "17:15" };
+        else if (totalMin < 1049) return { nextInfo: { price: Math.round(43 * factor * 10) / 10, text: "TRANSITION", class: "flag-yellow" }, timeStr: "17:29" };
+        else if (totalMin < 1140) return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" }, timeStr: "19:00" };
+        else if (totalMin < 1166) return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" }, timeStr: "19:26" };
+        else return { nextInfo: { price: Math.round(18 * factor * 10) / 10, text: "GREEN FLAG (非繁忙)", class: "flag-green" }, timeStr: "Tmwr 00:00" };
     }
 
     function calculateTolls(now) {
@@ -740,8 +738,7 @@
         }
 
         let tct = 20, lrt = 8, tsr = 8, smt = 8, abt = 8;
-        if (currentVehicle === 'taxi') tct = 15;
-        if (currentVehicle === 'motorcycle') tct = 15;
+        if (currentVehicle === 'taxi' || currentVehicle === 'motorcycle') tct = 15;
 
         updateCrossHarborUI(currentInfo, nextInfo, nextTimeStr);
         updateLandTunnelsUI(tltInfo, tltNext, tct, lrt, tsr, smt, abt);
@@ -801,6 +798,45 @@
         document.getElementById('price-abt').innerText = abt;
     }
 
+    // 計算機功能執行函數 (已加入大欖隧道)
+    function runCalculator() {
+        const dayVal = parseInt(document.getElementById('calc-day').value);
+        const timeStr = document.getElementById('calc-time').value;
+        if (!timeStr) return;
+        
+        const [h, m] = timeStr.split(':').map(Number);
+        const isSunday = (dayVal === 0);
+        
+        // 分別獲取過海隧道與大欖隧道的預測結果
+        const result = getCrossHarborToll(currentVehicle, isSunday, h, m);
+        const tltResult = getTltToll(currentVehicle, isSunday, h, m);
+        
+        const dayText = isSunday ? "星期日及公眾假期" : "星期一至六";
+        
+        const resDiv = document.getElementById('calc-result');
+        resDiv.innerHTML = `
+            <div style="margin-bottom:12px; color:var(--rusteze-yellow); font-family:var(--font-racing); font-size: 16px;">
+                🏁 預測結果 [${dayText} ${timeStr}]
+            </div>
+            
+            <div style="font-size: 16px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                <span>西區海底隧道: <strong>$${result.whc}</strong></span>
+                <span class="flag-status ${result.class}" style="font-size: 9px;">${result.text}</span>
+            </div>
+            
+            <div style="font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span>紅 / 東隧: <strong>$${result.cht}</strong></span>
+                <span class="flag-status ${result.class}" style="font-size: 9px;">${result.text}</span>
+            </div>
+            
+            <div style="border-top: 1px dashed #444; padding-top: 12px; font-size: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <span>大欖隧道 (TLT): <strong>$${tltResult.price}</strong></span>
+                <span class="flag-status ${tltResult.class}" style="font-size: 9px;">${tltResult.text}</span>
+            </div>
+        `;
+    }
+
+    // 啟動實時更新迴圈
     requestAnimationFrame(loop);
 </script>
 
