@@ -451,6 +451,28 @@
         body.dark-mode .time-badge { background-color: #1e293b; color: #fff; }
         body.dark-mode .time-badge.urgent { background-color: #ef4444; color: #fff; }
 
+        .btn-schedule-noti {
+            background-color: #00c753;
+            color: white;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            padding: 6px 10px;
+            font-weight: 900;
+            box-shadow: 2px 2px 0px var(--border);
+            cursor: pointer;
+            margin-left: 8px;
+            transition: opacity 0.3s ease, transform 0.1s;
+        }
+        .btn-schedule-noti:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px var(--border);
+        }
+        .btn-schedule-noti.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
         .spinning .refresh-icon { display: inline-block; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
@@ -495,6 +517,72 @@
             transform: translate(2px, 2px);
             box-shadow: 1px 1px 0px var(--border);
             filter: brightness(0.9);
+        }
+
+        /* 👑 升級版高質感 VIP 通知功能區樣式 */
+        .vip-details {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            padding: 16px;
+            border-radius: 16px;
+            border: 3px solid #d97706;
+            box-shadow: 4px 4px 0px #d97706;
+            transition: all 0.3s ease;
+        }
+        body.dark-mode .vip-details {
+            background: linear-gradient(135deg, #451a03 0%, #1e1b4b 100%);
+            border-color: #fbbf24;
+            box-shadow: 4px 4px 0px #fbbf24;
+        }
+        .vip-summary {
+            font-size: 1.05rem;
+            font-weight: 950;
+            color: #b45309;
+            cursor: pointer; 
+            user-select: none;
+            outline: none;
+            list-style: none; /* 隱藏預設箭頭 */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        body.dark-mode .vip-summary {
+            color: #fde68a;
+        }
+        .vip-summary::-webkit-details-marker {
+            display: none; /* 針對 Safari 隱藏預設箭頭 */
+        }
+        .vip-badge-tag {
+            background-color: #f59e0b;
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 2px 7px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            font-weight: 900;
+            box-shadow: 1px 1px 0px var(--border);
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.5px;
+        }
+        body.dark-mode .vip-badge-tag {
+            border-color: #fff;
+            box-shadow: 1px 1px 0px #fff;
+        }
+        .vip-desc-box {
+            margin-top: 10px;
+            background-color: #ffffff; 
+            border: 2px solid #d97706; 
+            color: #78350f;
+            padding: 12px; 
+            border-radius: 10px; 
+            font-size: 0.9rem;
+            font-weight: 800;
+            box-shadow: inset 2px 2px 0px rgba(0,0,0,0.05);
+        }
+        body.dark-mode .vip-desc-box {
+            background-color: #1e293b;
+            border-color: #fbbf24;
+            color: #fef3c7;
         }
     </style>
 </head>
@@ -555,6 +643,34 @@
                 <option value="">-- 請選擇群組 --</option>
             </select>
         </div>
+
+        <div class="divider"></div>
+        <!-- 👑 特别突顯高質感的 VIP 通知功能區 (附 ON/OFF 功能開關，免手動設定 Webhook) -->
+        <details class="vip-details" id="vipNotificationGroup">
+            <summary class="vip-summary" id="vipSummaryTitle">
+                <span>👑 VIP 通知功能 <span class="vip-badge-tag">EXECUTIVE</span></span>
+                <span id="vipToggleSign">[+]</span>
+            </summary>
+            <div style="margin-top: 12px;">
+                <div class="form-group" style="margin-bottom: 12px; background: rgba(217, 119, 6, 0.08); padding: 10px 12px; border-radius: 10px; border: 2px dashed #d97706;">
+                    <label for="vipToggleSwitch" style="margin: 0; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 900; color: #b45309;">
+                        <span>⚡ 啟用 VIP 自動推播功能 (ON / OFF)</span>
+                        <input type="checkbox" id="vipToggleSwitch" onchange="toggleVipSetting()" style="width: 22px; height: 22px; cursor: pointer; accent-color: #d97706;">
+                    </label>
+                </div>
+                <div class="vip-desc-box">
+                    💡 <b>VIP 專屬說明</b>：已內建專屬 Pushover 接收端點，無需額外設定。開啟後，當車輛接近時可直接點擊進行倒數推播排程！最後5分鐘會每分鐘進行推播。
+                </div>
+                <div style="margin-top: 10px;">
+                    <label for="pushoverUserKeyInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">👤 Pushover User Key：</label>
+                    <input type="text" id="pushoverUserKeyInput" placeholder="請輸入 Pushover User Key..." oninput="savePushoverSettings()">
+                </div>
+                <div style="margin-top: 10px;">
+                    <label for="pushoverApiTokenInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔑 Pushover API Token：</label>
+                    <input type="text" id="pushoverApiTokenInput" placeholder="請輸入 Pushover API Token..." oninput="savePushoverSettings()">
+                </div>
+            </div>
+        </details>
     </div>
 
     <div class="right-panels">
@@ -649,6 +765,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
+    const DEFAULT_WEBHOOK_URL = "https://eojjdplf10capre.m.pipedream.net";
+
     let profiles = JSON.parse(localStorage.getItem('profiles_data')) || {};
     let currentProfileId = null;
     let pinnedStops = JSON.parse(localStorage.getItem('pinned_stops_data')) || {};
@@ -673,6 +791,16 @@
             document.getElementById('themeBtn').textContent = '☀️';
         }
 
+        const savedUserKey = localStorage.getItem('pushoveruserkey') || "";
+        document.getElementById('pushoverUserKeyInput').value = savedUserKey;
+
+        const savedApiToken = localStorage.getItem('pushoverapitoken') || "";
+        document.getElementById('pushoverApiTokenInput').value = savedApiToken;
+
+        // 初始化 VIP ON/OFF 開關狀態
+        const savedVipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
+        document.getElementById('vipToggleSwitch').checked = savedVipEnabled;
+
         initAutoOpenSettings();
         renderProfiles();
 
@@ -680,6 +808,18 @@
         const autoOpenProfileId = localStorage.getItem('auto_open_profile_id');
         if (autoOpenEnabled && autoOpenProfileId && profiles[autoOpenProfileId]) {
             renderETA(autoOpenProfileId);
+        }
+
+        // 初始化與監聽 VIP 折疊標題動態切換狀態
+        const vipGroup = document.getElementById('vipNotificationGroup');
+        const vipSummaryTitle = document.getElementById('vipSummaryTitle');
+        if (vipGroup && vipSummaryTitle) {
+            const updateVipTitle = () => {
+                const sign = vipGroup.open ? '[-]' : '[+]';
+                vipSummaryTitle.innerHTML = `<span>👑 VIP 通知功能 <span class="vip-badge-tag">EXECUTIVE</span></span> <span id="vipToggleSign">${sign}</span>`;
+            };
+            updateVipTitle();
+            vipGroup.addEventListener('toggle', updateVipTitle);
         }
     });
 
@@ -697,6 +837,20 @@
 
     function saveToStorage() { localStorage.setItem('profiles_data', JSON.stringify(profiles)); }
     function savePinnedStorage() { localStorage.setItem('pinned_stops_data', JSON.stringify(pinnedStops)); }
+
+    function savePushoverSettings() {
+        const userKey = document.getElementById('pushoverUserKeyInput').value.trim();
+        const apiToken = document.getElementById('pushoverApiTokenInput').value.trim();
+
+        localStorage.setItem('pushoveruserkey', userKey);
+        localStorage.setItem('pushoverapitoken', apiToken);
+    }
+
+    function toggleVipSetting() {
+        const toggle = document.getElementById('vipToggleSwitch');
+        localStorage.setItem('vip_notifications_enabled', toggle.checked ? 'true' : 'false');
+        fetchETA(); // 即時重新刷新畫面以顯示或隱藏推播按鈕
+    }
 
     function toggleDarkMode() {
         const body = document.body;
@@ -1158,6 +1312,80 @@
         return dateObj.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
 
+    // 連續發送 5 次通知給 Pipedream WEBHOOK (使用內建預設網址)
+    async function sendMakeNotification(button, mins, route, stopName, company, stopValue, rawEtaTime) {
+        const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
+        if (!vipEnabled) {
+            alert('⚠️ VIP 推播通知功能目前為【OFF】關閉狀態，請先至主頁展開 VIP 功能並開啟開關！');
+            return;
+        }
+
+        const webhookUrl = DEFAULT_WEBHOOK_URL;
+
+        if (mins < 5) {
+            alert('⚠️ 剩餘時間小於 5 分鐘，無法啟動倒數通知！');
+            return;
+        }
+
+        const pushoverUserKey = localStorage.getItem('pushoveruserkey') || "";
+        const pushoverApiToken = localStorage.getItem('pushoverapitoken') || "";
+
+        button.innerText = '⏳';
+        button.disabled = true;
+
+        let successCount = 0;
+        const targetMinsLeft = [5, 4, 3, 2, 1];
+
+        // 連續發送 5 個 Webhook
+        for (let i = 0; i < targetMinsLeft.length; i++) {
+            const targetLeft = targetMinsLeft[i]; // 5, 4, 3, 2, 1
+            const totalSecondsToWait = Math.max(0, (mins - targetLeft) * 60);
+
+            const payload = {
+                title: `🚌 玩具交通總部 (${route})`,
+                message: `指揮官！${route} 還有大約 ${targetLeft} 分鐘抵達 [${stopName}]！`,
+                delay: totalSecondsToWait,
+                sequence: i + 1,
+                target_remaining_minutes: targetLeft,
+                pushoveruserkey: pushoverUserKey,
+                pushoverapitoken: pushoverApiToken
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    successCount++;
+                }
+            } catch (e) {
+                console.error(`第 ${i+1} 次排程發送失敗:`, e);
+            }
+        }
+
+        if (successCount === 5) {
+            button.innerText = '✅';
+            button.style.backgroundColor = '#8e8e93';
+            
+            // 成功排程後，利用 localStorage 將這班車 (以時間戳記為準) 記錄為「已通知」
+            const notifiedKey = `notified_${company}_${route}_${stopValue}`;
+            let notifiedTrips = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+            const etaMs = new Date(rawEtaTime).getTime();
+            notifiedTrips.push(etaMs);
+            localStorage.setItem(notifiedKey, JSON.stringify(notifiedTrips));
+
+            setTimeout(() => {
+                button.outerHTML = `<span class="time-badge" style="font-size: 0.8rem; background: #e2e8f0; border-color: #cbd5e1; color: #64748b; margin-left: 8px;">已排程</span>`;
+            }, 1500);
+        } else {
+            button.innerText = '❌';
+            button.disabled = false;
+            alert(`🚨 報告指揮官，部分排程發送失敗 (成功: ${successCount}/5)，請檢查網路或 Pipedream 狀態！`);
+        }
+    }
+
     async function fetchETA() {
         if (isEtaLoading) return;
         const container = document.getElementById('bus-container');
@@ -1171,6 +1399,9 @@
             'KMB': { name: '九巴', icon: '🚌' },
             'MIB': { name: '專線小巴', icon: '🚐' }
         };
+
+        const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
+        const webhookUrl = vipEnabled ? DEFAULT_WEBHOOK_URL : "";
 
         try {
             let sortedTargets = [...busTargets];
@@ -1234,7 +1465,7 @@
                     if (filteredEta.length === 0) {
                         cardHtml += `<li class="eta-item" style="color: #64748b; font-weight:800;">🚦 暫無班次或服務已結束</li>`;
                     } else {
-                        filteredEta.forEach(info => {
+                        filteredEta.forEach((info, idx) => {
                             const rawEtaTime = info.timestamp || info.eta; 
                             const dest = info.dest_tc || info.dest_en || '終點站';
                             const mins = getMinutesDiff(rawEtaTime);
@@ -1254,10 +1485,40 @@
                                 timeDisplay = '未明時間';
                             }
 
+                            // 只有當 VIP 開關開啟且時間大於等於 5 分鐘時才顯示通知按鈕
+                            let actionBtnHtml = '';
+                            if (vipEnabled && webhookUrl && mins !== null && mins >= 5) {
+                                const notifiedKey = `notified_${target.company}_${target.route}_${target.stopValue}`;
+                                let notifiedTrips = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+                                const currentEtaMs = new Date(rawEtaTime).getTime();
+                                
+                                // 清理超過 30 分鐘的舊記錄，避免 localStorage 肥大
+                                notifiedTrips = notifiedTrips.filter(t => (Date.now() - t) < 30 * 60 * 1000);
+                                localStorage.setItem(notifiedKey, JSON.stringify(notifiedTrips));
+                                
+                                // 判斷這班車（容錯 5 分鐘內的時差）是否已經發送過通知
+                                let isNotified = notifiedTrips.some(t => Math.abs(t - currentEtaMs) < 5 * 60 * 1000);
+
+                                if (isNotified) {
+                                    actionBtnHtml = `<span class="time-badge" style="font-size: 0.8rem; background: #e2e8f0; border-color: #cbd5e1; color: #64748b; margin-left: 8px;">已排程</span>`;
+                                } else {
+                                    actionBtnHtml = `
+                                        <button class="btn-schedule-noti" onclick="sendMakeNotification(this, ${mins}, '${target.route}', '${stopCleanName}', '${target.company}', '${target.stopValue}', '${rawEtaTime}')">
+                                            🔔
+                                        </button>
+                                    `;
+                                }
+                            }
+
                             cardHtml += `
                                 <li class="eta-item">
-                                    <div class="destination">往 ${dest}</div>
-                                    <div class="time-badge ${urgentClass}">${timeDisplay}</div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div class="destination">往 ${dest}</div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;">
+                                        <div class="time-badge ${urgentClass}">${timeDisplay}</div>
+                                        ${actionBtnHtml}
+                                    </div>
                                 </li>
                             `;
                         });
@@ -1321,11 +1582,19 @@
     }
 
     function exportProfiles() {        
-        if (Object.keys(profiles).length === 0) { alert('目前沒有基地設定可導出！'); return; }                
+        if (Object.keys(profiles).length === 0) { 
+            alert('目前沒有基地設定可導出！'); 
+            return; 
+        }                
         
         const exportData = {
             timestamp: new Date().toISOString(),
-            profiles: profiles
+            profiles: profiles,
+            vipSettings: {
+                enabled: localStorage.getItem('vip_notifications_enabled') === 'true',
+                pushoverUserKey: localStorage.getItem('pushoveruserkey') || "",
+                pushoverApiToken: localStorage.getItem('pushoverapitoken') || ""
+            }
         };
         
         const jsonString = JSON.stringify(exportData, null, 2);        
@@ -1353,12 +1622,29 @@
                 if (typeof targetProfiles !== 'object' || targetProfiles === null) throw new Error('格式不正確');
 
                 if (Object.keys(profiles).length > 0) {
-                    if (!confirm('這樣做會拆除目前的所有基地，確定要蓋過去嗎？')) { event.target.value = ''; return; }
+                    if (!confirm('這樣做會拆除目前的所有基地與設定，確定要蓋過去嗎？')) { event.target.value = ''; return; }
                 }
+                
                 profiles = targetProfiles;
                 saveToStorage();
+
+                // 恢復 VIP 資料與設定
+                if (importedData.vipSettings) {
+                    localStorage.setItem('vip_notifications_enabled', importedData.vipSettings.enabled ? 'true' : 'false');
+                    localStorage.setItem('pushoveruserkey', importedData.vipSettings.pushoverUserKey || '');
+                    localStorage.setItem('pushoverapitoken', importedData.vipSettings.pushoverApiToken || '');
+                    
+                    // 同步更新介面上的 UI 欄位
+                    const toggle = document.getElementById('vipToggleSwitch');
+                    if (toggle) toggle.checked = !!importedData.vipSettings.enabled;
+                    const userKeyInput = document.getElementById('pushoverUserKeyInput');
+                    if (userKeyInput) userKeyInput.value = importedData.vipSettings.pushoverUserKey || '';
+                    const apiTokenInput = document.getElementById('pushoverApiTokenInput');
+                    if (apiTokenInput) apiTokenInput.value = importedData.vipSettings.pushoverApiToken || '';
+                }
+
                 expandProfiles();
-                alert('基地數據成功載入！');
+                alert('基地數據與 VIP 資料成功載入！');
             } catch (err) {
                 alert('載入失敗：請確認使用的是正確的備份 .json 檔案。');
             }
