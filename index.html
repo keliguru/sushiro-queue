@@ -795,6 +795,7 @@
         
         const favorites = JSON.parse(localStorage.getItem('sushiro_fav_stores')) || [];
         const myNumbers = JSON.parse(localStorage.getItem('sushiro_my_numbers')) || {};
+        const sentRecords = JSON.parse(localStorage.getItem('sushiro_sent_records')) || {};
 
         stores.forEach(store => {
             const storeId = store.store_id || store.id || '';
@@ -810,6 +811,11 @@
             const isFav = favorites.includes(Number(storeId));
             const favBadge = isFav ? '<span class="fav-badge">★ 已收藏</span>' : '';
             const savedNumber = myNumbers[storeId]; 
+
+            const record = sentRecords[storeId];
+            const isAlreadySent = record && record.sent && record.ticket === savedNumber;
+            const btnText = isAlreadySent ? '已發送通知 (等待到號)' : '📱 發送通知';
+            const btnDisabled = isAlreadySent || timeStatus.code === 'closed';
 
             const distanceInfo = (store.calculatedDistance !== undefined && store.calculatedDistance !== 999) 
                 ? `<div class="store-info"><strong>📍 距離：</strong>約 ${store.calculatedDistance.toFixed(2)} 公里</div>` 
@@ -840,9 +846,9 @@
                     
                     <div class="notify-container">
                         <div class="notify-row">
-                            <input type="number" id="notify-num-${storeId}" class="num-input" placeholder="我的號碼" value="${savedNumber || ''}" ${timeStatus.code === 'closed' ? 'disabled' : ''}>
-                            <button class="btn-notify" onclick="sendPushoverBackendCheck(${storeId}, '${name}', event)" ${timeStatus.code === 'closed' ? 'disabled' : ''}>
-                                📱 發送通知
+                            <input type="number" id="notify-num-${storeId}" class="num-input" placeholder="我的號碼" value="${savedNumber || ''}" oninput="handleNumInputChange(${storeId})" ${timeStatus.code === 'closed' ? 'disabled' : ''}>
+                            <button class="btn-notify" onclick="sendPushoverBackendCheck(${storeId}, '${name}', event)" ${btnDisabled ? 'disabled' : ''}>
+                                ${btnText}
                             </button>
                         </div>
                     </div>
@@ -860,6 +866,30 @@
         if (index > -1) { favorites.splice(index, 1); } else { favorites.push(idNum); }
         localStorage.setItem('sushiro_fav_stores', JSON.stringify(favorites));
         filterAndRenderStores(currentFetchedStores === backupData);
+    }
+
+    function handleNumInputChange(storeId) {
+        const numInput = document.getElementById(`notify-num-${storeId}`);
+        const btn = numInput.closest('.notify-row').querySelector('.btn-notify');
+        const sentRecords = JSON.parse(localStorage.getItem('sushiro_sent_records')) || {};
+        const record = sentRecords[storeId];
+        const currentVal = Number(numInput.value);
+        
+        let myNumbers = JSON.parse(localStorage.getItem('sushiro_my_numbers')) || {};
+        if (numInput.value === '') {
+            delete myNumbers[storeId];
+        } else {
+            myNumbers[storeId] = currentVal;
+        }
+        localStorage.setItem('sushiro_my_numbers', JSON.stringify(myNumbers));
+
+        if (record && record.sent && record.ticket === currentVal) {
+            btn.textContent = '已發送通知 (等待到號)';
+            btn.disabled = true;
+        } else {
+            btn.textContent = '📱 發送通知';
+            btn.disabled = false;
+        }
     }
 
     async function sendPushoverBackendCheck(storeId, storeName, event) {
@@ -914,6 +944,16 @@
             const result = await response.json();
             
             if (response.ok && result.status === 'success') {
+                // 記錄已發送通知狀態
+                let sentRecords = JSON.parse(localStorage.getItem('sushiro_sent_records')) || {};
+                sentRecords[storeId] = { ticket: myTicketNumber, sent: true };
+                localStorage.setItem('sushiro_sent_records', JSON.stringify(sentRecords));
+
+                // 立即更新按鈕狀態
+                const btn = event.target;
+                btn.textContent = '已發送通知 (等待到號)';
+                btn.disabled = true;
+
                 statusLog.textContent = `✅ 「${storeName}」背景自動監控已啟動！`;
                 alert(`成功啟動自動監控！\n\n後端將每 10 分鐘自動檢查一次。\n到號或過號後會自動發送通知並停止監控。\n\n分店：${result.data.store_name}\n目前叫號：${result.data.current_calling} 號\n您的號碼：${result.data.my_ticket_number} 號`);
             } else {
@@ -970,6 +1010,23 @@
                                 <div class="queue-detail">現在叫號：<strong>${firstNumber} 號</strong></div>
                                 <div class="queue-detail">最新出票（估計）：<strong>${calculatedLatest} 號</strong></div>
                             `;
+
+                            // 🧠 檢查是否已過號 (現在叫號 > 用戶儲存的號碼)，若過號則解除發送鎖定
+                            const sentRecords = JSON.parse(localStorage.getItem('sushiro_sent_records')) || {};
+                            const record = sentRecords[storeId];
+                            const numInput = document.getElementById(`notify-num-${storeId}`);
+                            const btn = checkSection.closest('.queue-box').querySelector('.btn-notify');
+
+                            if (record && record.sent && record.ticket && numInput && Number(numInput.value) === record.ticket) {
+                                if (firstNumber > record.ticket) {
+                                    delete sentRecords[storeId];
+                                    localStorage.setItem('sushiro_sent_records', JSON.stringify(sentRecords));
+                                    if (btn) {
+                                        btn.textContent = '📱 發送通知 (已過號可重發)';
+                                        btn.disabled = false;
+                                    }
+                                }
+                            }
                         } else {
                             checkSection.innerHTML = `
                                 <div class="queue-detail">現在叫號：<strong>-</strong></div>
