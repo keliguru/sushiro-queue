@@ -253,8 +253,9 @@
 <body>
 
     <header>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <h1 id="page-title" style="line-height: 1;">動畫列表</h1>
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <h1 id="page-title" style="line-height: 1; margin: 0;">動畫列表</h1>
+            <button id="sync-fav-btn" class="btn primary" style="display:none; font-size:12px; padding: 6px 12px; background: var(--netflix-red); color: white;" onclick="syncFavorites()">🔄 強制同步</button>
         </div>
 
         <div id="search-controls" class="controls">
@@ -269,7 +270,7 @@
         <!-- 季度切換列 -->
         <div id="season-filter" class="scroll-bar"></div>
         
-        <!-- 升級功能：追番時間表 (星期幾篩選列) -->
+        <!-- 追番時間表 (星期幾篩選列) -->
         <div id="day-filter" class="scroll-bar">
             <button class="pill day-pill active" onclick="selectDay('ALL')">全部</button>
             <button class="pill day-pill" onclick="selectDay('1')">週一</button>
@@ -307,10 +308,9 @@
         let currentPage = 1, hasNextPage = false, isLoading = false;
         let selectedDayFilter = 'ALL';
         
-        // 用於記錄展開狀態的記憶集合 (Memory state for expanded panels)
+        // 用於記錄展開狀態的記憶集合
         let expandedIds = new Set();
 
-        // 升級：引入分頁 PageInfo 機制，擴展 title 獲取多國語言
         const GQL_QUERY = `query ($search: String, $season: MediaSeason, $seasonYear: Int, $page: Int) { 
             Page(page: $page, perPage: 30) { 
                 pageInfo { hasNextPage currentPage }
@@ -373,10 +373,8 @@
             }
         }
 
-        // 升級：無限滾動自動加載監聽器 與 回最頂端按鈕顯示控制
         function setupInfiniteScroll() {
             window.addEventListener('scroll', () => {
-                // 控制「回最頂端」按鈕的顯示/隱藏
                 const bttBtn = document.getElementById('backToTop');
                 if (window.scrollY > 300) {
                     bttBtn.classList.add('show');
@@ -395,13 +393,12 @@
             });
         }
 
-        // 滾動至網頁最頂端
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function selectSeason(element, season, year) {
-            expandedIds.clear(); // 清空展開記憶
+            expandedIds.clear(); 
             document.querySelectorAll('#season-filter .pill').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
             currentSeason = season; currentYear = year;
@@ -419,45 +416,45 @@
         async function searchAnime() {
             const term = document.getElementById('searchInput').value;
             if(!term) return;
-            expandedIds.clear(); // 清空展開記憶
+            expandedIds.clear(); 
             document.querySelectorAll('#season-filter .pill').forEach(el => el.classList.remove('active'));
             fetchGraphQL(GQL_QUERY, { search: term, page: 1 });
         }
 
-        // 取得日文原名，無日文則以羅馬拼音或預設名稱遞補
         function getOriginalTitle(anime) {
             if (!anime || !anime.title) return "未知動畫";
             return anime.title.native || anime.title.romaji || anime.title.userPreferred;
         }
 
-        // 核心修正：切換最愛分頁時觸發非同步同步機制
         async function switchTab(tab) {
             currentTab = tab;
-            expandedIds.clear(); // 清空展開記憶
+            expandedIds.clear(); 
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`nav-${tab}`).classList.add('active');
             
             const searchControls = document.getElementById('search-controls');
             const seasonFilter = document.getElementById('season-filter');
+            const syncFavBtn = document.getElementById('sync-fav-btn');
             
             if (tab === 'favorites') {
                 searchControls.style.display = 'none'; seasonFilter.style.display = 'none';
-                await syncFavorites(); // 呼叫下方的同步函數
+                if (syncFavBtn) syncFavBtn.style.display = 'inline-block';
+                await syncFavorites(); 
             } else {
                 searchControls.style.display = 'flex'; seasonFilter.style.display = 'flex';
+                if (syncFavBtn) syncFavBtn.style.display = 'none';
                 fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear, page: 1 });
             }
         }
 
-        // 核心新增：向 AniList API 動態請求最愛動畫的最新即時資訊
+        // 核心簡化：移除手動暫存比對，直接進行 API 快照同步與拉取
         async function syncFavorites() {
-            const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]');
+            const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
             if (favs.length === 0) {
                 renderList();
                 return;
             }
 
-            // 先顯示同步中的載入特效
             document.getElementById('anime-list').innerHTML = '<div class="empty-state">⏳ 正在同步最新集數資訊...</div>';
 
             const GQL_SYNC_QUERY = `query ($ids: [Int]) { 
@@ -477,13 +474,11 @@
                 const result = await response.json();
                 const updatedMedia = result.data.Page.media;
 
-                // 讀取目前的儲存庫並合併最新數據，避免遺漏
                 let favDetails = JSON.parse(localStorage.getItem('anime_favorites_details') || '{}');
                 updatedMedia.forEach(anime => {
                     favDetails[anime.id] = anime;
                 });
 
-                // 清理已不在最愛清單中的舊資料
                 Object.keys(favDetails).forEach(id => {
                     if (!favs.includes(Number(id))) {
                         delete favDetails[id];
@@ -494,7 +489,7 @@
             } catch (error) {
                 console.error("同步最愛動畫資料失敗，將採用本地快取顯示:", error);
             } finally {
-                renderList(); // 同步結束（或失敗時降級）皆調用渲染
+                renderList(); 
             }
         }
 
@@ -505,10 +500,21 @@
             renderList();
         }
 
-        // 計算動畫尚未觀看的集數 (未看集數 = 已播集數 - 已看集數)
+        // 核心功能：計算當前 API 計算出來的最新播出集數 (時間感應)
+        function getAiredCount(anime) {
+            if (!anime) return 0;
+            if (anime.nextAiringEpisode) {
+                const nextEp = anime.nextAiringEpisode.episode;
+                const airTime = anime.nextAiringEpisode.airingAt * 1000;
+                return (Date.now() >= airTime) ? nextEp : (nextEp - 1);
+            }
+            return anime.episodes || 0;
+        }
+
+        // 核心功能：計算未看集數
         function getUnwatchedCount(anime) {
-            const airedCount = anime.nextAiringEpisode ? anime.nextAiringEpisode.episode - 1 : (anime.episodes || 0);
-            const watchedList = JSON.parse(localStorage.getItem(`watched_${anime.id}`) || '[]');
+            const airedCount = getAiredCount(anime);
+            const watchedList = JSON.parse(localStorage.getItem(`watched_${anime.id}`) || '[]').map(Number);
             const validWatched = watchedList.filter(ep => ep <= airedCount).length;
             return Math.max(0, airedCount - validWatched);
         }
@@ -516,18 +522,16 @@
         function renderList() {
             const container = document.getElementById('anime-list');
             container.innerHTML = '';
-            const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]');
+            const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
             
             let displayData = [];
             if (currentTab === 'home') { 
                 displayData = animeData; 
             } else { 
                 displayData = Object.values(JSON.parse(localStorage.getItem('anime_favorites_details') || '{}'));
-                // 依未觀看集數由多到少排序 (未看最多的排最前)
                 displayData.sort((a, b) => getUnwatchedCount(b) - getUnwatchedCount(a));
             }
 
-            // 升級：追番時間表星期幾過濾邏輯
             if (selectedDayFilter !== 'ALL') {
                 displayData = displayData.filter(anime => {
                     if (!anime.nextAiringEpisode) return selectedDayFilter === 'END';
@@ -544,21 +548,16 @@
             }
 
             displayData.forEach(anime => {
-                const airedCount = anime.nextAiringEpisode ? anime.nextAiringEpisode.episode - 1 : (anime.episodes || 0);
-                const watchedList = JSON.parse(localStorage.getItem(`watched_${anime.id}`) || '[]');
+                // 100% 由自動化核心取得集數
+                const airedCount = getAiredCount(anime);
+                const watchedList = JSON.parse(localStorage.getItem(`watched_${anime.id}`) || '[]').map(Number);
                 const platformList = JSON.parse(localStorage.getItem(`platform_${anime.id}`) || '[]');
                 
-                // 讀取暱稱與原始名稱
                 const nickname = localStorage.getItem(`nickname_${anime.id}`) || '';
                 const originalTitle = getOriginalTitle(anime);
-
-                // 升級：評分與筆記讀取
                 const review = JSON.parse(localStorage.getItem(`review_${anime.id}`) || '{"rating":0,"note":""}');
-                
-                // 新增功能：自定義觀看連結讀取
                 const watchLink = localStorage.getItem(`watch_link_${anime.id}`) || '';
 
-                // 升級：精準實時進度條百分比計算
                 const validWatched = watchedList.filter(ep => ep <= airedCount).length;
                 const progressPercent = airedCount > 0 ? (validWatched / airedCount) * 100 : 0;
 
@@ -583,33 +582,26 @@
                     starsHtml += `<span class="${s <= review.rating ? 'active' : ''}" onclick="setRating(${anime.id}, ${s})">★</span>`;
                 }
 
-                // 檢查此卡片是否應維持展開狀態 (Checking memory state)
                 const isExpanded = expandedIds.has(anime.id);
 
                 container.innerHTML += `
                     <div class="anime-card ${hasNewEpisode ? 'new-update-effect' : ''}">
-                        <!-- 左上角顯示 AniList ID -->
                         <div class="id-badge">ID: ${anime.id}</div>
-                        
                         <button class="fav-btn ${favs.includes(anime.id) ? 'active' : ''}" onclick="toggleFav(${anime.id})">♥</button>
                         <div class="img-container">
-                            <!-- 升級：封面的 Fallback 機制防止破圖 -->
                             <img src="${anime.coverImage.large}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'150\\' height=\\'225\\' viewBox=\\'0 0 150 225\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%23222\\'/><text x=\\'50%\\' y=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23444\\' font-size=\\'12\\'>No Image</text></svg>'">
                             ${hasNewEpisode ? '<div class="new-ep-badge">NEW</div>' : ''}
                             ${dateBadgeHtml}
                         </div>
                         <div class="card-content">
-                            <!-- 點擊此區塊可以新增/修改暱稱 -->
                             <div onclick="editNickname(${anime.id})" title="點擊新增/修改暱稱" style="cursor: pointer;">
                                 ${nickname ? `<div class="nickname-display">🏷️ ${nickname}</div>` : ''}
                                 <h3 class="editable-title" title="${originalTitle}">${originalTitle}</h3>
                             </div>
                             <div class="meta-info">${nextInfo}</div>
                             
-                            <!-- 升級：視覺化追番進度條 -->
                             <div class="progress-container"><div class="progress-bar" style="width: ${progressPercent}%"></div></div>
                             
-                            <!-- 如果設定了自定義連結則顯示按鈕 -->
                             ${watchLink ? `<a href="${watchLink}" target="_blank" style="display: block; background: #0077ff; color: #fff; text-align: center; font-size: 11px; font-weight: bold; padding: 6px; border-radius: 4px; text-decoration: none; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">📺 前往自定義連結</a>` : ''}
 
                             <div class="platform-grid">
@@ -619,24 +611,21 @@
                                 <button class="platform-btn ${platformList.includes('ViuTV') ? 'active viu' : ''}" onclick="togglePlatform(${anime.id}, 'ViuTV')">ViuTV</button>
                             </div>
 
-                            <!-- 串接全新的 toggleExpand 記憶方法 -->
                             <button class="expand-btn" onclick="toggleExpand(${anime.id})">
                                 <span>展開控制面板</span> <span id="expand-icon-${anime.id}">${isExpanded ? '▲' : '▼'}</span>
                             </button>
                             <div id="collapsible-${anime.id}" class="collapsible ${isExpanded ? 'show' : ''}">
                                 <div style="padding-top: 8px;">
-                                    <!-- 升級：一鍵畢業/看完功能 -->
                                     <button class="btn primary" style="font-size:10px; padding:4px 8px; width:100%; margin-bottom:6px;" onclick="markAllWatched(${anime.id}, ${airedCount})">🚀 標記全集已看</button>
                                     
+                                    <!-- 已播出的所有集數 Button 清單（自動隨著 API 更新追加） -->
                                     <div class="ep-grid">${epBadges || '<span style="font-size:11px;color:#666;">尚無公開集數</span>'}</div>
                                     
-                                    <!-- 設定自定義觀看連結的輸入欄位 -->
                                     <div style="margin-top:10px; border-top: 1px solid #222; padding-top:6px;">
                                         <div style="font-size:11px; color:#aaa;">設定自定義觀看連結：</div>
                                         <input type="text" class="note-input" placeholder="輸入或貼上專屬觀看網址..." value="${watchLink}" onchange="saveWatchLink(${anime.id}, this.value)">
                                     </div>
 
-                                    <!-- 升級：個人短評與五星評分區 -->
                                     <div style="margin-top:10px; border-top: 1px solid #222; padding-top:6px;">
                                         <div style="font-size:11px; color:#aaa;">我的評分：</div>
                                         <div class="star-rating">${starsHtml}</div>
@@ -650,7 +639,6 @@
             });
         }
 
-        // 新增功能：控制卡片展開並記憶狀態
         function toggleExpand(id) {
             const panel = document.getElementById(`collapsible-${id}`);
             const icon = document.getElementById(`expand-icon-${id}`);
@@ -666,9 +654,9 @@
             }
         }
 
-        // 喜愛清單開關
         function toggleFav(id) {
-            let favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]');
+            id = Number(id); 
+            let favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
             let favDetails = JSON.parse(localStorage.getItem('anime_favorites_details') || '{}');
             
             if (favs.includes(id)) {
@@ -683,13 +671,12 @@
         }
 
         function toggleWatched(id, epNum) {
-            let w = JSON.parse(localStorage.getItem(`watched_${id}`) || '[]');
+            let w = JSON.parse(localStorage.getItem(`watched_${id}`) || '[]').map(Number);
             w = w.includes(epNum) ? w.filter(n => n !== epNum) : [...w, epNum];
             localStorage.setItem(`watched_${id}`, JSON.stringify(w));
             renderList();
         }
 
-        // 升級：一鍵畢業核心處理
         function markAllWatched(id, maxEp) {
             let w = [];
             for(let i = 1; i <= maxEp; i++) w.push(i);
@@ -697,7 +684,6 @@
             renderList();
         }
 
-        // 升級：保存個人評分
         function setRating(id, rating) {
             let review = JSON.parse(localStorage.getItem(`review_${id}`) || '{"rating":0,"note":""}');
             review.rating = rating;
@@ -705,14 +691,12 @@
             renderList();
         }
 
-        // 升級：保存觀後感隨手記
         function saveNote(id, noteText) {
             let review = JSON.parse(localStorage.getItem(`review_${id}`) || '{"rating":0,"note":""}');
             review.note = noteText;
             localStorage.setItem(`review_${id}`, JSON.stringify(review));
         }
 
-        // 新增功能：儲存自定義觀看連結
         function saveWatchLink(id, url) {
             if (!url.trim()) {
                 localStorage.removeItem(`watch_link_${id}`);
@@ -722,7 +706,6 @@
             renderList();
         }
 
-        // 新增功能：修改為新增/編輯暱稱
         function editNickname(id) { 
             const newNickname = prompt("請輸入動畫暱稱 (留空刪除):"); 
             if (newNickname !== null) { 
@@ -756,7 +739,6 @@
             reader.readAsText(e.target.files[0]);
         }
 
-        // 新增功能：重置 Local Storage
         function resetData() {
             const check = confirm("⚠️ 確定要重置所有資料嗎？\n\n這將會徹底清除所有：\n• 我的最愛清單及詳細快照\n• 自定義觀看連結及暱稱\n• 每一集數的觀看進度\n• 個人評分及追番心得筆記\n\n此操作無法還原，請確認是否繼續？");
             if (check) {
