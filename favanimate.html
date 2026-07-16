@@ -73,6 +73,7 @@
             background: #333; color: var(--text-main); border: none;
             padding: 10px 15px; border-radius: 4px; font-weight: bold;
             font-size: 14px; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
         }
         .btn.primary { background: var(--text-main); color: var(--bg-dark); }
 
@@ -255,15 +256,11 @@
     <header>
         <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
             <h1 id="page-title" style="line-height: 1; margin: 0;">動畫列表</h1>
-            <button id="sync-fav-btn" class="btn primary" style="display:none; font-size:12px; padding: 6px 12px; background: var(--netflix-red); color: white;" onclick="syncFavorites()">🔄 強制同步</button>
         </div>
 
         <div id="search-controls" class="controls">
             <input type="text" id="searchInput" class="search-box" placeholder="搜尋動畫...">
             <button class="btn primary" onclick="searchAnime()">搜尋</button>
-            <button class="btn" onclick="exportData()">導出</button>
-            <button class="btn" onclick="document.getElementById('importFile').click()">導入</button>
-            <button class="btn" onclick="resetData()" style="background: #2b2b2b; color: #ff5c5c;">🗑️ 重置</button>
             <input type="file" id="importFile" style="display:none" onchange="importData(event)">
         </div>
         
@@ -299,6 +296,9 @@
         </button>
         <button id="nav-favorites" class="nav-item" onclick="switchTab('favorites')">
             <span class="nav-icon">🏰</span><span>我的最愛</span>
+        </button>
+        <button id="nav-settings" class="nav-item" onclick="switchTab('settings')">
+            <span class="nav-icon">⚙️</span><span>設定</span>
         </button>
     </nav>
 
@@ -382,7 +382,7 @@
                     bttBtn.classList.remove('show');
                 }
 
-                if (currentTab === 'favorites' || !hasNextPage || isLoading) return;
+                if (currentTab !== 'home' || !hasNextPage || isLoading) return;
                 if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 250) {
                     const searchInput = document.getElementById('searchInput').value;
                     let vars = { page: currentPage + 1 };
@@ -434,20 +434,26 @@
             
             const searchControls = document.getElementById('search-controls');
             const seasonFilter = document.getElementById('season-filter');
-            const syncFavBtn = document.getElementById('sync-fav-btn');
+            const dayFilter = document.getElementById('day-filter');
             
             if (tab === 'favorites') {
-                searchControls.style.display = 'none'; seasonFilter.style.display = 'none';
-                if (syncFavBtn) syncFavBtn.style.display = 'inline-block';
+                searchControls.style.display = 'none'; 
+                seasonFilter.style.display = 'none';
+                dayFilter.style.display = 'flex';
                 await syncFavorites(); 
+            } else if (tab === 'settings') {
+                searchControls.style.display = 'none'; 
+                seasonFilter.style.display = 'none';
+                dayFilter.style.display = 'none';
+                renderSettings();
             } else {
-                searchControls.style.display = 'flex'; seasonFilter.style.display = 'flex';
-                if (syncFavBtn) syncFavBtn.style.display = 'none';
+                searchControls.style.display = 'flex'; 
+                seasonFilter.style.display = 'flex';
+                dayFilter.style.display = 'flex';
                 fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear, page: 1 });
             }
         }
 
-        // 核心簡化：移除手動暫存比對，直接進行 API 快照同步與拉取
         async function syncFavorites() {
             const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
             if (favs.length === 0) {
@@ -455,7 +461,9 @@
                 return;
             }
 
-            document.getElementById('anime-list').innerHTML = '<div class="empty-state">⏳ 正在同步最新集數資訊...</div>';
+            if (currentTab !== 'settings') {
+                document.getElementById('anime-list').innerHTML = '<div class="empty-state">⏳ 正在同步最新集數資訊...</div>';
+            }
 
             const GQL_SYNC_QUERY = `query ($ids: [Int]) { 
                 Page(page: 1, perPage: 100) { 
@@ -493,6 +501,7 @@
             }
         }
 
+        /* 【修復完成】將 6 個點修復回標準 expansion 語法 3 個點 */
         function togglePlatform(id, platform) {
             let p = JSON.parse(localStorage.getItem(`platform_${id}`) || '[]');
             p = p.includes(platform) ? p.filter(item => item !== platform) : [...p, platform];
@@ -500,7 +509,6 @@
             renderList();
         }
 
-        // 核心功能：計算當前 API 計算出來的最新播出集數 (時間感應)
         function getAiredCount(anime) {
             if (!anime) return 0;
             if (anime.nextAiringEpisode) {
@@ -511,7 +519,6 @@
             return anime.episodes || 0;
         }
 
-        // 核心功能：計算未看集數
         function getUnwatchedCount(anime) {
             const airedCount = getAiredCount(anime);
             const watchedList = JSON.parse(localStorage.getItem(`watched_${anime.id}`) || '[]').map(Number);
@@ -520,6 +527,11 @@
         }
 
         function renderList() {
+            if (currentTab === 'settings') {
+                renderSettings();
+                return;
+            }
+
             const container = document.getElementById('anime-list');
             container.innerHTML = '';
             const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
@@ -529,7 +541,18 @@
                 displayData = animeData; 
             } else { 
                 displayData = Object.values(JSON.parse(localStorage.getItem('anime_favorites_details') || '{}'));
-                displayData.sort((a, b) => getUnwatchedCount(b) - getUnwatchedCount(a));
+                
+                // 我的最愛排序：依據下一集播出時間小到大排序 (越快播出的排越前)
+                displayData.sort((a, b) => {
+                    const timeA = a.nextAiringEpisode ? a.nextAiringEpisode.airingAt : Number.MAX_SAFE_INTEGER;
+                    const timeB = b.nextAiringEpisode ? b.nextAiringEpisode.airingAt : Number.MAX_SAFE_INTEGER;
+                    
+                    if (timeA !== timeB) {
+                        return timeA - timeB; 
+                    }
+                    
+                    return getUnwatchedCount(b) - getUnwatchedCount(a);
+                });
             }
 
             if (selectedDayFilter !== 'ALL') {
@@ -548,7 +571,6 @@
             }
 
             displayData.forEach(anime => {
-                // 100% 由自動化核心取得集數
                 const airedCount = getAiredCount(anime);
                 const watchedList = JSON.parse(localStorage.getItem(`watched_${anime.id}`) || '[]').map(Number);
                 const platformList = JSON.parse(localStorage.getItem(`platform_${anime.id}`) || '[]');
@@ -618,7 +640,6 @@
                                 <div style="padding-top: 8px;">
                                     <button class="btn primary" style="font-size:10px; padding:4px 8px; width:100%; margin-bottom:6px;" onclick="markAllWatched(${anime.id}, ${airedCount})">🚀 標記全集已看</button>
                                     
-                                    <!-- 已播出的所有集數 Button 清單（自動隨著 API 更新追加） -->
                                     <div class="ep-grid">${epBadges || '<span style="font-size:11px;color:#666;">尚無公開集數</span>'}</div>
                                     
                                     <div style="margin-top:10px; border-top: 1px solid #222; padding-top:6px;">
@@ -637,6 +658,61 @@
                     </div>
                 `;
             });
+        }
+
+        function renderSettings() {
+            document.getElementById('page-title').innerText = "系統設定";
+            const container = document.getElementById('anime-list');
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; max-width: 500px; margin: 0 auto; width: 100%; padding: 10px 0;">
+                    
+                    <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333;">
+                        <h3 style="margin-top:0; color: #ffb300; font-size:16px;">🔄 即時資料同步</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">
+                            強制自 AniList API 重新載入你「我的最愛」中所有動畫的最新集數及播放時間表。
+                        </p>
+                        <button class="btn primary" style="background: var(--netflix-red); color: white; width:100%; font-size:13px;" onclick="triggerSyncFromSettings()">
+                            🔄 立即強制同步
+                        </button>
+                    </div>
+
+                    <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333;">
+                        <h3 style="margin-top:0; font-size:16px;">💾 備份與還原</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">
+                            匯出你所有的追番紀錄、看番進度、評分與設定；更換裝置或瀏覽器時可透過 JSON 檔快速導入還原。
+                        </p>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn" style="flex:1; font-size:13px; background:#2b2b2b;" onclick="exportData()">📤 匯出備份</button>
+                            <button class="btn" style="flex:1; font-size:13px; background:#2b2b2b;" onclick="document.getElementById('importFile').click()">📥 匯入還原</button>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid rgba(229, 9, 20, 0.3);">
+                        <h3 style="margin-top:0; color: #ff5c5c; font-size:16px;">⚠️ 危險區域</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">
+                            徹底清除瀏覽器快取中的所有數據，包含我的最愛清單、觀看進度、自訂暱稱與心得筆記。此操作將無法復原！
+                        </p>
+                        <button class="btn" style="background: #2b2b2b; color: #ff5c5c; width: 100%; border: 1px solid #ff5c5c; font-size:13px;" onclick="resetData()">
+                            🗑️ 重置所有資料
+                        </button>
+                    </div>
+
+                </div>
+            `;
+        }
+
+        async function triggerSyncFromSettings() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ 同步中...";
+            btn.disabled = true;
+            await syncFavorites();
+            btn.innerHTML = "✅ 同步完成！";
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                renderSettings();
+            }, 1500);
         }
 
         function toggleExpand(id) {
