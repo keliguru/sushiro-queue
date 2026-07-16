@@ -585,7 +585,7 @@
             color: #fef3c7;
         }
 
-        /* 新增 Pipedream 輸入顯示樣式 */
+        /* 新增  輸入顯示樣式 */
         .webhook-success-container {
             display: flex;
             align-items: center;
@@ -704,7 +704,7 @@
 驚碌電話碌到無神魂？最後 5 分鐘我哋會啟動「每分鐘炸你一次」魔鬼模式。再唔出門口，司機大佬真係踩油走人，唔等埋你㗎啦！
                 </div>
                 
-                <!-- Pipedream URL 設定欄位區 -->
+                <!--  URL 設定欄位區 -->
                 <div style="margin-top: 10px;">
                     <label style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔗 暗號：</label>
                     
@@ -720,7 +720,7 @@
                     </div>
                 </div>
 
-                <!-- Pushover 設定欄位區 (Pipedream 輸入成功後才顯示) -->
+                <!-- Pushover 設定欄位區 ( 輸入成功後才顯示) -->
                 <div id="pushoverFieldsContainer" style="display: none;">
                     <div style="margin-top: 10px;">
                         <label for="pushoverUserKeyInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">👤 Pushover User Key：</label>
@@ -844,11 +844,11 @@
     let autoRefreshTimer = null;
     let isEtaLoading = false;
 
-    // 驗證 Pipedream URL 格式的函數
-    function isValidWebhookUrl(url) {
-        const regex = /^https:\/\/[a-zA-Z0-9-]+\.m\.pipedream\.net\/?$/;
-        return regex.test(url);
-    }
+	// 驗證新的 URL 格式函數
+	function isValidWebhookUrl(url) {
+		const regex = /^https:\/\/([a-zA-Z0-9-]+\.)*cchlsy\.synology\.me(\/.*)?$/;
+		return regex.test(url);
+	}
 
     document.addEventListener('DOMContentLoaded', () => {
         const isDark = localStorage.getItem('dark_mode_enabled') === 'true';
@@ -866,7 +866,7 @@
         const savedWebhookUrl = localStorage.getItem('custom_webhook_url') || "";
         document.getElementById('webhookUrlInput').value = savedWebhookUrl;
 
-        // 頁面初始化時，檢查並渲染 Pipedream URL 的輸入狀態與 Pushover 欄位
+        // 頁面初始化時，檢查並渲染  URL 的輸入狀態與 Pushover 欄位
         updateWebhookDisplayState();
 
         // 初始化 VIP ON/OFF 開關狀態
@@ -1445,7 +1445,7 @@
         return dateObj.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
 
-    // 連續發送 5 次通知給 Pipedream WEBHOOK
+    // 連續發送 5 次通知給  WEBHOOK
     async function sendMakeNotification(button, mins, route, stopName, company, stopValue, rawEtaTime) {
         const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
         if (!vipEnabled) {
