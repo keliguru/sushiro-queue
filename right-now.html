@@ -584,6 +584,47 @@
             border-color: #fbbf24;
             color: #fef3c7;
         }
+
+        /* 新增 Pipedream 輸入顯示樣式 */
+        .webhook-success-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #e6f4ea;
+            border: 2px solid #137333;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: #137333;
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+        body.dark-mode .webhook-success-container {
+            background-color: #072714;
+            border-color: #34a853;
+            color: #34a853;
+        }
+        .btn-edit-url {
+            background: #ffffff;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 0.9rem;
+            box-shadow: 1.5px 1.5px 0px var(--border);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        body.dark-mode .btn-edit-url {
+            background: #1e293b;
+            color: #fff;
+            border-color: #fff;
+            box-shadow: 1.5px 1.5px 0px #fff;
+        }
+        .btn-edit-url:active {
+            transform: translate(1px, 1px);
+            box-shadow: 0.5px 0.5px 0px var(--border);
+        }
     </style>
 </head>
 <body>
@@ -645,7 +686,7 @@
         </div>
 
         <div class="divider"></div>
-        <!-- 👑 特别突顯高質感的 VIP 通知功能區 (附 ON/OFF 功能開關，免手動設定 Webhook) -->
+        <!-- 👑 特别突顯高質感的 VIP 通知功能區 -->
         <details class="vip-details" id="vipNotificationGroup">
             <summary class="vip-summary" id="vipSummaryTitle">
                 <span>👑 VIP 通知功能 <span class="vip-badge-tag">EXECUTIVE</span></span>
@@ -659,15 +700,36 @@
                     </label>
                 </div>
                 <div class="vip-desc-box">
-                    💡 <b>VIP 專屬說明</b>：已內建專屬 Pushover 接收端點，無需額外設定。開啟後，當車輛接近時可直接點擊進行倒數推播排程！最後5分鐘會每分鐘進行推播。
+                    💡 <b>神秘暗號！即刻升級做 VIP</b>： 入咗暗號，即刻叫你大佬！架車就到嗰陣篤一篤，我哋幫你裝實佢。
+驚碌電話碌到無神魂？最後 5 分鐘我哋會啟動「每分鐘炸你一次」魔鬼模式。再唔出門口，司機大佬真係踩油走人，唔等埋你㗎啦！
                 </div>
+                
+                <!-- Pipedream URL 設定欄位區 -->
                 <div style="margin-top: 10px;">
-                    <label for="pushoverUserKeyInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">👤 Pushover User Key：</label>
-                    <input type="text" id="pushoverUserKeyInput" placeholder="請輸入 Pushover User Key..." oninput="savePushoverSettings()">
+                    <label style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔗 暗號：</label>
+                    
+                    <!-- 輸入框容器 -->
+                    <div id="webhookInputContainer">
+                        <input type="text" id="webhookUrlInput" placeholder="暗號..." oninput="savePushoverSettings()">
+                    </div>
+                    
+                    <!-- 成功提示與修改按鈕容器 (預設隱藏) -->
+                    <div id="webhookSuccessContainer" class="webhook-success-container" style="display: none;">
+                        <span>✅ 暗號 輸入成功</span>
+                        <button type="button" class="btn-edit-url" onclick="editWebhookUrl()" title="修改暗號">✏️</button>
+                    </div>
                 </div>
-                <div style="margin-top: 10px;">
-                    <label for="pushoverApiTokenInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔑 Pushover API Token：</label>
-                    <input type="text" id="pushoverApiTokenInput" placeholder="請輸入 Pushover API Token..." oninput="savePushoverSettings()">
+
+                <!-- Pushover 設定欄位區 (Pipedream 輸入成功後才顯示) -->
+                <div id="pushoverFieldsContainer" style="display: none;">
+                    <div style="margin-top: 10px;">
+                        <label for="pushoverUserKeyInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">👤 Pushover User Key：</label>
+                        <input type="text" id="pushoverUserKeyInput" placeholder="請輸入 Pushover User Key..." oninput="savePushoverSettings()">
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <label for="pushoverApiTokenInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔑 Pushover API Token：</label>
+                        <input type="text" id="pushoverApiTokenInput" placeholder="請輸入 Pushover API Token..." oninput="savePushoverSettings()">
+                    </div>
                 </div>
             </div>
         </details>
@@ -765,8 +827,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
-    const DEFAULT_WEBHOOK_URL = "https://eojjdplf10capre.m.pipedream.net";
-
     let profiles = JSON.parse(localStorage.getItem('profiles_data')) || {};
     let currentProfileId = null;
     let pinnedStops = JSON.parse(localStorage.getItem('pinned_stops_data')) || {};
@@ -784,6 +844,12 @@
     let autoRefreshTimer = null;
     let isEtaLoading = false;
 
+    // 驗證 Pipedream URL 格式的函數
+    function isValidWebhookUrl(url) {
+        const regex = /^https:\/\/[a-zA-Z0-9-]+\.m\.pipedream\.net\/?$/;
+        return regex.test(url);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         const isDark = localStorage.getItem('dark_mode_enabled') === 'true';
         if (isDark) {
@@ -796,6 +862,12 @@
 
         const savedApiToken = localStorage.getItem('pushoverapitoken') || "";
         document.getElementById('pushoverApiTokenInput').value = savedApiToken;
+
+        const savedWebhookUrl = localStorage.getItem('custom_webhook_url') || "";
+        document.getElementById('webhookUrlInput').value = savedWebhookUrl;
+
+        // 頁面初始化時，檢查並渲染 Pipedream URL 的輸入狀態與 Pushover 欄位
+        updateWebhookDisplayState();
 
         // 初始化 VIP ON/OFF 開關狀態
         const savedVipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
@@ -823,6 +895,41 @@
         }
     });
 
+    // 根據目前的 Webhook 網址是否合法，決定顯示「輸入框」還是「成功文字及修改按鈕」，並連動顯示/隱藏 Pushover 欄位
+    function updateWebhookDisplayState() {
+        const webhookUrl = localStorage.getItem('custom_webhook_url') || "";
+        const inputContainer = document.getElementById('webhookInputContainer');
+        const successContainer = document.getElementById('webhookSuccessContainer');
+        const pushoverFields = document.getElementById('pushoverFieldsContainer');
+
+        if (isValidWebhookUrl(webhookUrl)) {
+            inputContainer.style.display = 'none';
+            successContainer.style.display = 'flex';
+            pushoverFields.style.display = 'block';
+        } else {
+            inputContainer.style.display = 'block';
+            successContainer.style.display = 'none';
+            pushoverFields.style.display = 'none';
+        }
+    }
+
+    // 當按下筆型(✏️)修改按鈕時，清除當前儲存，切換回輸入框狀態並獲得焦點
+    function editWebhookUrl() {
+        localStorage.removeItem('custom_webhook_url');
+        const input = document.getElementById('webhookUrlInput');
+        input.value = "";
+        
+        // 如果原本開啟了 VIP 通知，修改網址時自動關閉
+        if (localStorage.getItem('vip_notifications_enabled') === 'true') {
+            document.getElementById('vipToggleSwitch').checked = false;
+            localStorage.setItem('vip_notifications_enabled', 'false');
+        }
+        
+        updateWebhookDisplayState();
+        input.focus();
+        fetchETA();
+    }
+
     function toggleGuide() {
         const content = document.getElementById('guideContent');
         const icon = document.getElementById('guideToggleIcon');
@@ -841,13 +948,38 @@
     function savePushoverSettings() {
         const userKey = document.getElementById('pushoverUserKeyInput').value.trim();
         const apiToken = document.getElementById('pushoverApiTokenInput').value.trim();
+        const webhookUrl = document.getElementById('webhookUrlInput').value.trim();
 
         localStorage.setItem('pushoveruserkey', userKey);
         localStorage.setItem('pushoverapitoken', apiToken);
+        localStorage.setItem('custom_webhook_url', webhookUrl);
+        
+        // 每次輸入更新顯示狀態
+        updateWebhookDisplayState();
+        
+        // 若修改 URL 導致格式不正確，則自動關閉 VIP 狀態
+        const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
+        if (vipEnabled && !isValidWebhookUrl(webhookUrl)) {
+            document.getElementById('vipToggleSwitch').checked = false;
+            localStorage.setItem('vip_notifications_enabled', 'false');
+            alert('⚠️ 暗號不正確，已自動關閉 VIP 通知功能。請確保輸入正確。');
+            fetchETA();
+        }
     }
 
     function toggleVipSetting() {
         const toggle = document.getElementById('vipToggleSwitch');
+        const webhookUrl = document.getElementById('webhookUrlInput').value.trim();
+        
+        // 啟用時強制驗證 URL
+        if (toggle.checked) {
+            if (!isValidWebhookUrl(webhookUrl)) {
+                alert('⚠️ 請先輸入正確的暗號才能開啟 VIP 功能！');
+                toggle.checked = false;
+                return;
+            }
+        }
+        
         localStorage.setItem('vip_notifications_enabled', toggle.checked ? 'true' : 'false');
         fetchETA(); // 即時重新刷新畫面以顯示或隱藏推播按鈕
     }
@@ -1119,6 +1251,7 @@
         });
     }
 
+    // 更新 selectProfile 行為，切換頁面時重新整理 Webhook 與 Pushover 欄位顯示狀態
     function selectProfile(id) {
         currentProfileId = id; 
         document.getElementById('profileSettingCard').style.display = 'block';
@@ -1312,7 +1445,7 @@
         return dateObj.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
 
-    // 連續發送 5 次通知給 Pipedream WEBHOOK (使用內建預設網址)
+    // 連續發送 5 次通知給 Pipedream WEBHOOK
     async function sendMakeNotification(button, mins, route, stopName, company, stopValue, rawEtaTime) {
         const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
         if (!vipEnabled) {
@@ -1320,7 +1453,11 @@
             return;
         }
 
-        const webhookUrl = DEFAULT_WEBHOOK_URL;
+        const webhookUrl = localStorage.getItem('custom_webhook_url') || "";
+        if (!isValidWebhookUrl(webhookUrl)) {
+            alert('⚠️ 無效的 暗號，無法發送通知！請確認已在主頁設定中填寫正確暗號。');
+            return;
+        }
 
         if (mins < 5) {
             alert('⚠️ 剩餘時間小於 5 分鐘，無法啟動倒數通知！');
@@ -1336,7 +1473,6 @@
         let successCount = 0;
         const targetMinsLeft = [5, 4, 3, 2, 1];
 
-        // 連續發送 5 個 Webhook
         for (let i = 0; i < targetMinsLeft.length; i++) {
             const targetLeft = targetMinsLeft[i]; // 5, 4, 3, 2, 1
             const totalSecondsToWait = Math.max(0, (mins - targetLeft) * 60);
@@ -1369,7 +1505,6 @@
             button.innerText = '✅';
             button.style.backgroundColor = '#8e8e93';
             
-            // 成功排程後，利用 localStorage 將這班車 (以時間戳記為準) 記錄為「已通知」
             const notifiedKey = `notified_${company}_${route}_${stopValue}`;
             let notifiedTrips = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
             const etaMs = new Date(rawEtaTime).getTime();
@@ -1382,7 +1517,7 @@
         } else {
             button.innerText = '❌';
             button.disabled = false;
-            alert(`🚨 報告指揮官，部分排程發送失敗 (成功: ${successCount}/5)，請檢查網路或 Pipedream 狀態！`);
+            alert(`🚨 報告指揮官，部分排程發送失敗 (成功: ${successCount}/5)，請檢查網路或 暗號 狀態！`);
         }
     }
 
@@ -1401,7 +1536,7 @@
         };
 
         const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
-        const webhookUrl = vipEnabled ? DEFAULT_WEBHOOK_URL : "";
+        const webhookUrl = vipEnabled ? (localStorage.getItem('custom_webhook_url') || "") : "";
 
         try {
             let sortedTargets = [...busTargets];
@@ -1475,7 +1610,7 @@
                             let urgentClass = (mins !== null && mins <= 3) ? 'urgent' : '';
 
                             if (target.company === 'MIB' && info.remarks_tc) {
-                                timeDisplay = `${mins} 分鐘 (${info.remarks_tc})`;
+                                timeDisplay = `${mins} 分 (${info.remarks_tc})`;
                             } else if (mins === 0) {
                                 timeDisplay = '馬上到站！';
                                 urgentClass = 'urgent';
@@ -1485,18 +1620,16 @@
                                 timeDisplay = '未明時間';
                             }
 
-                            // 只有當 VIP 開關開啟且時間大於等於 5 分鐘時才顯示通知按鈕
+                            // 只有當 VIP 開關開啟且有填寫 Webhook 且時間大於等於 5 分鐘時才顯示通知按鈕
                             let actionBtnHtml = '';
-                            if (vipEnabled && webhookUrl && mins !== null && mins >= 5) {
+                            if (vipEnabled && isValidWebhookUrl(webhookUrl) && mins !== null && mins >= 5) {
                                 const notifiedKey = `notified_${target.company}_${target.route}_${target.stopValue}`;
                                 let notifiedTrips = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
                                 const currentEtaMs = new Date(rawEtaTime).getTime();
                                 
-                                // 清理超過 30 分鐘的舊記錄，避免 localStorage 肥大
                                 notifiedTrips = notifiedTrips.filter(t => (Date.now() - t) < 30 * 60 * 1000);
                                 localStorage.setItem(notifiedKey, JSON.stringify(notifiedTrips));
                                 
-                                // 判斷這班車（容錯 5 分鐘內的時差）是否已經發送過通知
                                 let isNotified = notifiedTrips.some(t => Math.abs(t - currentEtaMs) < 5 * 60 * 1000);
 
                                 if (isNotified) {
@@ -1593,7 +1726,8 @@
             vipSettings: {
                 enabled: localStorage.getItem('vip_notifications_enabled') === 'true',
                 pushoverUserKey: localStorage.getItem('pushoveruserkey') || "",
-                pushoverApiToken: localStorage.getItem('pushoverapitoken') || ""
+                pushoverApiToken: localStorage.getItem('pushoverapitoken') || "",
+                customWebhookUrl: localStorage.getItem('custom_webhook_url') || ""
             }
         };
         
@@ -1633,16 +1767,20 @@
                     localStorage.setItem('vip_notifications_enabled', importedData.vipSettings.enabled ? 'true' : 'false');
                     localStorage.setItem('pushoveruserkey', importedData.vipSettings.pushoverUserKey || '');
                     localStorage.setItem('pushoverapitoken', importedData.vipSettings.pushoverApiToken || '');
+                    localStorage.setItem('custom_webhook_url', importedData.vipSettings.customWebhookUrl || '');
                     
-                    // 同步更新介面上的 UI 欄位
+                    // 同步更新介面上的 UI 欄位與顯示狀態
                     const toggle = document.getElementById('vipToggleSwitch');
                     if (toggle) toggle.checked = !!importedData.vipSettings.enabled;
                     const userKeyInput = document.getElementById('pushoverUserKeyInput');
                     if (userKeyInput) userKeyInput.value = importedData.vipSettings.pushoverUserKey || '';
                     const apiTokenInput = document.getElementById('pushoverApiTokenInput');
                     if (apiTokenInput) apiTokenInput.value = importedData.vipSettings.pushoverApiToken || '';
+                    const webhookUrlInput = document.getElementById('webhookUrlInput');
+                    if (webhookUrlInput) webhookUrlInput.value = importedData.vipSettings.customWebhookUrl || '';
                 }
 
+                updateWebhookDisplayState();
                 expandProfiles();
                 alert('基地數據與 VIP 資料成功載入！');
             } catch (err) {
