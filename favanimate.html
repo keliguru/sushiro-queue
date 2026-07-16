@@ -430,7 +430,8 @@
             return anime.title.native || anime.title.romaji || anime.title.userPreferred;
         }
 
-        function switchTab(tab) {
+        // 核心修正：切換最愛分頁時觸發非同步同步機制
+        async function switchTab(tab) {
             currentTab = tab;
             expandedIds.clear(); // 清空展開記憶
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -441,10 +442,59 @@
             
             if (tab === 'favorites') {
                 searchControls.style.display = 'none'; seasonFilter.style.display = 'none';
-                renderList();
+                await syncFavorites(); // 呼叫下方的同步函數
             } else {
                 searchControls.style.display = 'flex'; seasonFilter.style.display = 'flex';
                 fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear, page: 1 });
+            }
+        }
+
+        // 核心新增：向 AniList API 動態請求最愛動畫的最新即時資訊
+        async function syncFavorites() {
+            const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]');
+            if (favs.length === 0) {
+                renderList();
+                return;
+            }
+
+            // 先顯示同步中的載入特效
+            document.getElementById('anime-list').innerHTML = '<div class="empty-state">⏳ 正在同步最新集數資訊...</div>';
+
+            const GQL_SYNC_QUERY = `query ($ids: [Int]) { 
+                Page(page: 1, perPage: 100) { 
+                    media(id_in: $ids, type: ANIME) { 
+                        id title { native romaji english userPreferred } coverImage { large } description episodes nextAiringEpisode { episode airingAt } 
+                    } 
+                } 
+            }`;
+
+            try {
+                const response = await fetch('https://graphql.anilist.co', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ query: GQL_SYNC_QUERY, variables: { ids: favs } }) 
+                });
+                const result = await response.json();
+                const updatedMedia = result.data.Page.media;
+
+                // 讀取目前的儲存庫並合併最新數據，避免遺漏
+                let favDetails = JSON.parse(localStorage.getItem('anime_favorites_details') || '{}');
+                updatedMedia.forEach(anime => {
+                    favDetails[anime.id] = anime;
+                });
+
+                // 清理已不在最愛清單中的舊資料
+                Object.keys(favDetails).forEach(id => {
+                    if (!favs.includes(Number(id))) {
+                        delete favDetails[id];
+                    }
+                });
+
+                localStorage.setItem('anime_favorites_details', JSON.stringify(favDetails));
+            } catch (error) {
+                console.error("同步最愛動畫資料失敗，將採用本地快取顯示:", error);
+            } finally {
+                renderList(); // 同步結束（或失敗時降級）皆調用渲染
             }
         }
 
