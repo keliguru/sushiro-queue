@@ -77,6 +77,9 @@
         <select id="catFilter" onchange="renderData()">
             <option value="all">⚡ 全部分類</option>
         </select>
+        <select id="storeFilter" onchange="renderData()">
+            <option value="all">🏬 全部店鋪</option>
+        </select>
         <button id="favBtn" class="filter-btn" onclick="toggleFilter('fav')">⭐ 只顯示最愛</button>
         <button id="offerBtn" class="filter-btn" onclick="toggleFilter('offer')">🎁 只顯示有優惠</button>
         <button class="reset-btn" onclick="resetFilter()">🔄 重置篩選 (Reset Filter)</button>
@@ -99,9 +102,17 @@
             try {
                 const res = await fetch(proxy + encodeURIComponent('https://online-price-watch.consumer.org.hk/opw/opendata/pricewatch.json'));
                 allData = await res.json();
+                
+                // 載入分類
                 const cats = [...new Set(allData.map(i => i.cat1Name?.['zh-Hant']))].filter(Boolean);
                 const select = document.getElementById('catFilter');
                 cats.forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
+
+                // 載入店鋪
+                const stores = [...new Set(allData.flatMap(i => (i.prices || []).map(p => p.supermarketCode)))].filter(Boolean).sort();
+                const storeSelect = document.getElementById('storeFilter');
+                stores.forEach(s => storeSelect.innerHTML += `<option value="${s}">${s}</option>`);
+
                 renderData();
             } catch (e) { document.getElementById('data-container').innerText = '載入失敗。'; }
         }
@@ -127,6 +138,7 @@
         function resetFilter() {
             document.getElementById('searchInput').value = '';
             document.getElementById('catFilter').value = 'all';
+            document.getElementById('storeFilter').value = 'all';
             
             filterFav = false;
             filterOffer = false;
@@ -139,6 +151,7 @@
         function renderData() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const cat = document.getElementById('catFilter').value;
+            const store = document.getElementById('storeFilter').value;
             const container = document.getElementById('data-container');
             const countDisplay = document.getElementById('countDisplay');
             container.innerHTML = '';
@@ -147,8 +160,11 @@
                 const nameZh = (i.name?.['zh-Hant'] || '').toLowerCase();
                 const nameEn = (i.name?.['en'] || '').toLowerCase();
                 const hasOffer = i.offers && i.offers.length > 0;
+                const matchStore = (store === 'all') || (i.prices && i.prices.some(p => p.supermarketCode === store));
+
                 return (nameZh.includes(query) || nameEn.includes(query)) && 
                        (cat === 'all' || i.cat1Name?.['zh-Hant'] === cat) && 
+                       matchStore &&
                        (!filterFav || favorites.includes(i.code)) &&
                        (!filterOffer || hasOffer);
             });
