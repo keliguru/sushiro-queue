@@ -131,6 +131,15 @@
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
+        /* 左上角 ID 標籤樣式 */
+        .id-badge {
+            position: absolute; top: 8px; left: 8px; z-index: 10;
+            background: rgba(0,0,0,0.6); color: var(--text-main);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 3px;
+            padding: 2px 6px; font-size: 10px; font-weight: bold;
+            backdrop-filter: blur(2px);
+        }
+
         .fav-btn { 
             position: absolute; top: 8px; right: 8px; z-index: 10; 
             background: rgba(0,0,0,0.6); color: var(--text-main); 
@@ -529,6 +538,9 @@
 
                 container.innerHTML += `
                     <div class="anime-card ${hasNewEpisode ? 'new-update-effect' : ''}">
+                        <!-- 左上角顯示 AniList ID -->
+                        <div class="id-badge">ID: ${anime.id}</div>
+                        
                         <button class="fav-btn ${favs.includes(anime.id) ? 'active' : ''}" onclick="toggleFav(${anime.id})">♥</button>
                         <div class="img-container">
                             <!-- 升級：封面的 Fallback 機制防止破圖 -->
