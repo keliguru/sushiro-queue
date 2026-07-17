@@ -18,12 +18,32 @@
     <style>
     
         :root {
-            --netflix-red: #E50914;
+            --accent-color: #E50914;
             --bg-dark: #141414;
             --card-bg: #181818;
             --text-main: #FFFFFF;
             --text-muted: #808080;
             --nav-bg: #121212;
+        }
+
+        /* 4大預設主題設定 */
+        body.theme-blue {
+            --accent-color: #00A2FF;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --nav-bg: #0f172a;
+        }
+        body.theme-orange {
+            --accent-color: #FF6600;
+            --bg-dark: #1a120b;
+            --card-bg: #2c1e13;
+            --nav-bg: #1a120b;
+        }
+        body.theme-oled {
+            --accent-color: #BF40BF; /* 霓虹紫 */
+            --bg-dark: #000000;
+            --card-bg: #080808;
+            --nav-bg: #000000;
         }
 
         * { box-sizing: border-box; }
@@ -36,6 +56,7 @@
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
             padding-bottom: 80px; 
+            transition: background 0.3s, color 0.3s;
         }
 
         /* 頂部導航列 */
@@ -54,10 +75,11 @@
 
         h1 { 
             margin: 0; 
-            color: var(--netflix-red); 
+            color: var(--accent-color); 
             font-size: 22px; 
             font-weight: 900; 
             letter-spacing: 1px;
+            transition: color 0.3s;
         }
 
         .controls { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -67,7 +89,7 @@
             background: #333; border: none; border-radius: 4px; 
             color: var(--text-main); font-size: 14px;
         }
-        .search-box:focus { outline: 1px solid var(--netflix-red); }
+        .search-box:focus { outline: 1px solid var(--accent-color); }
 
         .btn {
             background: #333; color: var(--text-main); border: none;
@@ -77,7 +99,7 @@
         }
         .btn.primary { background: var(--text-main); color: var(--bg-dark); }
 
-        /* 滑動標籤列 (季度 & 星期) */
+        /* 滑動標籤列 */
         .scroll-bar {
             display: flex; gap: 8px; overflow-x: auto; padding: 2px 0;
             scrollbar-width: none; 
@@ -92,13 +114,34 @@
         }
         .pill.active { background: var(--text-main); color: var(--bg-dark); border-color: var(--text-main); }
         .pill.day-pill { border-radius: 4px; background: #1a1a1a; border-color: #333; color: #aaa;}
-        .pill.day-pill.active { background: var(--netflix-red); color: #fff; border-color: var(--netflix-red); }
+        .pill.day-pill.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
 
-        /* 網格系統 */
+        /* 網格系統 (標準排版) */
         .anime-grid { 
             display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); 
             gap: 12px; padding: 15px; 
         }
+
+        /* 緊湊排版樣式 */
+        .anime-grid.compact {
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            gap: 8px;
+            padding: 8px;
+        }
+        .anime-grid.compact .anime-card { border-radius: 4px; }
+        .anime-grid.compact .card-content { padding: 6px; }
+        .anime-grid.compact .nickname-display { font-size: 9px; margin-bottom: 0px; }
+        .anime-grid.compact .editable-title { font-size: 11px; margin-bottom: 2px; }
+        .anime-grid.compact .meta-info { font-size: 9px; margin-bottom: 4px; }
+        .anime-grid.compact .progress-container { margin: 2px 0 6px 0; height: 3px; }
+        .anime-grid.compact .platform-grid { gap: 2px; margin-bottom: 6px; }
+        .anime-grid.compact .platform-btn { font-size: 8px; padding: 3px 1px; }
+        .anime-grid.compact .expand-btn { font-size: 9px; padding: 5px; }
+        .anime-grid.compact .ep-badge { width: 22px; height: 22px; font-size: 9px; }
+        .anime-grid.compact .fav-btn { width: 26px; height: 26px; font-size: 12px; top: 6px; right: 6px; }
+        .anime-grid.compact .id-badge { font-size: 8px; padding: 1px 4px; top: 6px; left: 6px; }
+        .anime-grid.compact .new-ep-badge { font-size: 8px; padding: 1px 4px; bottom: 4px; left: 4px; }
+        .anime-grid.compact .date-overlay-badge { font-size: 8px; padding: 1px 4px; bottom: 4px; right: 4px; }
 
         .anime-card { 
             background: var(--card-bg); border-radius: 6px; overflow: hidden; 
@@ -109,16 +152,24 @@
         /* 呼吸燈特效 */
         @keyframes netflix-glow {
             0% { box-shadow: 0 0 4px rgba(229, 9, 20, 0.2); border-color: rgba(229, 9, 20, 0.3); }
-            50% { box-shadow: 0 0 14px rgba(229, 9, 20, 0.7); border-color: var(--netflix-red); }
+            50% { box-shadow: 0 0 14px var(--accent-color); border-color: var(--accent-color); }
             100% { box-shadow: 0 0 4px rgba(229, 9, 20, 0.2); border-color: rgba(229, 9, 20, 0.3); }
         }
         .new-update-effect { animation: netflix-glow 2s infinite ease-in-out; }
+
+        /* 今日更新金黃呼吸燈特效 */
+        @keyframes today-glow {
+            0% { box-shadow: 0 0 4px rgba(255, 179, 0, 0.2); border-color: rgba(255, 179, 0, 0.3); }
+            50% { box-shadow: 0 0 14px #ffb300; border-color: #ffb300; }
+            100% { box-shadow: 0 0 4px rgba(255, 179, 0, 0.2); border-color: rgba(255, 179, 0, 0.3); }
+        }
+        .airing-today-effect { animation: today-glow 2s infinite ease-in-out; }
 
         .img-container { width: 100%; aspect-ratio: 2 / 3; position: relative; background: #222; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; }
 
         .new-ep-badge {
-            position: absolute; bottom: 6px; left: 6px; background: var(--netflix-red);
+            position: absolute; bottom: 6px; left: 6px; background: var(--accent-color);
             color: #fff; font-size: 10px; font-weight: 900; padding: 2px 6px;
             border-radius: 3px; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
             animation: flash-text 1.5s infinite ease-in-out;
@@ -132,7 +183,6 @@
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
-        /* 左上角 ID 標籤樣式 */
         .id-badge {
             position: absolute; top: 8px; left: 8px; z-index: 10;
             background: rgba(0,0,0,0.6); color: var(--text-main);
@@ -148,27 +198,27 @@
             width: 32px; height: 32px; font-size: 16px; display: flex; 
             align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(2px);
         }
-        .fav-btn.active { color: var(--netflix-red); border-color: var(--netflix-red); }
+        .fav-btn.active { color: var(--accent-color); border-color: var(--accent-color); }
 
         .card-content { padding: 10px; display: flex; flex-direction: column; flex: 1; }
         
-        /* 暱稱顯示樣式 */
         .nickname-display { font-size: 11px; color: #ffb300; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
         .editable-title { font-size: 14px; margin: 0 0 4px 0; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
         .meta-info { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
 
-        /* 專屬指定平台啟用色彩 */
-        .platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px; }
+        /* 指定平台啟用色彩 */
+        .platform-grid { display: grid; gap: 4px; margin-bottom: 8px; }
         .platform-btn {
             font-size: 10px; padding: 5px 2px; background: #2b2b2b; color: #888;
             border: none; border-radius: 3px; cursor: pointer; font-weight: bold; text-align: center;
         }
-        .platform-btn.active.nf { background: #000000; color: var(--netflix-red); }
+        .platform-btn.active.nf { background: #000000; color: #E50914; }
         .platform-btn.active.dp { background: #0063e5; color: #ffffff; }
         .platform-btn.active.yt { background: #ff0000; color: #ffffff; }
         .platform-btn.active.viu { background: #ffb300; color: #ffffff; }
+        .platform-btn.active.gamer { background: #00adef; color: #ffffff; }
+        .platform-btn.active.bili { background: #fb7299; color: #ffffff; }
 
-        /* 絲滑動態折疊面板結構 */
         .expand-btn { 
             background: rgba(255,255,255,0.08); color: var(--text-main); border: none; 
             border-radius: 4px; padding: 8px; font-size: 11px; cursor: pointer; 
@@ -180,9 +230,8 @@
         }
         .collapsible.show { max-height: 2000px; }
 
-        /* 進度條與評分樣式 */
         .progress-container { background: #333; height: 4px; width: 100%; border-radius: 2px; margin: 4px 0 8px 0; overflow: hidden; }
-        .progress-bar { background: var(--netflix-red); height: 100%; width: 0%; transition: width 0.3s; }
+        .progress-bar { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.3s; }
 
         .star-rating { display: flex; gap: 4px; margin: 8px 0; color: #444; font-size: 16px; cursor: pointer; }
         .star-rating span.active { color: #ffb300; }
@@ -198,10 +247,69 @@
             align-items: center; justify-content: center; background: #2b2b2b; 
             border-radius: 50%; cursor: pointer; font-weight: bold; 
         }
-        .ep-badge.watched { background: var(--netflix-red); color: var(--text-main); }
+        .ep-badge.watched { background: var(--accent-color); color: var(--text-main); }
         
         .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; grid-column: 1 / -1; font-size: 14px;}
         .loading-trigger { text-align: center; color: var(--text-muted); padding: 15px; grid-column: 1 / -1; font-size: 12px; }
+
+        /* 設定頁面專屬 CSS */
+        .setting-section {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+        .setting-section-title {
+            margin-top: 0;
+            color: var(--accent-color);
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #222;
+        }
+        .setting-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .setting-item:first-of-type { padding-top: 0; }
+        .setting-label { font-size: 14px; font-weight: 500; }
+        .setting-select {
+            background: #2b2b2b; color: #fff; border: 1px solid #444;
+            padding: 6px 10px; border-radius: 4px; font-size: 13px;
+            cursor: pointer; outline: none;
+        }
+        .setting-select:focus { border-color: var(--accent-color); }
+
+        /* Switch 滑軌開關元件 */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333; transition: .3s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .3s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* 平台客製化標籤 */
+        .platform-selector-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .platform-tag {
+            background: #2b2b2b; border: 1px solid #444; color: #aaa; padding: 8px;
+            border-radius: 4px; font-size: 11px; font-weight: bold; text-align: center;
+            cursor: pointer; user-select: none; transition: all 0.2s;
+        }
+        .platform-tag.selected { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
 
         /* 底部導航 */
         .bottom-nav {
@@ -219,36 +327,16 @@
 
         /* 回最頂端懸浮按鈕 */
         .back-to-top {
-            position: fixed;
-            bottom: 80px; /* 避開底部導航列 60px */
-            right: 20px;
-            width: 45px;
-            height: 45px;
-            background: rgba(0, 0, 0, 0.75);
-            color: var(--text-main);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 105;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
-            opacity: 0;
-            visibility: hidden;
+            position: fixed; bottom: 80px; right: 20px; width: 45px; height: 45px;
+            background: rgba(0, 0, 0, 0.75); color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; z-index: 105; backdrop-filter: blur(5px);
+            transition: all 0.3s ease; opacity: 0; visibility: hidden;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
-        .back-to-top.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        .back-to-top:hover {
-            background: var(--netflix-red);
-            border-color: var(--netflix-red);
-            transform: scale(1.1);
-        }
+        .back-to-top.show { opacity: 1; visibility: visible; }
+        .back-to-top:hover { background: var(--accent-color); border-color: var(--accent-color); transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -308,8 +396,21 @@
         let currentPage = 1, hasNextPage = false, isLoading = false;
         let selectedDayFilter = 'ALL';
         
-        // 用於記錄展開狀態的記憶集合
         let expandedIds = new Set();
+
+        /* 進階全域設定定義 */
+        const SETTINGS = {
+            titleLang: () => localStorage.getItem('setting_title_lang') || 'native',
+            density: () => localStorage.getItem('setting_density') || 'standard',
+            theme: () => localStorage.getItem('setting_theme') || 'red',
+            defaultTab: () => localStorage.getItem('setting_default_tab') || 'home',
+            hideWatched: () => localStorage.getItem('setting_hide_watched') === 'true',
+            todayHighlight: () => localStorage.getItem('setting_today_highlight') === 'true',
+            platforms: () => {
+                const p = localStorage.getItem('setting_platforms');
+                return p ? JSON.parse(p) : ['Netflix', 'Disney+', 'YouTube', 'ViuTV'];
+            }
+        };
 
         const GQL_QUERY = `query ($search: String, $season: MediaSeason, $seasonYear: Int, $page: Int) { 
             Page(page: $page, perPage: 30) { 
@@ -321,9 +422,22 @@
         }`;
 
         async function init() {
+            applyTheme(); // 初始化佈局色彩
             setupDynamicSeasonFilter();
             setupInfiniteScroll();
-            fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear, page: 1 });
+            
+            // 讀取並進入預設啟用頁面
+            const startTab = SETTINGS.defaultTab();
+            switchTab(startTab);
+        }
+
+        /* 應用配色主題 */
+        function applyTheme() {
+            const theme = SETTINGS.theme();
+            document.body.className = '';
+            if (theme === 'blue') document.body.classList.add('theme-blue');
+            else if (theme === 'orange') document.body.classList.add('theme-orange');
+            else if (theme === 'oled') document.body.classList.add('theme-oled');
         }
 
         function setupDynamicSeasonFilter() {
@@ -421,9 +535,17 @@
             fetchGraphQL(GQL_QUERY, { search: term, page: 1 });
         }
 
+        /* 根據設定語系輸出動畫名 */
         function getOriginalTitle(anime) {
             if (!anime || !anime.title) return "未知動畫";
-            return anime.title.native || anime.title.romaji || anime.title.userPreferred;
+            const lang = SETTINGS.titleLang();
+            if (lang === 'romaji') {
+                return anime.title.romaji || anime.title.native || anime.title.english || anime.title.userPreferred;
+            } else if (lang === 'english') {
+                return anime.title.english || anime.title.romaji || anime.title.native || anime.title.userPreferred;
+            } else {
+                return anime.title.native || anime.title.romaji || anime.title.english || anime.title.userPreferred;
+            }
         }
 
         async function switchTab(tab) {
@@ -501,7 +623,6 @@
             }
         }
 
-        /* 【修復完成】將 6 個點修復回標準 expansion 語法 3 個點 */
         function togglePlatform(id, platform) {
             let p = JSON.parse(localStorage.getItem(`platform_${id}`) || '[]');
             p = p.includes(platform) ? p.filter(item => item !== platform) : [...p, platform];
@@ -526,6 +647,16 @@
             return Math.max(0, airedCount - validWatched);
         }
 
+        /* 判斷這部番是否為今天播出 */
+        function isAiringToday(anime) {
+            if (!anime || !anime.nextAiringEpisode) return false;
+            const airDate = new Date(anime.nextAiringEpisode.airingAt * 1000);
+            const today = new Date();
+            return airDate.getDate() === today.getDate() &&
+                   airDate.getMonth() === today.getMonth() &&
+                   airDate.getFullYear() === today.getFullYear();
+        }
+
         function renderList() {
             if (currentTab === 'settings') {
                 renderSettings();
@@ -534,6 +665,14 @@
 
             const container = document.getElementById('anime-list');
             container.innerHTML = '';
+            
+            // 處理排版密度 class
+            if (SETTINGS.density() === 'compact') {
+                container.classList.add('compact');
+            } else {
+                container.classList.remove('compact');
+            }
+
             const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
             
             let displayData = [];
@@ -542,7 +681,16 @@
             } else { 
                 displayData = Object.values(JSON.parse(localStorage.getItem('anime_favorites_details') || '{}'));
                 
-                // 我的最愛排序：依據下一集播出時間小到大排序 (越快播出的排越前)
+                // 自動隱藏已看完全集選項 (有集數且未看集數為0則隱藏)
+                if (SETTINGS.hideWatched()) {
+                    displayData = displayData.filter(anime => {
+                        const aired = getAiredCount(anime);
+                        if (aired === 0) return true; // 尚未開播的不隱藏
+                        return getUnwatchedCount(anime) > 0;
+                    });
+                }
+
+                // 最愛排序：依據下一集播出時間小到大 (最快播出的排最前)
                 displayData.sort((a, b) => {
                     const timeA = a.nextAiringEpisode ? a.nextAiringEpisode.airingAt : Number.MAX_SAFE_INTEGER;
                     const timeB = b.nextAiringEpisode ? b.nextAiringEpisode.airingAt : Number.MAX_SAFE_INTEGER;
@@ -550,7 +698,6 @@
                     if (timeA !== timeB) {
                         return timeA - timeB; 
                     }
-                    
                     return getUnwatchedCount(b) - getUnwatchedCount(a);
                 });
             }
@@ -586,11 +733,22 @@
                 const nextInfo = anime.nextAiringEpisode ? `預計更新：第 ${anime.nextAiringEpisode.episode} 話` : "目前無更新排程";
                 const hasNewEpisode = (currentTab === 'favorites' && airedCount > 0 && !watchedList.includes(airedCount));
                 
+                // 判斷今日更新
+                const isToday = SETTINGS.todayHighlight() && isAiringToday(anime);
+
                 let dateBadgeHtml = '';
                 if (anime.nextAiringEpisode) {
                     const date = new Date(anime.nextAiringEpisode.airingAt * 1000);
                     const days = ['日', '一', '二', '三', '四', '五', '六'];
                     dateBadgeHtml = `<div class="date-overlay-badge">${date.getMonth() + 1}/${date.getDate()} (${days[date.getDay()]})</div>`;
+                }
+
+                // 判斷要顯示「NEW」還是「今日更新」
+                let badgeHtml = '';
+                if (isToday) {
+                    badgeHtml = '<div class="new-ep-badge" style="background:#ffb300; color:#000;">⚡ 今日更新</div>';
+                } else if (hasNewEpisode) {
+                    badgeHtml = '<div class="new-ep-badge">NEW</div>';
                 }
 
                 let epBadges = '';
@@ -604,15 +762,35 @@
                     starsHtml += `<span class="${s <= review.rating ? 'active' : ''}" onclick="setRating(${anime.id}, ${s})">★</span>`;
                 }
 
+                // 動態取得設定允許顯示的串流平台
+                const activePlats = SETTINGS.platforms();
+                let platformGridHtml = '';
+                if (activePlats.length > 0) {
+                    platformGridHtml += `<div class="platform-grid" style="grid-template-columns: repeat(${activePlats.length > 3 ? 2 : activePlats.length}, 1fr);">`;
+                    activePlats.forEach(p => {
+                        let classType = 'nf';
+                        if (p === 'Disney+') classType = 'dp';
+                        else if (p === 'YouTube') classType = 'yt';
+                        else if (p === 'ViuTV') classType = 'viu';
+                        else if (p === '動畫瘋') classType = 'gamer';
+                        else if (p === 'Bilibili') classType = 'bili';
+                        
+                        platformGridHtml += `
+                            <button class="platform-btn ${platformList.includes(p) ? 'active ' + classType : ''}" onclick="togglePlatform(${anime.id}, '${p}')">${p}</button>
+                        `;
+                    });
+                    platformGridHtml += `</div>`;
+                }
+
                 const isExpanded = expandedIds.has(anime.id);
 
                 container.innerHTML += `
-                    <div class="anime-card ${hasNewEpisode ? 'new-update-effect' : ''}">
+                    <div class="anime-card ${hasNewEpisode ? 'new-update-effect' : ''} ${isToday ? 'airing-today-effect' : ''}">
                         <div class="id-badge">ID: ${anime.id}</div>
                         <button class="fav-btn ${favs.includes(anime.id) ? 'active' : ''}" onclick="toggleFav(${anime.id})">♥</button>
                         <div class="img-container">
                             <img src="${anime.coverImage.large}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'150\\' height=\\'225\\' viewBox=\\'0 0 150 225\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%23222\\'/><text x=\\'50%\\' y=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23444\\' font-size=\\'12\\'>No Image</text></svg>'">
-                            ${hasNewEpisode ? '<div class="new-ep-badge">NEW</div>' : ''}
+                            ${badgeHtml}
                             ${dateBadgeHtml}
                         </div>
                         <div class="card-content">
@@ -626,12 +804,7 @@
                             
                             ${watchLink ? `<a href="${watchLink}" target="_blank" style="display: block; background: #0077ff; color: #fff; text-align: center; font-size: 11px; font-weight: bold; padding: 6px; border-radius: 4px; text-decoration: none; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">📺 前往自定義連結</a>` : ''}
 
-                            <div class="platform-grid">
-                                <button class="platform-btn ${platformList.includes('Netflix') ? 'active nf' : ''}" onclick="togglePlatform(${anime.id}, 'Netflix')">Netflix</button>
-                                <button class="platform-btn ${platformList.includes('Disney+') ? 'active dp' : ''}" onclick="togglePlatform(${anime.id}, 'Disney+')">Disney+</button>
-                                <button class="platform-btn ${platformList.includes('YouTube') ? 'active yt' : ''}" onclick="togglePlatform(${anime.id}, 'YouTube')">YouTube</button>
-                                <button class="platform-btn ${platformList.includes('ViuTV') ? 'active viu' : ''}" onclick="togglePlatform(${anime.id}, 'ViuTV')">ViuTV</button>
-                            </div>
+                            ${platformGridHtml}
 
                             <button class="expand-btn" onclick="toggleExpand(${anime.id})">
                                 <span>展開控制面板</span> <span id="expand-icon-${anime.id}">${isExpanded ? '▲' : '▼'}</span>
@@ -660,24 +833,125 @@
             });
         }
 
+        /* 渲染方案 A：專屬進階設定分頁 */
         function renderSettings() {
             document.getElementById('page-title').innerText = "系統設定";
             const container = document.getElementById('anime-list');
+            
+            // 確保設定頁不會受到緊湊卡片樣式的干擾
+            container.classList.remove('compact');
+
+            const hideWatchedChecked = SETTINGS.hideWatched() ? 'checked' : '';
+            const todayHighlightChecked = SETTINGS.todayHighlight() ? 'checked' : '';
+            
+            // 平台選擇 tags 產生
+            const platforms = ['Netflix', 'Disney+', 'YouTube', 'ViuTV', '動畫瘋', 'Bilibili'];
+            const activePlats = SETTINGS.platforms();
+            let platformSelectorHtml = '<div class="platform-selector-grid">';
+            platforms.forEach(p => {
+                const isSelected = activePlats.includes(p);
+                platformSelectorHtml += `
+                    <div class="platform-tag ${isSelected ? 'selected' : ''}" onclick="toggleSettingPlatform('${p}')">${p}</div>
+                `;
+            });
+            platformSelectorHtml += '</div>';
+
             container.innerHTML = `
                 <div style="grid-column: 1 / -1; max-width: 500px; margin: 0 auto; width: 100%; padding: 10px 0;">
                     
-                    <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333;">
-                        <h3 style="margin-top:0; color: #ffb300; font-size:16px;">🔄 即時資料同步</h3>
-                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">
-                            強制自 AniList API 重新載入你「我的最愛」中所有動畫的最新集數及播放時間表。
-                        </p>
-                        <button class="btn primary" style="background: var(--netflix-red); color: white; width:100%; font-size:13px;" onclick="triggerSyncFromSettings()">
-                            🔄 立即強制同步
-                        </button>
+                    <!-- 1. 顯示與外觀設定 -->
+                    <div class="setting-section">
+                        <h3 class="setting-section-title">🎨 顯示與外觀設定</h3>
+                        
+                        <div class="setting-item">
+                            <span class="setting-label">🔤 標題語言偏好</span>
+                            <select class="setting-select" onchange="updateSetting('title_lang', this.value)">
+                                <option value="native" ${SETTINGS.titleLang() === 'native' ? 'selected' : ''}>日文原名 (Native)</option>
+                                <option value="romaji" ${SETTINGS.titleLang() === 'romaji' ? 'selected' : ''}>羅馬拼音 (Romaji)</option>
+                                <option value="english" ${SETTINGS.titleLang() === 'english' ? 'selected' : ''}>英文譯名 (English)</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-item">
+                            <span class="setting-label">📱 卡片排版密度</span>
+                            <select class="setting-select" onchange="updateSetting('density', this.value)">
+                                <option value="standard" ${SETTINGS.density() === 'standard' ? 'selected' : ''}>舒適標準</option>
+                                <option value="compact" ${SETTINGS.density() === 'compact' ? 'selected' : ''}>緊湊列表</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-item">
+                            <span class="setting-label">🌈 自訂主題配色</span>
+                            <select class="setting-select" onchange="updateSetting('theme', this.value)">
+                                <option value="red" ${SETTINGS.theme() === 'red' ? 'selected' : ''}>經典 Netflix 紅</option>
+                                <option value="blue" ${SETTINGS.theme() === 'blue' ? 'selected' : ''}>巴哈姆特 藍</option>
+                                <option value="orange" ${SETTINGS.theme() === 'orange' ? 'selected' : ''}>活力動漫 橘</option>
+                                <option value="oled" ${SETTINGS.theme() === 'oled' ? 'selected' : ''}>極致霓虹 OLED 黑</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333;">
-                        <h3 style="margin-top:0; font-size:16px;">💾 備份與還原</h3>
+                    <!-- 2. 追番邏輯設定 -->
+                    <div class="setting-section">
+                        <h3 class="setting-section-title">⚙️ 追番邏輯設定</h3>
+                        
+                        <div class="setting-item">
+                            <span class="setting-label">🏠 預設啟動頁面</span>
+                            <select class="setting-select" onchange="updateSetting('default_tab', this.value)">
+                                <option value="home" ${SETTINGS.defaultTab() === 'home' ? 'selected' : ''}>首頁 (探索新番)</option>
+                                <option value="favorites" ${SETTINGS.defaultTab() === 'favorites' ? 'selected' : ''}>我的最愛 (追番清單)</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-item">
+                            <span class="setting-label">🙈 自動隱藏「已看完全集」作品</span>
+                            <label class="switch">
+                                <input type="checkbox" ${hideWatchedChecked} onchange="toggleSetting('hide_watched')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <span class="setting-label">⚡ 亮起「今日更新」作品特效</span>
+                            <label class="switch">
+                                <input type="checkbox" ${todayHighlightChecked} onchange="toggleSetting('today_highlight')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 3. 播放平台管理 -->
+                    <div class="setting-section">
+                        <h3 class="setting-section-title">🛠️ 自訂常用播放平台</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height: 1.4;">
+                            勾選你擁有的串流平台，未勾選的標籤將在控制面板中隱藏。
+                        </p>
+                        ${platformSelectorHtml}
+                    </div>
+
+                    <!-- 4. 資料同步與快速工具 -->
+                    <div class="setting-section">
+                        <h3 class="setting-section-title" style="color: #ffb300;">🔄 資料同步與工具</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height: 1.4;">
+                            強制自 AniList API 重新載入你「我的最愛」中所有動畫的最新集數及播放時間表。
+                        </p>
+                        <button class="btn primary" style="background: var(--accent-color); color: white; width:100%; font-size:13px; margin-bottom: 12px;" onclick="triggerSyncFromSettings()">
+                            🔄 立即強制同步
+                        </button>
+                        
+                        <div style="border-top: 1px solid #222; padding-top: 12px; margin-top: 4px;">
+                            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px; line-height: 1.4;">
+                                複製我的最愛中「未完結」動畫的 ID 列表（自動過濾掉沒有下一個播放排程的已完結作品）。
+                            </p>
+                            <button class="btn" style="background: #2b2b2b; color: #fff; width: 100%; font-size: 13px;" onclick="copyActiveFavoriteIds(this)">
+                                📋 複製未完結我的最愛 ID 列表
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 5. 備份與還原區塊 -->
+                    <div class="setting-section">
+                        <h3 class="setting-section-title">💾 備份與還原</h3>
                         <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">
                             匯出你所有的追番紀錄、看番進度、評分與設定；更換裝置或瀏覽器時可透過 JSON 檔快速導入還原。
                         </p>
@@ -687,8 +961,9 @@
                         </div>
                     </div>
 
-                    <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid rgba(229, 9, 20, 0.3);">
-                        <h3 style="margin-top:0; color: #ff5c5c; font-size:16px;">⚠️ 危險區域</h3>
+                    <!-- 6. 危險區域 -->
+                    <div class="setting-section" style="border: 1px solid rgba(229, 9, 20, 0.3);">
+                        <h3 class="setting-section-title" style="color: #ff5c5c;">⚠️ 危險區域</h3>
                         <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">
                             徹底清除瀏覽器快取中的所有數據，包含我的最愛清單、觀看進度、自訂暱稱與心得筆記。此操作將無法復原！
                         </p>
@@ -699,6 +974,80 @@
 
                 </div>
             `;
+        }
+
+        /* 複製未完結我的最愛 ID 列表功能 (已改為按鈕狀態交互，不彈出 Alert) */
+        function copyActiveFavoriteIds(btn) {
+            const favDetails = JSON.parse(localStorage.getItem('anime_favorites_details') || '{}');
+            const animeList = Object.values(favDetails);
+            
+            // 過濾掉沒有 nextAiringEpisode 的已完結作品
+            const activeIds = animeList
+                .filter(anime => anime && anime.nextAiringEpisode !== null && anime.nextAiringEpisode !== undefined)
+                .map(anime => anime.id);
+
+            const originalText = btn ? btn.innerHTML : "📋 複製未完結我的最愛 ID 列表";
+
+            if (activeIds.length === 0) {
+                if (btn) {
+                    btn.innerHTML = "💡 暫無未完結動畫";
+                    btn.disabled = true;
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 1500);
+                }
+                return;
+            }
+
+            const idString = activeIds.join(', ');
+            navigator.clipboard.writeText(idString).then(() => {
+                if (btn) {
+                    btn.innerHTML = "✅ 已複製！";
+                    btn.disabled = true;
+                    btn.style.background = "#2e7d32"; // 複製成功暫時變成綠色
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        btn.style.background = "#2b2b2b"; // 還原原色
+                    }, 1500);
+                }
+            }).catch(err => {
+                console.error("複製失敗", err);
+                if (btn) {
+                    btn.innerHTML = "❌ 複製失敗";
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                    }, 1500);
+                }
+            });
+        }
+
+        /* 儲存選單設定 */
+        function updateSetting(key, value) {
+            localStorage.setItem(`setting_${key}`, value);
+            applyTheme();
+            renderList();
+        }
+
+        /* 切換開關設定 */
+        function toggleSetting(key) {
+            const val = localStorage.getItem(`setting_${key}`) === 'true';
+            localStorage.setItem(`setting_${key}`, !val);
+            applyTheme();
+            renderList();
+        }
+
+        /* 勾選/取消常用播放平台 */
+        function toggleSettingPlatform(platform) {
+            let p = SETTINGS.platforms();
+            if (p.includes(platform)) {
+                p = p.filter(item => item !== platform);
+            } else {
+                p.push(platform);
+            }
+            localStorage.setItem('setting_platforms', JSON.stringify(p));
+            renderList();
         }
 
         async function triggerSyncFromSettings() {
@@ -796,9 +1145,7 @@
             const pad = (n) => String(n).padStart(2, '0');
             const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
             
-            const data = {
-                _export_timestamp: now.toISOString()
-            };
+            const data = { _export_timestamp: now.toISOString() };
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 data[key] = localStorage.getItem(key);
