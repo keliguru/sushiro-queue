@@ -951,13 +951,13 @@
 
                     <!-- 5. 備份與還原區塊 -->
                     <div class="setting-section">
-                        <h3 class="setting-section-title">💾 備份與還原</h3>
+                        <h3 class="setting-section-title">💾 我的最愛備份與還原</h3>
                         <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">
-                            匯出你所有的追番紀錄、看番進度、評分與設定；更換裝置或瀏覽器時可透過 JSON 檔快速導入還原。
+                            僅匯出/匯入你的「我的最愛追番清單」及相關進度心得。更換裝置時，不會影響目標裝置的系統個人化外觀設定。
                         </p>
                         <div style="display:flex; gap:10px;">
-                            <button class="btn" style="flex:1; font-size:13px; background:#2b2b2b;" onclick="exportData()">📤 匯出備份</button>
-                            <button class="btn" style="flex:1; font-size:13px; background:#2b2b2b;" onclick="document.getElementById('importFile').click()">📥 匯入還原</button>
+                            <button class="btn" style="flex:1; font-size:13px; background:#2b2b2b;" onclick="exportData()">📤 匯出最愛紀錄</button>
+                            <button class="btn" style="flex:1; font-size:13px; background:#2b2b2b;" onclick="document.getElementById('importFile').click()">📥 匯入最愛紀錄</button>
                         </div>
                     </div>
 
@@ -976,12 +976,11 @@
             `;
         }
 
-        /* 複製未完結我的最愛 ID 列表功能 (已改為按鈕狀態交互，不彈出 Alert) */
+        /* 複製未完結我的最愛 ID 列表功能 */
         function copyActiveFavoriteIds(btn) {
             const favDetails = JSON.parse(localStorage.getItem('anime_favorites_details') || '{}');
             const animeList = Object.values(favDetails);
             
-            // 過濾掉沒有 nextAiringEpisode 的已完結作品
             const activeIds = animeList
                 .filter(anime => anime && anime.nextAiringEpisode !== null && anime.nextAiringEpisode !== undefined)
                 .map(anime => anime.id);
@@ -1005,11 +1004,11 @@
                 if (btn) {
                     btn.innerHTML = "✅ 已複製！";
                     btn.disabled = true;
-                    btn.style.background = "#2e7d32"; // 複製成功暫時變成綠色
+                    btn.style.background = "#2e7d32"; 
                     setTimeout(() => {
                         btn.innerHTML = originalText;
                         btn.disabled = false;
-                        btn.style.background = "#2b2b2b"; // 還原原色
+                        btn.style.background = "#2b2b2b"; 
                     }, 1500);
                 }
             }).catch(err => {
@@ -1140,25 +1139,58 @@
             } 
         }
 
+        /* 修正：僅匯出「我的最愛」以及與這些最愛有關的進度、心得、暱稱 */
         function exportData() {
             const now = new Date();
             const pad = (n) => String(n).padStart(2, '0');
             const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
             
-            const data = { _export_timestamp: now.toISOString() };
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                data[key] = localStorage.getItem(key);
-            }
+            const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
+            const data = { 
+                _export_timestamp: now.toISOString(),
+                anime_favorites: localStorage.getItem('anime_favorites'),
+                anime_favorites_details: localStorage.getItem('anime_favorites_details')
+            };
+            
+            // 唯獨保留最愛清單內作品的個人追番紀錄數據
+            favs.forEach(id => {
+                const relatedKeys = [`watched_${id}`, `platform_${id}`, `review_${id}`, `watch_link_${id}`, `nickname_${id}`];
+                relatedKeys.forEach(key => {
+                    const val = localStorage.getItem(key);
+                    if (val !== null) data[key] = val;
+                });
+            });
+
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a'); 
             a.href = URL.createObjectURL(blob); 
-            a.download = `anime_pro_backup_${timestamp}.json`; 
+            a.download = `anime_favorites_only_${timestamp}.json`; 
             a.click();
         }
 
+        /* 修正：僅匯入「我的最愛」結構，忽略且不覆蓋全域環境與系統外觀設定 */
         function importData(e) {
-            const reader = new FileReader(); reader.onload = (e) => { const data = JSON.parse(e.target.result); Object.keys(data).forEach(key => localStorage.setItem(key, data[key])); location.reload(); };
+            const reader = new FileReader(); 
+            reader.onload = (e) => { 
+                try {
+                    const data = JSON.parse(e.target.result); 
+                    
+                    // 嚴格白名單審查，防止系統設定（setting_*）被污染覆蓋
+                    Object.keys(data).forEach(key => {
+                        if (key === 'anime_favorites' || key === 'anime_favorites_details' || 
+                            key.startsWith('watched_') || key.startsWith('platform_') || 
+                            key.startsWith('review_') || key.startsWith('watch_link_') || 
+                            key.startsWith('nickname_')) {
+                            if (data[key] !== null) {
+                                localStorage.setItem(key, data[key]);
+                            }
+                        }
+                    }); 
+                    location.reload(); 
+                } catch (err) {
+                    alert("匯入失敗，請確認備份 JSON 檔案是否正確。");
+                }
+            };
             reader.readAsText(e.target.files[0]);
         }
 
