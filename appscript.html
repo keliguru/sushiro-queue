@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luka's Beaver Schedule</title>
+	
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/beaver-icon.png">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Beaver Schedule">
+	<meta property="og:description" content="Beaver Schedule">
+	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/beaver-icon.png"> 
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/beaver-icon.png">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="Beaver Schedule">
+	
+    <style>
+        /* 亮色模式變數 */
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #eef2ff;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #475569;
+            --border-color: #cbd5e1;
+            --today-bg: #e0e7ff;
+            --today-text: #4f46e5;
+        }
+
+        /* 黑夜模式變數 */
+        [data-theme="dark"] {
+            --primary: #6366f1;
+            --primary-light: #312e81;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --border-color: #475569;
+            --today-bg: #1e1b4b;
+            --today-text: #818cf8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 12px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+            margin-bottom: 16px;
+            border: 2px solid var(--border-color);
+        }
+
+        .app-header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        button {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .utility-btn {
+            padding: 10px 14px;
+            font-size: 1.05rem;
+        }
+
+        /* 列表模式容器 */
+        .agenda-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .agenda-day-group {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+        }
+
+        .agenda-day-header {
+            background: var(--card-bg);
+            padding: 14px 18px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .agenda-day-header.is-today {
+            background: var(--today-bg);
+            color: var(--today-text);
+            border-left: 6px solid var(--primary);
+        }
+
+        .agenda-tasks-list {
+            padding: 8px 0;
+        }
+
+        .agenda-task-item {
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 1.15rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .agenda-task-item:last-child {
+            border-bottom: none;
+        }
+
+        .agenda-time {
+            font-weight: 700;
+            color: var(--today-text);
+            min-width: 65px;
+            font-size: 1.1rem;
+        }
+
+        .agenda-title {
+            color: var(--text-main);
+            word-break: break-all;
+            font-weight: 600;
+        }
+
+        .status, .error {
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            padding: 40px;
+            background: var(--card-bg);
+            border-radius: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+            color: var(--text-muted);
+            border: 2px solid var(--border-color);
+        }
+
+        .error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 載入狀態 -->
+        <div id="status" class="status">載入中...</div>
+        
+        <!-- 行事模式介面 -->
+        <div id="calendar-app" style="display: none;">
+            <div class="app-header">
+                <h1 id="currentMonthYear">-- 年 -- 月</h1>
+                <div class="header-controls">
+                    <div class="nav-btns">
+                        <button onclick="changeMonth(-1)">上月</button>
+                        <button onclick="goToday()">今天</button>
+                        <button onclick="changeMonth(1)">下月</button>
+                    </div>
+                    <button class="utility-btn" id="langToggleBtn" onclick="toggleLanguage()">EN</button>
+                    <button class="utility-btn" id="themeToggleBtn" onclick="toggleTheme()">☀️</button>
+                </div>
+            </div>
+            
+            <!-- 列表容器 -->
+            <div id="agendaGrid" class="agenda-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const scriptBaseURL = 'https://script.google.com/macros/s/AKfycbyTpJCNcPRC4aVonX-9bgYgAQzzleU7jsDGyD_ezowc0cK0hsWJ60COodtDjdHLjqq6/exec';
+        
+        let allTasks = [];
+        let viewDate = new Date();
+        let currentLang = 'zh'; // 'zh' 或 'en'
+
+        // 簡易字典庫：用於把常見行程翻譯成英文
+        const translationDict = {
+            "開會": "Meeting",
+            "午餐": "Lunch",
+            "晚餐": "Dinner",
+            "約會": "Appointment",
+            "運動": "Workout",
+            "體檢": "Medical Checkup",
+            "面試": "Interview",
+            "旅行": "Trip",
+            "生日": "Birthday",
+            "聚會": "Gathering",
+            "剪頭髮": "Haircut",
+            "看醫生": "See Doctor",
+            "交租": "Pay Rent",
+            "買餸": "Grocery Shopping"
+        };
+
+        function translateTask(title) {
+            if (currentLang === 'zh') return title;
+            if (translationDict[title]) return translationDict[title];
+            
+            let translated = title;
+            for (let [zh, en] of Object.entries(translationDict)) {
+                if (translated.includes(zh)) {
+                    translated = translated.replace(zh, en);
+                }
+            }
+            return translated;
+        }
+
+        // 切換語言
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.getElementById('langToggleBtn').textContent = currentLang === 'zh' ? 'EN' : '繁';
+            localStorage.setItem('lang', currentLang);
+            renderAgenda();
+        }
+
+        // 切換日夜模式
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            
+            const btn = document.getElementById('themeToggleBtn');
+            btn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // 初始化儲存的偏好設定
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const savedLang = localStorage.getItem('lang') || 'zh';
+            currentLang = savedLang;
+
+            window.addEventListener('DOMContentLoaded', () => {
+                const themeBtn = document.getElementById('themeToggleBtn');
+                if (themeBtn) themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+                
+                const langBtn = document.getElementById('langToggleBtn');
+                if (langBtn) langBtn.textContent = currentLang === 'zh' ? 'EN' : '繁';
+            });
+        })();
+
+        async function fetchTimeTasks() {
+            const statusEl = document.getElementById('status');
+            const calendarApp = document.getElementById('calendar-app');
+
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth() + 1; // 1-12
+
+            const requestURL = `${scriptBaseURL}?year=${year}&month=${month}`;
+
+            try {
+                const response = await fetch(requestURL, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`伺服器錯誤：${response.status}`);
+                }
+
+                const data = await response.json();
+
+                statusEl.style.display = 'none';
+                calendarApp.style.display = 'block';
+
+                allTasks = Array.isArray(data) ? data : (data.results || data.data || data.tasks || [data]);
+                
+                renderAgenda();
+
+            } catch (error) {
+                statusEl.className = 'error';
+                statusEl.textContent = `載入失敗：${error.message}`;
+                console.error(error);
+            }
+        }
+
+        function renderAgenda() {
+            const container = document.getElementById('agendaGrid');
+            const monthYearEl = document.getElementById('currentMonthYear');
+
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth();
+
+            // 標題顯示格式化
+            if (currentLang === 'en') {
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                monthYearEl.textContent = `${monthNames[month]} ${year}`;
+            } else {
+                monthYearEl.textContent = `${year} 年 ${month + 1} 月`;
+            }
+
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            let agendaHTML = '';
+
+            for (let day = 1; day <= totalDays; day++) {
+                const formattedMonth = String(month + 1).padStart(2, '0');
+                const formattedDay = String(day).padStart(2, '0');
+                const datePrefix = `${formattedMonth}/${formattedDay}`;
+                const dateStr = `${year}-${formattedMonth}-${formattedDay}`;
+
+                const dayTasks = allTasks.filter(item => {
+                    return item.time && item.time.startsWith(datePrefix);
+                });
+
+                if (dayTasks.length === 0) continue;
+
+                dayTasks.sort((a, b) => a.time.localeCompare(b.time));
+
+                let tasksHTML = '';
+                dayTasks.forEach(item => {
+                    const timeOnly = item.time.split(' ')[1] || (currentLang === 'en' ? 'All Day' : '全日');
+                    const rawTitle = item.task || item.title || item.name || (currentLang === 'en' ? 'Untitled' : '無標題');
+                    const taskTitle = translateTask(rawTitle);
+                    
+                    tasksHTML += `
+                        <div class="agenda-task-item">
+                            <span class="agenda-time">${timeOnly}</span>
+                            <span class="agenda-title">${taskTitle}</span>
+                        </div>
+                    `;
+                });
+
+                const isToday = dateStr === todayStr ? 'is-today' : '';
+                
+                let dateHeaderStr = '';
+                if (currentLang === 'en') {
+                    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                    const weekDayIndex = new Date(year, month, day).getDay();
+                    const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    dateHeaderStr = `${monthNamesShort[month]} ${day} (${daysOfWeek[weekDayIndex]})`;
+                } else {
+                    const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                    const weekDayStr = weekDays[new Date(year, month, day).getDay()];
+                    dateHeaderStr = `${month + 1}月${day}日 (${weekDayStr})`;
+                }
+
+                const countText = currentLang === 'en' ? `${dayTasks.length} task(s)` : `${dayTasks.length} 個行程`;
+
+                agendaHTML += `
+                    <div class="agenda-day-group">
+                        <div class="agenda-day-header ${isToday}">
+                            <span>${dateHeaderStr}</span>
+                            <span style="font-size: 0.95rem; font-weight: 700; opacity: 0.85;">${countText}</span>
+                        </div>
+                        <div class="agenda-tasks-list">
+                            ${tasksHTML}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (!agendaHTML) {
+                const emptyText = currentLang === 'en' ? 'No events for this month' : '本月無行程資料';
+                agendaHTML = `<div style="text-align: center; padding: 50px; font-size: 1.15rem; font-weight: 700; color: var(--text-muted); background: var(--card-bg); border-radius: 12px; border: 2px solid var(--border-color);">${emptyText}</div>`;
+            }
+
+            container.innerHTML = agendaHTML;
+        }
+
+        function changeMonth(direction) {
+            viewDate.setMonth(viewDate.getMonth() + direction);
+            fetchTimeTasks();
+        }
+
+        function goToday() {
+            viewDate = new Date();
+            fetchTimeTasks();
+        }
+
+        // 初次載入
+        fetchTimeTasks();
+    </script>
+
+</body>
+</html>
