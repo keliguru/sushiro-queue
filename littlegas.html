@@ -67,7 +67,6 @@
       width: 100%;
     }
 
-    /* 修正 H1 在小螢幕爆框的問題 */
     .header h1 {
       margin: 0;
       font-size: clamp(20px, 6vw, 26px);
@@ -120,7 +119,6 @@
     }
     .form-group label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
 
-    /* 解決 Flexbox 子元素撐開問題（關鍵修復：min-width: 0） */
     .form-row { 
       display: flex; 
       gap: 10px; 
@@ -131,12 +129,11 @@
       min-width: 0; 
     }
 
-    /* 統一修復 iOS Date/Number 輸入框相容性 */
     .cartoon-input {
       width: 100%;
-      height: 46px; /* 統一固定高度 */
+      height: 46px;
       padding: 8px 12px;
-      font-size: 16px; /* 防止 iOS 點擊時自動放大頁面 */
+      font-size: 16px;
       font-family: inherit;
       font-weight: 700;
       color: var(--border-color);
@@ -154,13 +151,67 @@
       border-color: #4C6EF5;
     }
 
+    /* 計算機風格金額顯示螢幕 */
+    .calc-screen {
+      text-align: right;
+      font-size: 22px;
+      background-color: #E8F5E9;
+      color: #1B5E20;
+      letter-spacing: 1px;
+    }
+
+    /* 計算機按鈕網格 */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+    }
+
+    .calc-btn {
+      height: 48px;
+      font-size: 18px;
+      font-family: inherit;
+      font-weight: 700;
+      color: var(--border-color);
+      background-color: #FFFFFF;
+      border: 3px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 4px 0 var(--border-color);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.05s ease;
+      user-select: none;
+    }
+
+    .calc-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--border-color);
+    }
+
+    .calc-btn.op-btn {
+      background-color: #E2E8F0;
+    }
+
+    .calc-btn.clear-btn {
+      background-color: #FFD1D1;
+      color: var(--danger);
+    }
+
+    .calc-btn.equal-btn {
+      background-color: #A8DADC;
+    }
+
     .btn-group { display: flex; gap: 8px; }
 
     .cartoon-btn {
       width: 100%;
-      height: 48px;
+      height: 52px;
       padding: 0 14px;
-      font-size: 17px;
+      font-size: 18px;
       font-family: inherit;
       font-weight: 700;
       color: var(--border-color);
@@ -169,7 +220,7 @@
       border-radius: 16px;
       box-shadow: 0 5px 0 var(--border-color);
       cursor: pointer;
-      margin-top: 6px;
+      margin-top: 4px;
       transition: all 0.1s ease;
       display: flex;
       justify-content: center;
@@ -197,7 +248,6 @@
       gap: 12px;
     }
 
-    /* 歷史單項卡片防走位佈局 */
     .item-card {
       background: #FFFFFF;
       border: 3px solid var(--border-color);
@@ -244,7 +294,7 @@
       align-items: center;
       border-top: 2px dashed #E2E8F0;
       padding-top: 8px;
-      flex-wrap: wrap; /* 避免極窄手機時按鈕重疊 */
+      flex-wrap: wrap;
       gap: 8px;
     }
 
@@ -259,11 +309,10 @@
       word-break: break-all;
     }
 
-    /* 小巧 3D 卡通操作按鈕 */
     .action-btns { 
       display: flex; 
       gap: 6px; 
-      margin-left: auto; /* 右對齊 */
+      margin-left: auto;
     }
 
     .mini-btn {
@@ -325,15 +374,43 @@
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="amount">💵 金額 ($)</label>
-          <input type="number" id="amount" class="cartoon-input" step="any" placeholder="0" required>
-        </div>
-        <div class="form-group">
-          <label for="note">📝 備註</label>
-          <input type="text" id="note" class="cartoon-input" placeholder="可不填">
-        </div>
+      <div class="form-group">
+        <label for="note">📝 備註</label>
+        <input type="text" id="note" class="cartoon-input" placeholder="可不填">
+      </div>
+
+      <!-- 計算機面板區塊 -->
+      <div class="form-group">
+        <label for="amount">🧮 金額 ($)</label>
+        <input type="text" id="amount" class="cartoon-input calc-screen" placeholder="0" readonly required>
+      </div>
+
+      <!-- 計算機按鈕盤 -->
+      <div class="calc-grid">
+        <button type="button" class="calc-btn clear-btn" onclick="clearCalc()">C</button>
+        <button type="button" class="calc-btn clear-btn" onclick="backspaceCalc()">⌫</button>
+        <button type="button" class="calc-btn op-btn" onclick="appendCalc('÷')">÷</button>
+        <button type="button" class="calc-btn op-btn" onclick="appendCalc('×')">×</button>
+
+        <button type="button" class="calc-btn" onclick="appendCalc('7')">7</button>
+        <button type="button" class="calc-btn" onclick="appendCalc('8')">8</button>
+        <button type="button" class="calc-btn" onclick="appendCalc('9')">9</button>
+        <button type="button" class="calc-btn op-btn" onclick="appendCalc('-')">-</button>
+
+        <button type="button" class="calc-btn" onclick="appendCalc('4')">4</button>
+        <button type="button" class="calc-btn" onclick="appendCalc('5')">5</button>
+        <button type="button" class="calc-btn" onclick="appendCalc('6')">6</button>
+        <button type="button" class="calc-btn op-btn" onclick="appendCalc('+')">+</button>
+
+        <button type="button" class="calc-btn" onclick="appendCalc('1')">1</button>
+        <button type="button" class="calc-btn" onclick="appendCalc('2')">2</button>
+        <button type="button" class="calc-btn" onclick="appendCalc('3')">3</button>
+        <button type="button" class="calc-btn equal-btn" onclick="evaluateCalc()">=</button>
+
+        <button type="button" class="calc-btn" onclick="appendCalc('0')">0</button>
+        <button type="button" class="calc-btn" onclick="appendCalc('00')">00</button>
+        <button type="button" class="calc-btn" onclick="appendCalc('.')">.</button>
+        <button type="button" class="calc-btn op-btn" onclick="appendCalc('+')">+</button>
       </div>
 
       <div class="btn-group">
@@ -371,6 +448,57 @@
 
   document.getElementById('date').valueAsDate = new Date();
   document.addEventListener('DOMContentLoaded', fetchRecords);
+
+  /* 計算機邏輯 */
+  function appendCalc(val) {
+    const amtInput = document.getElementById('amount');
+    const ops = ['+', '-', '×', '÷'];
+    const current = amtInput.value;
+
+    if (current === '0' && !ops.includes(val) && val !== '.') {
+      amtInput.value = val;
+      return;
+    }
+
+    // 防止連續輸入多個運算符
+    if (ops.includes(val) && ops.includes(current.slice(-1))) {
+      amtInput.value = current.slice(0, -1) + val;
+      return;
+    }
+
+    amtInput.value += val;
+  }
+
+  function clearCalc() {
+    document.getElementById('amount').value = '';
+  }
+
+  function backspaceCalc() {
+    const amtInput = document.getElementById('amount');
+    amtInput.value = amtInput.value.slice(0, -1);
+  }
+
+  function evaluateCalc() {
+    const amtInput = document.getElementById('amount');
+    let expr = amtInput.value.trim();
+    if (!expr) return;
+
+    expr = expr.replace(/×/g, '*').replace(/÷/g, '/');
+
+    try {
+      // 僅允許數字與基本四則運算符，確保安全性
+      if (/^[0-9+\-*/. ]+$/.test(expr)) {
+        let res = Function('"use strict"; return (' + expr + ')')();
+        if (!isNaN(res) && isFinite(res)) {
+          // 四捨五入至小數第二位，避免浮點數誤差
+          res = Math.round(res * 100) / 100;
+          amtInput.value = res;
+        }
+      }
+    } catch (err) {
+      console.warn('計算錯誤:', err);
+    }
+  }
 
   async function fetchRecords() {
     const loadingEl = document.getElementById('loading');
@@ -495,6 +623,16 @@
 
   document.getElementById('expenseForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    // 送出前先執行計算
+    evaluateCalc();
+
+    const amtVal = document.getElementById('amount').value;
+    if (!amtVal || isNaN(parseFloat(amtVal))) {
+      alert('請先輸入有效金額！');
+      return;
+    }
+
     const btn = document.getElementById('submitBtn');
     const editId = document.getElementById('editId').value;
     const isEdit = Boolean(editId);
@@ -508,7 +646,7 @@
       rowIndex: document.getElementById('editRowIndex').value,
       date: document.getElementById('date').value,
       category: document.getElementById('category').value,
-      amount: document.getElementById('amount').value,
+      amount: amtVal,
       note: document.getElementById('note').value
     };
 
