@@ -446,7 +446,17 @@
 
   let currentRecords = [];
 
-  document.getElementById('date').valueAsDate = new Date();
+  // 設定當前本地日期
+  function setTodayDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    document.getElementById('date').value = `${year}-${month}-${day}`;
+  }
+
+  // 頁面初次載入
+  setTodayDate();
   document.addEventListener('DOMContentLoaded', fetchRecords);
 
   /* 計算機邏輯 */
@@ -587,7 +597,7 @@
     document.getElementById('category').value = '';
     document.getElementById('amount').value = '';
     document.getElementById('note').value = '';
-    document.getElementById('date').valueAsDate = new Date();
+    setTodayDate();
 
     document.getElementById('submitBtn').innerHTML = '<span>➕ 新增一筆紀錄</span>';
     document.getElementById('cancelEditBtn').style.display = 'none';
