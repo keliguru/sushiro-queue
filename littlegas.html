@@ -2,19 +2,19 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>小氣簿</title>
   
-	<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/littlegas-icon.png">
-	<meta property="og:type" content="website">
-	<meta property="og:title" content="小氣簿">
-	<meta property="og:description" content="小氣簿">
-	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/littlegas-icon.png"> 
-	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/littlegas-icon.png">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/littlegas-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="小氣簿">
+  <meta property="og:description" content="小氣簿">
+  <meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/littlegas-icon.png"> 
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/littlegas-icon.png">
 
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="default">
-	<meta name="apple-mobile-web-app-title" content="小氣簿">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="小氣簿">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,11 +36,18 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* 防止手機全局橫向滑動/走位 */
+    html, body {
+      width: 100%;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-color);
       color: var(--border-color);
-      margin: 0;
       padding: 16px 12px 40px 12px;
       display: flex;
       justify-content: center;
@@ -57,20 +64,24 @@
     .header {
       text-align: center;
       padding: 10px 0 5px 0;
+      width: 100%;
     }
 
+    /* 修正 H1 在小螢幕爆框的問題 */
     .header h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: clamp(20px, 6vw, 26px);
       font-weight: 700;
       background: #FF6B6B;
       color: white;
-      padding: 8px 24px;
+      padding: 8px 18px;
       border-radius: 50px;
       border: 3.5px solid var(--border-color);
-      box-shadow: 0 6px 0 var(--border-color);
+      box-shadow: 0 5px 0 var(--border-color);
       transform: rotate(-2deg);
       display: inline-block;
+      max-width: 100%;
+      word-break: break-word;
     }
 
     .cartoon-card {
@@ -78,31 +89,54 @@
       border: 3.5px solid var(--border-color);
       border-radius: var(--radius);
       box-shadow: 0 8px 0 var(--border-color);
-      padding: 20px 16px;
+      padding: 16px 14px;
+      width: 100%;
     }
 
     .total-banner {
       background: var(--secondary);
       border: 3.5px solid var(--border-color);
       border-radius: 18px;
-      box-shadow: 0 6px 0 var(--border-color);
-      padding: 14px 18px;
+      box-shadow: 0 5px 0 var(--border-color);
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
     }
 
-    .total-title { font-size: 16px; font-weight: 700; }
-    .total-amount { font-size: 26px; font-weight: 700; color: white; text-shadow: 2px 2px 0 var(--border-color); }
+    .total-title { font-size: 15px; font-weight: 700; }
+    .total-amount { 
+      font-size: 24px; 
+      font-weight: 700; 
+      color: white; 
+      text-shadow: 2px 2px 0 var(--border-color);
+      word-break: break-all;
+    }
 
-    .form-group { margin-bottom: 14px; }
+    .form-group { 
+      margin-bottom: 12px; 
+      width: 100%;
+    }
     .form-group label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
 
+    /* 解決 Flexbox 子元素撐開問題（關鍵修復：min-width: 0） */
+    .form-row { 
+      display: flex; 
+      gap: 10px; 
+      width: 100%;
+    }
+    .form-row .form-group { 
+      flex: 1; 
+      min-width: 0; 
+    }
+
+    /* 統一修復 iOS Date/Number 輸入框相容性 */
     .cartoon-input {
       width: 100%;
-      padding: 12px 14px;
-      font-size: 16px;
+      height: 46px; /* 統一固定高度 */
+      padding: 8px 12px;
+      font-size: 16px; /* 防止 iOS 點擊時自動放大頁面 */
       font-family: inherit;
       font-weight: 700;
       color: var(--border-color);
@@ -111,6 +145,8 @@
       border-radius: 14px;
       outline: none;
       box-shadow: inset 0 3px 0 rgba(0,0,0,0.06);
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     .cartoon-input:focus {
@@ -118,22 +154,20 @@
       border-color: #4C6EF5;
     }
 
-    .form-row { display: flex; gap: 10px; }
-    .form-row .form-group { flex: 1; }
-
     .btn-group { display: flex; gap: 8px; }
 
     .cartoon-btn {
       width: 100%;
-      padding: 14px;
-      font-size: 18px;
+      height: 48px;
+      padding: 0 14px;
+      font-size: 17px;
       font-family: inherit;
       font-weight: 700;
       color: var(--border-color);
       background-color: var(--primary);
       border: 3.5px solid var(--border-color);
       border-radius: 16px;
-      box-shadow: 0 6px 0 var(--border-color);
+      box-shadow: 0 5px 0 var(--border-color);
       cursor: pointer;
       margin-top: 6px;
       transition: all 0.1s ease;
@@ -143,13 +177,13 @@
     }
 
     .cartoon-btn:active:not(:disabled) {
-      transform: translateY(4px);
+      transform: translateY(3px);
       box-shadow: 0 2px 0 var(--border-color);
     }
 
     .cartoon-btn.cancel-btn {
       background-color: #E2E8F0;
-      flex: 0 0 80px;
+      flex: 0 0 75px;
     }
 
     .list-header { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
@@ -163,7 +197,7 @@
       gap: 12px;
     }
 
-    /* 歷史單項卡片布局 */
+    /* 歷史單項卡片防走位佈局 */
     .item-card {
       background: #FFFFFF;
       border: 3px solid var(--border-color);
@@ -173,17 +207,36 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      width: 100%;
     }
 
     .item-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      width: 100%;
     }
 
-    .item-info { display: flex; flex-direction: column; gap: 2px; }
-    .item-category { font-size: 16px; font-weight: 700; }
-    .item-meta { font-size: 12px; font-weight: 500; color: #64748B; }
+    .item-info { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 2px; 
+      min-width: 0; 
+      width: 100%;
+    }
+    
+    .item-category { 
+      font-size: 16px; 
+      font-weight: 700; 
+      word-break: break-word; 
+    }
+    
+    .item-meta { 
+      font-size: 12px; 
+      font-weight: 500; 
+      color: #64748B; 
+      word-break: break-word; 
+    }
 
     .item-bottom {
       display: flex;
@@ -191,6 +244,8 @@
       align-items: center;
       border-top: 2px dashed #E2E8F0;
       padding-top: 8px;
+      flex-wrap: wrap; /* 避免極窄手機時按鈕重疊 */
+      gap: 8px;
     }
 
     .item-amount-badge {
@@ -201,15 +256,20 @@
       padding: 3px 10px;
       font-size: 16px;
       font-weight: 700;
+      word-break: break-all;
     }
 
     /* 小巧 3D 卡通操作按鈕 */
-    .action-btns { display: flex; gap: 6px; }
+    .action-btns { 
+      display: flex; 
+      gap: 6px; 
+      margin-left: auto; /* 右對齊 */
+    }
 
     .mini-btn {
       border: 2px solid var(--border-color);
       border-radius: 10px;
-      padding: 4px 10px;
+      padding: 5px 10px;
       font-size: 13px;
       font-family: inherit;
       font-weight: 700;
@@ -307,13 +367,11 @@
 <script>
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPAd8GJhMvHthq1NE8MTiAXN1_cHmbj-_Og9tPGn2dSKSj_qP9QjO-5wN3uGrS5Y_-/exec";
 
-  // 全域變數儲存目前載入的紀錄
   let currentRecords = [];
 
   document.getElementById('date').valueAsDate = new Date();
   document.addEventListener('DOMContentLoaded', fetchRecords);
 
-  // 讀取紀錄
   async function fetchRecords() {
     const loadingEl = document.getElementById('loading');
     const listEl = document.getElementById('itemList');
@@ -338,7 +396,6 @@
     }
   }
 
-  // 渲染清單
   function renderList(records) {
     const listEl = document.getElementById('itemList');
     const totalEl = document.getElementById('totalAmount');
@@ -350,7 +407,6 @@
       return;
     }
 
-    // 由新到舊排列
     const sorted = [...records].reverse();
 
     sorted.forEach(item => {
@@ -380,7 +436,6 @@
     totalEl.textContent = total.toLocaleString();
   }
 
-  // 開始編輯：將資料填入頂部表單
   function startEdit(id, rowIndex) {
     const item = currentRecords.find(r => String(r.id) === String(id) || r.rowIndex === rowIndex);
     if (!item) return;
@@ -392,15 +447,12 @@
     document.getElementById('amount').value = item.amount;
     document.getElementById('note').value = item.note || '';
 
-    // 切換按鈕狀態
     document.getElementById('submitBtn').innerHTML = '<span>💾 儲存修改</span>';
     document.getElementById('cancelEditBtn').style.display = 'block';
 
-    // 捲動至頂部表單
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 重置表單為新增模式
   function resetForm() {
     document.getElementById('editId').value = '';
     document.getElementById('editRowIndex').value = '';
@@ -413,7 +465,6 @@
     document.getElementById('cancelEditBtn').style.display = 'none';
   }
 
-  // 刪除紀錄
   async function deleteRecord(id, rowIndex) {
     if (!confirm("確定要刪除這筆紀錄嗎？")) return;
 
@@ -442,7 +493,6 @@
     }
   }
 
-  // 表單提交（處理新增或修改）
   document.getElementById('expenseForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
