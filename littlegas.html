@@ -28,6 +28,7 @@
       --primary: #FFD166;
       --secondary: #4ECDC4;
       --danger: #FF6B6B;
+      --success: #2EC4B6;
       --radius: 22px;
     }
 
@@ -92,21 +93,34 @@
       width: 100%;
     }
 
+    /* 看板樣式優化 */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
     .total-banner {
       background: var(--secondary);
       border: 3.5px solid var(--border-color);
       border-radius: 18px;
       box-shadow: 0 5px 0 var(--border-color);
-      padding: 12px 16px;
+      padding: 10px 12px;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    .total-title { font-size: 15px; font-weight: 700; }
+    .total-banner.balance-banner {
+      background: var(--primary);
+      grid-column: span 2;
+      align-items: center;
+    }
+
+    .total-title { font-size: 13px; font-weight: 700; }
     .total-amount { 
-      font-size: 24px; 
+      font-size: 22px; 
       font-weight: 700; 
       color: white; 
       text-shadow: 2px 2px 0 var(--border-color);
@@ -298,6 +312,7 @@
       gap: 8px;
     }
 
+    /* 支出標籤 */
     .item-amount-badge {
       background: #FFE3E3;
       color: var(--danger);
@@ -307,6 +322,12 @@
       font-size: 16px;
       font-weight: 700;
       word-break: break-all;
+    }
+
+    /* 收入標籤 */
+    .item-amount-badge.income {
+      background: #E8F5E9;
+      color: #2E7D32;
     }
 
     .action-btns { 
@@ -363,11 +384,22 @@
       <input type="hidden" id="editId" value="">
       <input type="hidden" id="editRowIndex" value="">
 
+      <!-- 新增：收支類型選擇 -->
       <div class="form-row">
+        <div class="form-group">
+          <label for="type">🔄 類型</label>
+          <select id="type" class="cartoon-input">
+            <option value="expense">🔴 支出</option>
+            <option value="income">🟢 收入</option>
+          </select>
+        </div>
         <div class="form-group">
           <label for="date">📅 日期</label>
           <input type="date" id="date" class="cartoon-input" required>
         </div>
+      </div>
+
+      <div class="form-row">
         <div class="form-group">
           <label for="category">🏷️ 項目/類別</label>
           <input type="text" id="category" class="cartoon-input" placeholder="不可不填" required>
@@ -400,6 +432,7 @@
         <button type="button" class="calc-btn" onclick="appendCalc('4')">4</button>
         <button type="button" class="calc-btn" onclick="appendCalc('5')">5</button>
         <button type="button" class="calc-btn" onclick="appendCalc('6')">6</button>
+
         <button type="button" class="calc-btn op-btn" onclick="appendCalc('+')">+</button>
 
         <button type="button" class="calc-btn" onclick="appendCalc('1')">1</button>
@@ -409,6 +442,7 @@
 
         <button type="button" class="calc-btn" onclick="appendCalc('0')">0</button>
         <button type="button" class="calc-btn" onclick="appendCalc('00')">00</button>
+
         <button type="button" class="calc-btn" onclick="appendCalc('.')">.</button>
         <button type="button" class="calc-btn op-btn" onclick="appendCalc('+')">+</button>
       </div>
@@ -424,9 +458,19 @@
 
   <!-- 總計看板 + 明細列表 -->
   <div class="cartoon-card">
-    <div class="total-banner">
-      <span class="total-title">💰 累積總支出</span>
-      <span class="total-amount">$<span id="totalAmount">0</span></span>
+    <div class="dashboard-grid">
+      <div class="total-banner balance-banner">
+        <span class="total-title">💰 當前總結餘</span>
+        <span class="total-amount">$<span id="totalBalance">0</span></span>
+      </div>
+      <div class="total-banner" style="background-color: #4ECDC4;">
+        <span class="total-title">🟢 累積收入</span>
+        <span class="total-amount">$<span id="totalIncome">0</span></span>
+      </div>
+      <div class="total-banner" style="background-color: #FF6B6B;">
+        <span class="total-title">🔴 累積支出</span>
+        <span class="total-amount">$<span id="totalExpense">0</span></span>
+      </div>
     </div>
 
     <div class="list-header">📜 歷史明細</div>
@@ -536,12 +580,14 @@
 
   function renderList(records) {
     const listEl = document.getElementById('itemList');
-    const totalEl = document.getElementById('totalAmount');
-    let total = 0;
+    let totalIncome = 0;
+    let totalExpense = 0;
 
     if (!records || records.length === 0) {
       listEl.innerHTML = '<li class="loading-box">目前沒有記帳紀錄喔！🎈</li>';
-      totalEl.textContent = '0';
+      document.getElementById('totalBalance').textContent = '0';
+      document.getElementById('totalIncome').textContent = '0';
+      document.getElementById('totalExpense').textContent = '0';
       return;
     }
 
@@ -549,19 +595,27 @@
 
     sorted.forEach(item => {
       const amt = parseFloat(item.amount) || 0;
-      total += amt;
+      const isIncome = item.type === 'income';
+
+      if (isIncome) {
+        totalIncome += amt;
+      } else {
+        totalExpense += amt;
+      }
 
       const li = document.createElement('li');
       li.className = 'item-card';
       li.innerHTML = `
         <div class="item-top">
           <div class="item-info">
-            <div class="item-category">${escapeHtml(item.category)}</div>
+            <div class="item-category">${isIncome ? '🟢' : '🔴'} ${escapeHtml(item.category)}</div>
             <div class="item-meta">🗓️ ${item.date} ${item.note ? '• ' + escapeHtml(item.note) : ''}</div>
           </div>
         </div>
         <div class="item-bottom">
-          <div class="item-amount-badge">-$${amt.toLocaleString()}</div>
+          <div class="item-amount-badge ${isIncome ? 'income' : ''}">
+            ${isIncome ? '+' : '-'}$${amt.toLocaleString()}
+          </div>
           <div class="action-btns">
             <button class="mini-btn edit-btn" onclick="startEdit('${item.id}', ${item.rowIndex})">✏️ 編輯</button>
             <button class="mini-btn delete-btn" onclick="deleteRecord('${item.id}', ${item.rowIndex})">🗑️ 刪除</button>
@@ -571,7 +625,9 @@
       listEl.appendChild(li);
     });
 
-    totalEl.textContent = total.toLocaleString();
+    document.getElementById('totalIncome').textContent = totalIncome.toLocaleString();
+    document.getElementById('totalExpense').textContent = totalExpense.toLocaleString();
+    document.getElementById('totalBalance').textContent = (totalIncome - totalExpense).toLocaleString();
   }
 
   function startEdit(id, rowIndex) {
@@ -580,6 +636,7 @@
 
     document.getElementById('editId').value = item.id;
     document.getElementById('editRowIndex').value = item.rowIndex;
+    document.getElementById('type').value = item.type || 'expense';
     document.getElementById('date').value = item.date;
     document.getElementById('category').value = item.category;
     document.getElementById('amount').value = item.amount;
@@ -594,6 +651,7 @@
   function resetForm() {
     document.getElementById('editId').value = '';
     document.getElementById('editRowIndex').value = '';
+    document.getElementById('type').value = 'expense';
     document.getElementById('category').value = '';
     document.getElementById('amount').value = '';
     document.getElementById('note').value = '';
@@ -654,6 +712,7 @@
       action: isEdit ? 'edit' : 'add',
       id: editId,
       rowIndex: document.getElementById('editRowIndex').value,
+      type: document.getElementById('type').value,
       date: document.getElementById('date').value,
       category: document.getElementById('category').value,
       amount: amtVal,
