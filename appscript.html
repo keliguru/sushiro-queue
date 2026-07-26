@@ -2,7 +2,7 @@
 <html lang="zh-Hant" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Luka's Beaver Schedule</title>
 	
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/beaver-icon.png">
@@ -16,40 +16,60 @@
 	<meta name="apple-mobile-web-app-status-bar-style" content="default">
 	<meta name="apple-mobile-web-app-title" content="Beaver Schedule">
 	
+    <!-- 引入塗鴉字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+
     <style>
-        /* 亮色模式變數 */
+        /* 亮色模式變數 - 塗鴉紙質感 */
         :root {
             --primary: #4f46e5;
             --primary-light: #eef2ff;
-            --bg-color: #f1f5f9;
+            --bg-color: #fdfcfa;
             --card-bg: #ffffff;
             --text-main: #1e293b;
             --text-muted: #475569;
-            --border-color: #cbd5e1;
-            --today-bg: #e0e7ff;
-            --today-text: #4f46e5;
+            --border-color: #7c7c7c;
+            --today-bg: #ffe4e6;
+            --today-text: #e11d48;
+            --doodle-font: 'Gloria Hallelujah', cursive;
         }
 
-        /* 黑夜模式變數 */
+        /* 黑夜模式變數 - 黑板質感 */
         [data-theme="dark"] {
             --primary: #6366f1;
             --primary-light: #312e81;
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --bg-color: #1a1a1a;
+            --card-bg: #2a2a2a;
             --text-main: #f8fafc;
             --text-muted: #cbd5e1;
-            --border-color: #475569;
-            --today-bg: #1e1b4b;
-            --today-text: #818cf8;
+            --border-color: #a3a3a3;
+            --today-bg: #4c0519;
+            --today-text: #fb7185;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: var(--doodle-font);
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
             padding: 12px;
             transition: background-color 0.3s, color 0.3s;
+            /* 紙張質感 */
+            background-image: 
+                linear-gradient(90deg, rgba(124, 124, 124, 0.02) 1px, transparent 1px),
+                linear-gradient(rgba(124, 124, 124, 0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        [data-theme="dark"] body {
+            /* 黑板質感 */
+            background-image: 
+                radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
 
         .container {
@@ -59,88 +79,160 @@
 
         .app-header {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 14px;
             align-items: center;
             background: var(--card-bg);
-            padding: 16px 20px;
-            border-radius: 14px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+            padding: 16px 14px;
             margin-bottom: 16px;
-            border: 2px solid var(--border-color);
+            /* 應用手繪效果 */
+            border: 3px solid var(--border-color);
+            border-radius: 15px 30px 10px 25px / 25px 10px 30px 15px;
+            filter: url(#rough-border);
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        @media (min-width: 480px) {
+            .app-header {
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 16px 20px;
+            }
+        }
+
+        [data-theme="dark"] .app-header {
+            box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* 海狸圖標 */
+        .app-header h1::before {
+            content: "";
+            filter: url(#squiggle);
         }
 
         .app-header h1 {
             margin: 0;
-            font-size: 1.4rem;
-            font-weight: 800;
+            font-size: 1.6rem;
+            font-weight: normal;
             color: var(--text-main);
+            filter: url(#rough-text);
+            text-align: center;
         }
 
         .header-controls {
             display: flex;
-            gap: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
             align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        @media (min-width: 480px) {
+            .header-controls {
+                width: auto;
+            }
         }
 
         .nav-btns {
             display: flex;
-            gap: 6px;
+            gap: 8px;
+            flex: 1;
+            justify-content: center;
         }
 
+        @media (min-width: 480px) {
+            .nav-btns {
+                flex: initial;
+            }
+        }
+
+        /* 手機人性化按鈕設計 */
         button {
             background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            padding: 10px 14px;
-            border-radius: 8px;
             cursor: pointer;
-            font-weight: 700;
-            font-size: 1.05rem;
+            font-family: var(--doodle-font);
+            font-weight: normal;
+            font-size: 1.25rem;
             color: var(--text-main);
-            transition: all 0.2s;
+            transition: all 0.15s ease-in-out;
+            /* 應用手繪效果 - 按鈕更扭曲 */
+            border: 3px solid var(--border-color);
+            border-radius: 12px 22px 8px 18px / 18px 8px 22px 12px;
+            padding: 8px 14px;
+            min-height: 48px; /* 符合手機觸控規範 (48px) */
+            min-width: 48px;
+            filter: url(#squiggle);
+            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.12);
+            touch-action: manipulation; /* 消除手機點擊 300ms 延遲 */
+            user-select: none;
+            -webkit-user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        [data-theme="dark"] button {
+            box-shadow: 3px 3px 0 rgba(255, 255, 255, 0.08);
         }
 
+        /* Hover & 按下 (Active) 效果，增強手機點擊反饋 */
         button:hover {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
+            transform: scale(1.05) rotate(1deg);
+        }
+
+        button:active {
+            transform: scale(0.92) translate(2px, 2px);
+            box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
+            background: var(--primary);
+            color: white;
         }
 
         .utility-btn {
-            padding: 10px 14px;
-            font-size: 1.05rem;
+            padding: 8px 12px;
+            font-size: 1.15rem;
         }
 
         /* 列表模式容器 */
         .agenda-container {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
         }
 
         .agenda-day-group {
             background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
             overflow: hidden;
-            border: 2px solid var(--border-color);
+            /* 應用手繪效果 */
+            border: 3px solid var(--border-color);
+            border-radius: 15px 30px 10px 25px / 25px 10px 30px 15px;
+            filter: url(#rough-border);
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+        }
+        [data-theme="dark"] .agenda-day-group {
+            box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.05);
         }
 
         .agenda-day-header {
             background: var(--card-bg);
             padding: 14px 18px;
-            font-weight: 800;
-            font-size: 1.2rem;
+            font-size: 1.35rem;
             color: var(--text-main);
-            border-bottom: 2px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 3px dashed var(--border-color); /* 塗鴉風格虛線 */
+            filter: url(#rough-text);
         }
 
         .agenda-day-header.is-today {
             background: var(--today-bg);
             color: var(--today-text);
-            border-left: 6px solid var(--primary);
+            /* 今天更扭曲 */
+            filter: url(#squiggle);
+            border-left: 10px solid var(--primary);
         }
 
         .agenda-tasks-list {
@@ -151,9 +243,10 @@
             padding: 12px 18px;
             display: flex;
             align-items: center;
-            gap: 16px;
-            font-size: 1.15rem;
-            border-bottom: 1px solid var(--border-color);
+            gap: 18px;
+            font-size: 1.25rem;
+            border-bottom: 2px dashed var(--border-color); /* 塗鴉風格虛線 */
+            filter: url(#rough-text);
         }
 
         .agenda-task-item:last-child {
@@ -161,28 +254,32 @@
         }
 
         .agenda-time {
-            font-weight: 700;
             color: var(--today-text);
-            min-width: 65px;
-            font-size: 1.1rem;
+            min-width: 75px;
+            font-size: 1.2rem;
+            filter: url(#rough-text); /* 文字增加質感 */
         }
 
         .agenda-title {
             color: var(--text-main);
             word-break: break-all;
-            font-weight: 600;
+            filter: url(#rough-text);
         }
 
         .status, .error {
             text-align: center;
-            font-size: 1.25rem;
-            font-weight: 700;
-            padding: 40px;
+            font-size: 1.4rem;
+            padding: 40px 20px;
             background: var(--card-bg);
-            border-radius: 14px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
             color: var(--text-muted);
-            border: 2px solid var(--border-color);
+            /* 應用手繪效果 */
+            border: 3px solid var(--border-color);
+            border-radius: 15px 30px 10px 25px / 25px 10px 30px 15px;
+            filter: url(#rough-border);
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+        }
+        [data-theme="dark"] .status, [data-theme="dark"] .error {
+            box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.05);
         }
 
         .error {
@@ -202,9 +299,9 @@
                 <h1 id="currentMonthYear">-- 年 -- 月</h1>
                 <div class="header-controls">
                     <div class="nav-btns">
-                        <button onclick="changeMonth(-1)">上月</button>
-                        <button onclick="goToday()">今天</button>
-                        <button onclick="changeMonth(1)">下月</button>
+                        <button onclick="changeMonth(-1)" aria-label="上月" title="上月">◀</button>
+                        <button onclick="goToday()" aria-label="本月" title="本月">📅</button>
+                        <button onclick="changeMonth(1)" aria-label="下月" title="下月">▶</button>
                     </div>
                     <button class="utility-btn" id="langToggleBtn" onclick="toggleLanguage()">EN</button>
                     <button class="utility-btn" id="themeToggleBtn" onclick="toggleTheme()">☀️</button>
@@ -215,6 +312,27 @@
             <div id="agendaGrid" class="agenda-container"></div>
         </div>
     </div>
+
+    <!-- SVG 濾鏡 -->
+    <svg style="visibility: hidden; position: absolute;" width="0" height="0" xmlns="http://www.w3.org/2000/svg" version="1.1">
+      <defs>
+        <!-- 細微的粗糙邊框 -->
+        <filter id="rough-border">
+          <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="3" seed="1" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <!-- 按鈕/今天用更扭曲的邊框 -->
+        <filter id="squiggle">
+          <feTurbulence baseFrequency="0.02" numOctaves="5" type="fractalNoise" seed="0" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <!-- 文字用輕微的扭曲質感 -->
+        <filter id="rough-text">
+          <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="1" seed="0" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="1" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+    </svg>
 
     <script>
         const scriptBaseURL = 'https://script.google.com/macros/s/AKfycbyTpJCNcPRC4aVonX-9bgYgAQzzleU7jsDGyD_ezowc0cK0hsWJ60COodtDjdHLjqq6/exec';
@@ -395,7 +513,7 @@
                     <div class="agenda-day-group">
                         <div class="agenda-day-header ${isToday}">
                             <span>${dateHeaderStr}</span>
-                            <span style="font-size: 0.95rem; font-weight: 700; opacity: 0.85;">${countText}</span>
+                            <span style="font-size: 1.1rem; font-weight: normal; opacity: 0.85;">${countText}</span>
                         </div>
                         <div class="agenda-tasks-list">
                             ${tasksHTML}
@@ -406,7 +524,7 @@
 
             if (!agendaHTML) {
                 const emptyText = currentLang === 'en' ? 'No events for this month' : '本月無行程資料';
-                agendaHTML = `<div style="text-align: center; padding: 50px; font-size: 1.15rem; font-weight: 700; color: var(--text-muted); background: var(--card-bg); border-radius: 12px; border: 2px solid var(--border-color);">${emptyText}</div>`;
+                agendaHTML = `<div style="text-align: center; padding: 50px; font-size: 1.3rem; color: var(--text-muted); background: var(--card-bg); border-radius: 15px 30px 10px 25px / 25px 10px 30px 15px; border: 3px solid var(--border-color); filter: url(#rough-border); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);">${emptyText}</div>`;
             }
 
             container.innerHTML = agendaHTML;
