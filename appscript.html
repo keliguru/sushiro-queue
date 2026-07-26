@@ -16,35 +16,35 @@
 	<meta name="apple-mobile-web-app-status-bar-style" content="default">
 	<meta name="apple-mobile-web-app-title" content="Beaver Schedule">
 	
-    <!-- 引入塗鴉字體 -->
+    <!-- Doodle Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* 亮色模式變數 - 塗鴉紙質感 */
         :root {
             --primary: #4f46e5;
             --primary-light: #eef2ff;
             --bg-color: #fdfcfa;
             --card-bg: #ffffff;
             --text-main: #1e293b;
-            --text-muted: #475569;
+            --text-muted: #94a3b8;
             --border-color: #7c7c7c;
             --today-bg: #ffe4e6;
             --today-text: #e11d48;
+            --past-opacity: 0.55;
             --doodle-font: 'Gloria Hallelujah', cursive;
         }
 
-        /* 黑夜模式變數 - 黑板質感 */
         [data-theme="dark"] {
             --primary: #6366f1;
             --primary-light: #312e81;
             --bg-color: #1a1a1a;
             --card-bg: #2a2a2a;
             --text-main: #f8fafc;
-            --text-muted: #cbd5e1;
+            --text-muted: #64748b;
             --border-color: #a3a3a3;
             --today-bg: #4c0519;
             --today-text: #fb7185;
+            --past-opacity: 0.45;
         }
 
         * {
@@ -59,14 +59,12 @@
             margin: 0;
             padding: 12px;
             transition: background-color 0.3s, color 0.3s;
-            /* 紙張質感 */
             background-image: 
                 linear-gradient(90deg, rgba(124, 124, 124, 0.02) 1px, transparent 1px),
                 linear-gradient(rgba(124, 124, 124, 0.02) 1px, transparent 1px);
             background-size: 30px 30px;
         }
         [data-theme="dark"] body {
-            /* 黑板質感 */
             background-image: 
                 radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
             background-size: 20px 20px;
@@ -85,7 +83,6 @@
             background: var(--card-bg);
             padding: 16px 14px;
             margin-bottom: 16px;
-            /* 應用手繪效果 */
             border: 3px solid var(--border-color);
             border-radius: 15px 30px 10px 25px / 25px 10px 30px 15px;
             filter: url(#rough-border);
@@ -104,7 +101,6 @@
             box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.05);
         }
 
-        /* 海狸圖標 */
         .app-header h1::before {
             content: "";
             filter: url(#squiggle);
@@ -147,7 +143,6 @@
             }
         }
 
-        /* 手機人性化按鈕設計 */
         button {
             background: var(--card-bg);
             cursor: pointer;
@@ -156,15 +151,14 @@
             font-size: 1.25rem;
             color: var(--text-main);
             transition: all 0.15s ease-in-out;
-            /* 應用手繪效果 - 按鈕更扭曲 */
             border: 3px solid var(--border-color);
             border-radius: 12px 22px 8px 18px / 18px 8px 22px 12px;
             padding: 8px 14px;
-            min-height: 48px; /* 符合手機觸控規範 (48px) */
+            min-height: 48px;
             min-width: 48px;
             filter: url(#squiggle);
             box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.12);
-            touch-action: manipulation; /* 消除手機點擊 300ms 延遲 */
+            touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
             display: inline-flex;
@@ -175,7 +169,6 @@
             box-shadow: 3px 3px 0 rgba(255, 255, 255, 0.08);
         }
 
-        /* Hover & 按下 (Active) 效果，增強手機點擊反饋 */
         button:hover {
             background: var(--primary);
             color: white;
@@ -190,12 +183,19 @@
             color: white;
         }
 
+        /* 標示當前月份按鈕的樣式 */
+        .btn-current-month {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+        }
+
         .utility-btn {
             padding: 8px 12px;
             font-size: 1.15rem;
         }
 
-        /* 列表模式容器 */
         .agenda-container {
             display: flex;
             flex-direction: column;
@@ -205,12 +205,17 @@
         .agenda-day-group {
             background: var(--card-bg);
             overflow: hidden;
-            /* 應用手繪效果 */
             border: 3px solid var(--border-color);
             border-radius: 15px 30px 10px 25px / 25px 10px 30px 15px;
             filter: url(#rough-border);
             box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+            transition: opacity 0.3s;
         }
+        
+        .agenda-day-group.is-past-day {
+            opacity: var(--past-opacity);
+        }
+
         [data-theme="dark"] .agenda-day-group {
             box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.05);
         }
@@ -223,14 +228,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 3px dashed var(--border-color); /* 塗鴉風格虛線 */
+            border-bottom: 3px dashed var(--border-color);
             filter: url(#rough-text);
         }
 
         .agenda-day-header.is-today {
             background: var(--today-bg);
             color: var(--today-text);
-            /* 今天更扭曲 */
             filter: url(#squiggle);
             border-left: 10px solid var(--primary);
         }
@@ -245,7 +249,7 @@
             align-items: center;
             gap: 18px;
             font-size: 1.25rem;
-            border-bottom: 2px dashed var(--border-color); /* 塗鴉風格虛線 */
+            border-bottom: 2px dashed var(--border-color);
             filter: url(#rough-text);
         }
 
@@ -253,11 +257,25 @@
             border-bottom: none;
         }
 
+        .agenda-task-item.is-past-task {
+            opacity: 0.7;
+        }
+
+        .agenda-task-item.is-past-task .agenda-title {
+            text-decoration: line-through;
+            text-decoration-thickness: 2px;
+            color: var(--text-muted);
+        }
+
+        .agenda-task-item.is-past-task .agenda-time {
+            color: var(--text-muted);
+        }
+
         .agenda-time {
             color: var(--today-text);
             min-width: 75px;
             font-size: 1.2rem;
-            filter: url(#rough-text); /* 文字增加質感 */
+            filter: url(#rough-text);
         }
 
         .agenda-title {
@@ -272,7 +290,6 @@
             padding: 40px 20px;
             background: var(--card-bg);
             color: var(--text-muted);
-            /* 應用手繪效果 */
             border: 3px solid var(--border-color);
             border-radius: 15px 30px 10px 25px / 25px 10px 30px 15px;
             filter: url(#rough-border);
@@ -299,9 +316,9 @@
                 <h1 id="currentMonthYear">-- 年 -- 月</h1>
                 <div class="header-controls">
                     <div class="nav-btns">
-                        <button onclick="changeMonth(-1)" aria-label="上月" title="上月">◀</button>
-                        <button onclick="goToday()" aria-label="本月" title="本月">📅</button>
-                        <button onclick="changeMonth(1)" aria-label="下月" title="下月">▶</button>
+                        <button id="prevMonthBtn" onclick="changeMonth(-1)" aria-label="上月">-</button>
+                        <button id="currMonthBtn" class="btn-current-month" onclick="goToday()" aria-label="本月">-</button>
+                        <button id="nextMonthBtn" onclick="changeMonth(1)" aria-label="下月">-</button>
                     </div>
                     <button class="utility-btn" id="langToggleBtn" onclick="toggleLanguage()">EN</button>
                     <button class="utility-btn" id="themeToggleBtn" onclick="toggleTheme()">☀️</button>
@@ -316,17 +333,14 @@
     <!-- SVG 濾鏡 -->
     <svg style="visibility: hidden; position: absolute;" width="0" height="0" xmlns="http://www.w3.org/2000/svg" version="1.1">
       <defs>
-        <!-- 細微的粗糙邊框 -->
         <filter id="rough-border">
           <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="3" seed="1" result="noise"/>
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
-        <!-- 按鈕/今天用更扭曲的邊框 -->
         <filter id="squiggle">
           <feTurbulence baseFrequency="0.02" numOctaves="5" type="fractalNoise" seed="0" result="noise"/>
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
-        <!-- 文字用輕微的扭曲質感 -->
         <filter id="rough-text">
           <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="1" seed="0" result="noise"/>
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="1" xChannelSelector="R" yChannelSelector="G"/>
@@ -339,9 +353,8 @@
         
         let allTasks = [];
         let viewDate = new Date();
-        let currentLang = 'zh'; // 'zh' 或 'en'
+        let currentLang = 'zh';
 
-        // 簡易字典庫：用於把常見行程翻譯成英文
         const translationDict = {
             "開會": "Meeting",
             "午餐": "Lunch",
@@ -372,7 +385,6 @@
             return translated;
         }
 
-        // 切換語言
         function toggleLanguage() {
             currentLang = currentLang === 'zh' ? 'en' : 'zh';
             document.getElementById('langToggleBtn').textContent = currentLang === 'zh' ? 'EN' : '繁';
@@ -380,7 +392,6 @@
             renderAgenda();
         }
 
-        // 切換日夜模式
         function toggleTheme() {
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme');
@@ -393,7 +404,6 @@
             localStorage.setItem('theme', newTheme);
         }
 
-        // 初始化儲存的偏好設定
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -410,12 +420,27 @@
             });
         })();
 
+        // 更新按鈕上的月份數字
+        function updateMonthButtons() {
+            const currentMonth = viewDate.getMonth() + 1; // 1-12
+            
+            // 計算上個月與下個月數字 (自動處理 12 -> 1, 1 -> 12 跨年問題)
+            const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+            const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+
+            document.getElementById('prevMonthBtn').textContent = prevMonth;
+            document.getElementById('currMonthBtn').textContent = currentMonth;
+            document.getElementById('nextMonthBtn').textContent = nextMonth;
+        }
+
         async function fetchTimeTasks() {
+            updateMonthButtons(); // 即時更新按鈕數字
+
             const statusEl = document.getElementById('status');
             const calendarApp = document.getElementById('calendar-app');
 
             const year = viewDate.getFullYear();
-            const month = viewDate.getMonth() + 1; // 1-12
+            const month = viewDate.getMonth() + 1;
 
             const requestURL = `${scriptBaseURL}?year=${year}&month=${month}`;
 
@@ -445,6 +470,15 @@
             }
         }
 
+        function parseTaskDateTime(item, year, month, day) {
+            const timePart = item.time.split(' ')[1];
+            if (timePart && timePart.includes(':')) {
+                const [h, m] = timePart.split(':').map(Number);
+                return new Date(year, month, day, h, m);
+            }
+            return new Date(year, month, day, 23, 59, 59);
+        }
+
         function renderAgenda() {
             const container = document.getElementById('agendaGrid');
             const monthYearEl = document.getElementById('currentMonthYear');
@@ -452,7 +486,6 @@
             const year = viewDate.getFullYear();
             const month = viewDate.getMonth();
 
-            // 標題顯示格式化
             if (currentLang === 'en') {
                 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
                 monthYearEl.textContent = `${monthNames[month]} ${year}`;
@@ -461,9 +494,10 @@
             }
 
             const totalDays = new Date(year, month + 1, 0).getDate();
-            const todayStr = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-            let agendaHTML = '';
+            const dayGroups = [];
 
             for (let day = 1; day <= totalDays; day++) {
                 const formattedMonth = String(month + 1).padStart(2, '0');
@@ -480,21 +514,30 @@
                 dayTasks.sort((a, b) => a.time.localeCompare(b.time));
 
                 let tasksHTML = '';
+                let hasUpcomingTasks = false;
+
                 dayTasks.forEach(item => {
                     const timeOnly = item.time.split(' ')[1] || (currentLang === 'en' ? 'All Day' : '全日');
                     const rawTitle = item.task || item.title || item.name || (currentLang === 'en' ? 'Untitled' : '無標題');
                     const taskTitle = translateTask(rawTitle);
-                    
+
+                    const taskDateTime = parseTaskDateTime(item, year, month, day);
+                    const isPastTask = taskDateTime < now;
+
+                    if (!isPastTask) {
+                        hasUpcomingTasks = true;
+                    }
+
                     tasksHTML += `
-                        <div class="agenda-task-item">
+                        <div class="agenda-task-item ${isPastTask ? 'is-past-task' : ''}">
                             <span class="agenda-time">${timeOnly}</span>
                             <span class="agenda-title">${taskTitle}</span>
                         </div>
                     `;
                 });
 
-                const isToday = dateStr === todayStr ? 'is-today' : '';
-                
+                const isToday = dateStr === todayStr;
+
                 let dateHeaderStr = '';
                 if (currentLang === 'en') {
                     const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -509,9 +552,11 @@
 
                 const countText = currentLang === 'en' ? `${dayTasks.length} task(s)` : `${dayTasks.length} 個行程`;
 
-                agendaHTML += `
-                    <div class="agenda-day-group">
-                        <div class="agenda-day-header ${isToday}">
+                const isPastDay = new Date(year, month, day, 23, 59, 59) < now;
+
+                const groupHTML = `
+                    <div class="agenda-day-group ${isPastDay ? 'is-past-day' : ''}">
+                        <div class="agenda-day-header ${isToday ? 'is-today' : ''}">
                             <span>${dateHeaderStr}</span>
                             <span style="font-size: 1.1rem; font-weight: normal; opacity: 0.85;">${countText}</span>
                         </div>
@@ -520,7 +565,23 @@
                         </div>
                     </div>
                 `;
+
+                dayGroups.push({
+                    day: day,
+                    isPastDay: isPastDay,
+                    hasUpcomingTasks: hasUpcomingTasks,
+                    html: groupHTML
+                });
             }
+
+            dayGroups.sort((a, b) => {
+                if (a.isPastDay !== b.isPastDay) {
+                    return a.isPastDay ? 1 : -1;
+                }
+                return a.day - b.day;
+            });
+
+            let agendaHTML = dayGroups.map(g => g.html).join('');
 
             if (!agendaHTML) {
                 const emptyText = currentLang === 'en' ? 'No events for this month' : '本月無行程資料';
@@ -540,7 +601,6 @@
             fetchTimeTasks();
         }
 
-        // 初次載入
         fetchTimeTasks();
     </script>
 
