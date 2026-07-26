@@ -317,6 +317,17 @@
     .edit-btn { background-color: #A8DADC; color: var(--border-color); }
     .delete-btn { background-color: #FF6B6B; color: white; }
     .loading-box { text-align: center; padding: 20px; font-weight: 700; color: #64748B; }
+    
+    /* 滾動加載指示器 */
+    .scroll-loader {
+      text-align: center;
+      padding: 14px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #64748B;
+      display: none;
+    }
+
     .spinner {
       display: inline-block;
       width: 24px;
@@ -411,11 +422,24 @@
       <div>載入明細中...</div>
     </div>
     <ul id="itemList" class="item-list"></ul>
+    
+    <!-- 滾動加載觸發點與提示 -->
+    <div id="scrollSentinel" class="scroll-loader">
+      <span>⏳ 載入更多紀錄中...</span>
+    </div>
   </div>
 </div>
 <script>
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPAd8GJhMvHthq1NE8MTiAXN1_cHmbj-_Og9tPGn2dSKSj_qP9QjO-5wN3uGrS5Y_-/exec";
+  
   let currentRecords = [];
+  let sortedRecords = [];
+  
+  // 分頁控制變數
+  const PAGE_SIZE = 15; // 每次向下掃加載 15 筆
+  let currentPage = 0;
+  let observer = null;
+
   // 設定當前本地日期
   function setTodayDate() {
     const today = new Date();
@@ -424,9 +448,11 @@
     const day = String(today.getDate()).padStart(2, '0');
     document.getElementById('date').value = `${year}-${month}-${day}`;
   }
+
   // 頁面初次載入
   setTodayDate();
   document.addEventListener('DOMContentLoaded', fetchRecords);
+
   /* 計算機邏輯 */
   function appendCalc(val) {
     const amtInput = document.getElementById('amount');
@@ -459,7 +485,6 @@
     const amtInput = document.getElementById('amount');
     let val = amtInput.value.trim();
     if (!val || val === '-' || val === '.') return;
-    // 若為純數字（可能含小數），直接切換正負
     if (/^-?[0-9]*\.?[0-9]*$/.test(val)) {
       if (val.startsWith('-')) {
         amtInput.value = val.slice(1) || '0';
@@ -468,7 +493,6 @@
       }
       return;
     }
-    // 若為運算式，先計算再切換
     evaluateCalc();
     val = amtInput.value.trim();
     if (val && /^-?[0-9]*\.?[0-9]*$/.test(val)) {
@@ -485,11 +509,9 @@
     if (!expr || expr === '-') return;
     expr = expr.replace(/×/g, '*').replace(/÷/g, '/');
     try {
-      // 僅允許數字與基本四則運算符，確保安全性
       if (/^[0-9+\-*/. ]+$/.test(expr)) {
         let res = Function('"use strict"; return (' + expr + ')')();
         if (!isNaN(res) && isFinite(res)) {
-          // 四捨五入至小數第二位，避免浮點數誤差
           res = Math.round(res * 100) / 100;
           amtInput.value = res;
         }
@@ -498,11 +520,14 @@
       console.warn('計算錯誤:', err);
     }
   }
+
   async function fetchRecords() {
     const loadingEl = document.getElementById('loading');
     const listEl = document.getElementById('itemList');
     loadingEl.style.display = 'block';
     listEl.innerHTML = '';
+    hideSentinel();
+
     try {
       const response = await fetch(GAS_WEB_APP_URL);
       const resData = await response.json();
@@ -519,26 +544,58 @@
       loadingEl.style.display = 'none';
     }
   }
+
   function renderList(records) {
     const listEl = document.getElementById('itemList');
-    let totalIncome = 0;
-    let totalExpense = 0;
+    listEl.innerHTML = '';
+
     if (!records || records.length === 0) {
       listEl.innerHTML = '<li class="loading-box">目前沒有記帳紀錄喔！🎈</li>';
       document.getElementById('totalBalance').textContent = '0';
       document.getElementById('totalIncome').textContent = '0';
       document.getElementById('totalExpense').textContent = '0';
+      hideSentinel();
       return;
     }
-    const sorted = [...records].reverse();
-    sorted.forEach(item => {
+
+    // 1. 全數據金額總計計算 (不受分頁影響)
+    let totalIncome = 0;
+    let totalExpense = 0;
+    records.forEach(item => {
       const amt = parseFloat(item.amount) || 0;
-      const isIncome = item.type === 'income';
-      if (isIncome) {
+      if (item.type === 'income') {
         totalIncome += amt;
       } else {
         totalExpense += amt;
       }
+    });
+
+    document.getElementById('totalIncome').textContent = totalIncome.toLocaleString();
+    document.getElementById('totalExpense').textContent = totalExpense.toLocaleString();
+    document.getElementById('totalBalance').textContent = (totalIncome - totalExpense).toLocaleString();
+
+    // 2. 初始化分頁狀態
+    sortedRecords = [...records].reverse();
+    currentPage = 0;
+
+    // 3. 渲染第一頁
+    loadMoreRecords();
+
+    // 4. 設定向下滾動監聽器 (IntersectionObserver)
+    setupObserver();
+  }
+
+  // 渲染下一頁的紀錄項目
+  function loadMoreRecords() {
+    const listEl = document.getElementById('itemList');
+    const start = currentPage * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    const chunk = sortedRecords.slice(start, end);
+
+    chunk.forEach(item => {
+      const amt = parseFloat(item.amount) || 0;
+      const isIncome = item.type === 'income';
+
       const li = document.createElement('li');
       li.className = 'item-card';
       li.innerHTML = `
@@ -560,10 +617,50 @@
       `;
       listEl.appendChild(li);
     });
-    document.getElementById('totalIncome').textContent = totalIncome.toLocaleString();
-    document.getElementById('totalExpense').textContent = totalExpense.toLocaleString();
-    document.getElementById('totalBalance').textContent = (totalIncome - totalExpense).toLocaleString();
+
+    currentPage++;
+
+    // 若還有剩餘資料，顯示滾動加載感應器
+    if (currentPage * PAGE_SIZE < sortedRecords.length) {
+      showSentinel();
+    } else {
+      hideSentinel();
+    }
   }
+
+  // 設定滾動監聽
+  function setupObserver() {
+    const sentinel = document.getElementById('scrollSentinel');
+    if (observer) observer.disconnect();
+
+    observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        if (currentPage * PAGE_SIZE < sortedRecords.length) {
+          // 增加微小延遲感，避免過度頻繁觸發
+          setTimeout(() => {
+            loadMoreRecords();
+          }, 150);
+        }
+      }
+    }, {
+      root: null,
+      rootMargin: '100px', // 接近底部 100px 時即預先加載
+      threshold: 0.1
+    });
+
+    observer.observe(sentinel);
+  }
+
+  function showSentinel() {
+    const sentinel = document.getElementById('scrollSentinel');
+    if (sentinel) sentinel.style.display = 'block';
+  }
+
+  function hideSentinel() {
+    const sentinel = document.getElementById('scrollSentinel');
+    if (sentinel) sentinel.style.display = 'none';
+  }
+
   function startEdit(id, rowIndex) {
     const item = currentRecords.find(r => String(r.id) === String(id) || r.rowIndex === rowIndex);
     if (!item) return;
@@ -571,7 +668,6 @@
     document.getElementById('editRowIndex').value = item.rowIndex;
     document.getElementById('date').value = item.date;
     document.getElementById('category').value = item.category;
-    // 依類型設定正負號：收入為正，支出為負
     const amt = parseFloat(item.amount) || 0;
     document.getElementById('amount').value = (item.type === 'income') ? amt : -Math.abs(amt);
     document.getElementById('note').value = item.note || '';
@@ -579,6 +675,7 @@
     document.getElementById('cancelEditBtn').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
   function resetForm() {
     document.getElementById('editId').value = '';
     document.getElementById('editRowIndex').value = '';
@@ -589,6 +686,7 @@
     document.getElementById('submitBtn').innerHTML = '<span>➕ 新增一筆紀錄</span>';
     document.getElementById('cancelEditBtn').style.display = 'none';
   }
+
   async function deleteRecord(id, rowIndex) {
     if (!confirm("確定要刪除這筆紀錄嗎？")) return;
     const payload = {
@@ -613,10 +711,10 @@
       alert('刪除時發生錯誤');
     }
   }
+
   document.getElementById('expenseForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // 送出前先執行計算
     evaluateCalc();
     const amtVal = document.getElementById('amount').value;
     const numAmt = parseFloat(amtVal);
@@ -629,7 +727,7 @@
     const isEdit = Boolean(editId);
     btn.disabled = true;
     btn.innerHTML = '<span>⏳ 處理中...</span>';
-    // 正數 = 收入，負數 = 支出；後端仍存正數 + type
+    
     const type = numAmt > 0 ? 'income' : 'expense';
     const amount = Math.abs(numAmt);
     const payload = {
@@ -663,6 +761,7 @@
       if (!isEdit) resetForm();
     }
   });
+
   function escapeHtml(str) {
     return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
