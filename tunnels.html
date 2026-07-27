@@ -99,6 +99,20 @@
             text-transform: uppercase;
             margin-bottom: 3px;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .holiday-badge {
+            font-size: 10px;
+            background: #d31010;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #fff;
+            font-family: sans-serif;
         }
 
         .stopwatch-display {
@@ -345,9 +359,10 @@
         }
         
         .calc-row { display: flex; gap: 8px; margin-bottom: 15px; }
-        .calc-row select, .calc-row input { 
+        .calc-row input, .calc-row select { 
             padding: 12px; border-radius: 8px; border: 2px solid #444; 
             background: #2a2a2a; color: #fff; flex: 1; font-size: 16px; font-family: var(--font-mono);
+            outline: none;
         }
         
         .calc-result { 
@@ -375,6 +390,24 @@
 
         .info-box p:last-child { margin-bottom: 0; }
         .info-box strong { color: var(--rusteze-yellow); font-family: var(--font-racing); letter-spacing: 0.5px; }
+        
+        .info-box a {
+            color: var(--rusteze-yellow);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .info-box a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+        .info-box ul {
+            margin: 6px 0 10px 22px;
+            line-height: 1.8;
+        }
+        .info-box li {
+            font-size: 13px;
+            color: #bbb;
+        }
 
         .system-footer {
             background: #000;
@@ -412,7 +445,10 @@
     <div class="chequered-flag"></div>
     
     <div class="stopwatch-header">
-        <div class="stopwatch-label">🏆 TOLL BOARD 🏆</div>
+        <div class="stopwatch-label">
+            🏆 TOLL BOARD 🏆
+            <span id="holiday-badge" class="holiday-badge" style="display: none;">公眾假期</span>
+        </div>
         <div class="stopwatch-display" id="stopwatch">00:00:00<span class="ms">.000</span></div>
         
         <div class="sync-container">
@@ -423,8 +459,8 @@
     </div>
 
     <div class="mode-selector">
-        <button class="mode-btn active" onclick="changeVehicle('private_car', this)">STAGE 1: 私家車</button>
-        <button class="mode-btn" onclick="changeVehicle('taxi', this)">FLEET: 的士</button>
+        <button class="mode-btn active" onclick="changeVehicle('private_car', this)">PRIVATE CAR: 私家車</button>
+        <button class="mode-btn" onclick="changeVehicle('taxi', this)">TAXI: 的士</button>
         <button class="mode-btn" onclick="changeVehicle('motorcycle', this)">MOTO: 電單車</button>
     </div>
 
@@ -519,7 +555,7 @@
     <div class="sector-title">SECTOR 3: 免費通行路段</div>
     <div class="telemetry-grid">
         <div class="gauge-card" style="opacity: 0.8;">
-            <div class="gauge-header"><span class="gauge-title">將軍澳 / 屯赤 / 啟德</span></div>
+            <div class="gauge-header"><span class="gauge-title">中九龍繞道 / 將軍澳 / 屯赤 / 啟德</span></div>
             <div class="gauge-body"><span class="flag-status flag-free">FREE HIGHWAY</span><div class="speedo-price">$0<small>HKD</small></div></div>
         </div>
     </div>
@@ -528,22 +564,29 @@
     <div class="sector-title">CALCULATOR: 手動收費預測</div>
     <div class="calculator-box">
         <div class="calc-row">
-            <select id="calc-day">
-                <option value="1">星期一至六</option>
-                <option value="0">星期日及公眾假期</option>
+            <select id="calc-day-type">
+                <option value="weekday">星期一至六</option>
+                <option value="holiday">星期日 / 公眾假期</option>
             </select>
             <input type="time" id="calc-time" value="08:00" required>
         </div>
         <button class="mode-btn" style="width: 100%; min-height: 50px;" onclick="runCalculator()">開始預測計算</button>
-        <div id="calc-result" class="calc-result">請選擇時間並點擊計算，將依據上方所選之車種（私家車/的士/電單車）進行運算。</div>
+        <div id="calc-result" class="calc-result">請選擇日期類型及時間，點擊按鈕進行運算。</div>
     </div>
 
     <!-- 說明 -->
     <div class="sector-title">CREW CHIEF BRIEFING: 系統說明</div>
     <div class="info-box">
         <p>⚡ <strong>時段收費機制 (TVT):</strong> 過海及大欖隧道現已實施分時段收費。系統除了顯示實時收費，亦會預測及顯示<strong>下一個即將轉換的時段及價錢</strong> (NEXT LAP)。</p>
+        <p>⚡ <strong>公眾假期自動識別:</strong> 頂部即時面板已整合香港公眾假期數據，會自動識別今日是否為公眾假期並套用相應收費模式。</p>
         <p>⚡ <strong>過渡時段:</strong> 於不同收費時段之間切換時，設有過渡性安排，收費以每 2 分鐘 $2（或比例）平穩遞增或遞減。</p>
         <p>⚡ <strong>大欖與的士:</strong> 大欖隧道私家車/電單車設動態分時段收費，的士全日收 $28，其他商用車 $43。</p>
+        <p>🔗 <strong>運輸署官方參考連結：</strong></p>
+        <ul>
+            <li><a href="https://www.td.gov.hk/tc/transport_in_hong_kong/tunnels_and_bridges_n/tvt/index.html" target="_blank" rel="noopener noreferrer">運輸署 - 過海隧道收費方案</a></li>
+            <li><a href="https://www.td.gov.hk/tc/transport_in_hong_kong/tunnels_and_bridges_n/toll_matters/toll_rates_of_road_tunnels_and_lantau_link/index.html" target="_blank" rel="noopener noreferrer">行車隧道的收費</a></li>
+            <li><a href="https://www.td.gov.hk/tc/transport_in_hong_kong/tunnels_and_bridges_n/tlt/index.html" target="_blank" rel="noopener noreferrer">大欖隧道收費方案</a></li>
+        </ul>
         <p style="text-align: right; margin-top: 8px; color: var(--rusteze-yellow); font-family: var(--font-racing); font-size: 16px;">Ka-Chow!</p>
     </div>
 
@@ -554,6 +597,33 @@
 
 <script>
     let currentVehicle = 'private_car';
+
+    // 🗓️ 香港公眾假期資料庫 (YYYY-MM-DD)
+    const HK_HOLIDAYS = [
+        // 2025 年
+        "2025-01-01", "2025-01-29", "2025-01-30", "2025-01-31", "2025-04-04", 
+        "2025-04-18", "2025-04-19", "2025-04-21", "2025-05-01", "2025-05-05", 
+        "2025-05-31", "2025-07-01", "2025-10-01", "2025-10-07", "2025-10-29", 
+        "2025-12-25", "2025-12-26",
+        // 2026 年
+        "2026-01-01", "2026-02-17", "2026-02-18", "2026-02-19", "2026-04-03", 
+        "2026-04-04", "2026-04-06", "2026-05-01", "2026-05-25", "2026-06-19", 
+        "2026-07-01", "2026-09-26", "2026-10-01", "2026-10-19", "2026-12-25", "2026-12-26"
+    ];
+
+    function checkIsSundayOrHoliday(dateObj) {
+        if (dateObj.getDay() === 0) {
+            return { isHoliday: true, reason: '星期日' };
+        }
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        const dateStr = `${y}-${m}-${d}`;
+        if (HK_HOLIDAYS.includes(dateStr)) {
+            return { isHoliday: true, reason: '公眾假期' };
+        }
+        return { isHoliday: false, reason: '平日 (星期一至六)' };
+    }
 
     function triggerVibrate() {
         if (navigator.vibrate) { navigator.vibrate(40); }
@@ -586,72 +656,61 @@
         calculateTolls(new Date());
     }
 
-    // 核心過海隧道收費演算法 (支援 step+1 起步加減機制)
-	function getCrossHarborToll(vehicle, isSunday, hour, min) {
-		const totalMin = hour * 60 + min;
-		if (vehicle === 'taxi') {
-			return { text: "全日劃一", class: "flag-fixed", cht: 25, ehc: 25, whc: 25 };
-		}
-		
-		const isMoto = (vehicle === 'motorcycle');
-		const factor = isMoto ? 0.4 : 1.0;
+    function getCrossHarborToll(vehicle, isSunday, hour, min) {
+        const totalMin = hour * 60 + min;
+        if (vehicle === 'taxi') {
+            return { text: "FIXED", class: "flag-fixed", cht: 25, ehc: 25, whc: 25 };
+        }
+        
+        const isMoto = (vehicle === 'motorcycle');
+        const factor = isMoto ? 0.4 : 1.0;
 
-		function calcTrans(startMin, startC, startW, endC, endW) {
-			let step = Math.floor((totalMin - startMin) / 2);
-			let dirC = endC > startC ? 1 : -1;
-			let dirW = endW > startW ? 1 : -1;
-			
-			let pC = startC + ((step + 1) * 2 * dirC);
-			let pW = startW + ((step + 1) * 2 * dirW);
-			
-			if (dirC > 0) pC = Math.min(endC, pC); else pC = Math.max(endC, pC);
-			if (dirW > 0) pW = Math.min(endW, pW); else pW = Math.max(endW, pW);
-			
-			return { 
-				text: "TRANSITION", 
-				class: "flag-yellow", 
-				cht: Math.round(pC * factor * 10) / 10, 
-				ehc: Math.round(pC * factor * 10) / 10, 
-				whc: Math.round(pW * factor * 10) / 10 
-			};
-		}
+        function calcTrans(startMin, startC, startW, endC, endW) {
+            let step = Math.floor((totalMin - startMin) / 2);
+            let dirC = endC > startC ? 1 : -1;
+            let dirW = endW > startW ? 1 : -1;
+            
+            let pC = startC + ((step + 1) * 2 * dirC);
+            let pW = startW + ((step + 1) * 2 * dirW);
+            
+            if (dirC > 0) pC = Math.min(endC, pC); else pC = Math.max(endC, pC);
+            if (dirW > 0) pW = Math.min(endW, pW); else pW = Math.max(endW, pW);
+            
+            return { 
+                text: "TRANSITION", 
+                class: "flag-yellow", 
+                cht: Math.round(pC * factor * 10) / 10, 
+                ehc: Math.round(pC * factor * 10) / 10, 
+                whc: Math.round(pW * factor * 10) / 10 
+            };
+        }
 
-		if (isSunday) {
-			// 星期日及公眾假期：非繁忙 $20，一般時段 $25
-			const offPeak = 20;
-			const normSunday = 25;
+        if (isSunday) {
+            const offPeak = 20;
+            const normSunday = 25;
 
-			if (totalMin < 615) { // 10:15 前 (非繁忙 $20)
-				return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeak*factor, ehc: offPeak*factor, whc: offPeak*factor };
-			}
-			if (totalMin < 621) { // 10:15 - 10:21 過渡時段 ($20 -> $25)
-				return calcTrans(615, offPeak, offPeak, normSunday, normSunday); 
-			}
-			if (totalMin < 1155) { // 10:21 - 19:15 (一般時段 $25)
-				return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normSunday*factor, ehc: normSunday*factor, whc: normSunday*factor };
-			}
-			if (totalMin < 1161) { // 19:15 - 19:21 過渡時段 ($25 -> $20)
-				return calcTrans(1155, normSunday, normSunday, offPeak, offPeak); 
-			}
-			return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeak*factor, ehc: offPeak*factor, whc: offPeak*factor };
-		} else {
-			// 星期一至六收費標準
-			const offPeakC = 20, normC = 30, peakC = 40;
-			const offPeakW = 20, normW = 30, peakW = 60;
+            if (totalMin < 615) return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeak*factor, ehc: offPeak*factor, whc: offPeak*factor };
+            if (totalMin < 621) return calcTrans(615, offPeak, offPeak, normSunday, normSunday); 
+            if (totalMin < 1155) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normSunday*factor, ehc: normSunday*factor, whc: normSunday*factor };
+            if (totalMin < 1161) return calcTrans(1155, normSunday, normSunday, offPeak, offPeak); 
+            return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeak*factor, ehc: offPeak*factor, whc: offPeak*factor };
+        } else {
+            const offPeakC = 20, normC = 30, peakC = 40;
+            const offPeakW = 20, normW = 30, peakW = 60; 
 
-			if (totalMin < 450) return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
-			if (totalMin < 490) return calcTrans(450, offPeakC, offPeakW, peakC, peakW); 
-			if (totalMin < 615) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
-			if (totalMin < 645) return calcTrans(615, peakC, peakW, normC, normW); 
-			if (totalMin < 990) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
-			if (totalMin < 1020) return calcTrans(990, normC, normW, peakC, peakW); 
-			if (totalMin < 1140) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
-			if (totalMin < 1170) return calcTrans(1140, peakC, peakW, normC, normW); 
-			if (totalMin < 1380) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
-			if (totalMin < 1390) return calcTrans(1380, normC, normW, offPeakC, offPeakW); 
-			return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
-		}
-	}
+            if (totalMin < 450) return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
+            if (totalMin < 490) return calcTrans(450, offPeakC, offPeakW, peakC, peakW); 
+            if (totalMin < 615) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
+            if (totalMin < 645) return calcTrans(615, peakC, peakW, normC, normW); 
+            if (totalMin < 990) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
+            if (totalMin < 1020) return calcTrans(990, normC, normW, peakC, peakW); 
+            if (totalMin < 1140) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
+            if (totalMin < 1170) return calcTrans(1140, peakC, peakW, normC, normW); 
+            if (totalMin < 1380) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: offPeakW*factor };
+            if (totalMin < 1390) return calcTrans(1380, normC, normW, offPeakC, offPeakW); 
+            return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
+        }
+    }
 
     function getTltToll(vehicle, isSunday, hour, min) {
         const totalMin = hour * 60 + min;
@@ -719,8 +778,18 @@
     function calculateTolls(now) {
         const hour = now.getHours();
         const min = now.getMinutes();
-        const day = now.getDay(); 
-        const isSunday = (day === 0);
+        
+        const todayStatus = checkIsSundayOrHoliday(now);
+        const isSunday = todayStatus.isHoliday;
+
+        const holidayBadge = document.getElementById('holiday-badge');
+        if (todayStatus.isHoliday) {
+            holidayBadge.innerText = todayStatus.reason;
+            holidayBadge.style.display = 'inline-block';
+        } else {
+            holidayBadge.style.display = 'none';
+        }
+
         const timeVal = hour + min / 60;
 
         const currentInfo = getCrossHarborToll(currentVehicle, isSunday, hour, min);
@@ -732,9 +801,19 @@
 
         if (currentVehicle !== 'taxi') {
             if (isSunday) {
-                if (timeVal < 10.25) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 10, 16); nextTimeStr = "10:15"; }
-                else if (timeVal < 19.25) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 19, 16); nextTimeStr = "19:15"; }
-                else { nextInfo = getCrossHarborToll(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; }
+                if (timeVal < 10.25) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 10, 21); nextTimeStr = "10:15"; }
+                else if (timeVal < 19.25) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 19, 21); nextTimeStr = "19:15"; }
+                else { 
+                    const tomorrow = new Date(now);
+                    tomorrow.setDate(now.getDate() + 1);
+                    const tomorrowIsHoliday = checkIsSundayOrHoliday(tomorrow).isHoliday;
+                    
+                    if (tomorrowIsHoliday) {
+                        nextInfo = getCrossHarborToll(currentVehicle, true, 10, 21); nextTimeStr = "Tmwr 10:15"; 
+                    } else {
+                        nextInfo = getCrossHarborToll(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; 
+                    }
+                }
             } else {
                 if (timeVal < 7.5) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 7, 31); nextTimeStr = "07:30"; }
                 else if (timeVal < 10.25) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 10, 16); nextTimeStr = "10:15"; }
@@ -742,9 +821,15 @@
                 else if (timeVal < 19.0) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 19, 1); nextTimeStr = "19:00"; }
                 else if (timeVal < 23.0) { nextInfo = getCrossHarborToll(currentVehicle, isSunday, 23, 1); nextTimeStr = "23:00"; }
                 else {
-                    let nextDayIsSunday = (day === 6);
-                    if (nextDayIsSunday) { nextInfo = getCrossHarborToll(currentVehicle, true, 10, 16); nextTimeStr = "Tmwr 10:15"; }
-                    else { nextInfo = getCrossHarborToll(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; }
+                    const tomorrow = new Date(now);
+                    tomorrow.setDate(now.getDate() + 1);
+                    const tomorrowIsHoliday = checkIsSundayOrHoliday(tomorrow).isHoliday;
+                    
+                    if (tomorrowIsHoliday) { 
+                        nextInfo = getCrossHarborToll(currentVehicle, true, 10, 21); nextTimeStr = "Tmwr 10:15"; 
+                    } else { 
+                        nextInfo = getCrossHarborToll(currentVehicle, false, 7, 31); nextTimeStr = "Tmwr 07:30"; 
+                    }
                 }
             }
         }
@@ -810,25 +895,22 @@
         document.getElementById('price-abt').innerText = abt;
     }
 
-    // 計算機功能執行函數 (已加入大欖隧道)
     function runCalculator() {
-        const dayVal = parseInt(document.getElementById('calc-day').value);
+        const dayType = document.getElementById('calc-day-type').value;
         const timeStr = document.getElementById('calc-time').value;
         if (!timeStr) return;
         
-        const [h, m] = timeStr.split(':').map(Number);
-        const isSunday = (dayVal === 0);
+        const [h, min] = timeStr.split(':').map(Number);
+        const isSunday = (dayType === 'holiday');
+        const dayLabel = isSunday ? '星期日 / PUBLIC HOLIDAY' : '星期一至六';
         
-        // 分別獲取過海隧道與大欖隧道的預測結果
-        const result = getCrossHarborToll(currentVehicle, isSunday, h, m);
-        const tltResult = getTltToll(currentVehicle, isSunday, h, m);
-        
-        const dayText = isSunday ? "星期日及公眾假期" : "星期一至六";
+        const result = getCrossHarborToll(currentVehicle, isSunday, h, min);
+        const tltResult = getTltToll(currentVehicle, isSunday, h, min);
         
         const resDiv = document.getElementById('calc-result');
         resDiv.innerHTML = `
             <div style="margin-bottom:12px; color:var(--rusteze-yellow); font-family:var(--font-racing); font-size: 16px;">
-                🏁 預測結果 [${dayText} ${timeStr}]
+                🏁 預測結果 [${dayLabel} ${timeStr}]
             </div>
             
             <div style="font-size: 16px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
@@ -848,7 +930,6 @@
         `;
     }
 
-    // 啟動實時更新迴圈
     requestAnimationFrame(loop);
 </script>
 
