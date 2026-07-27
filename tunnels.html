@@ -587,59 +587,71 @@
     }
 
     // 核心過海隧道收費演算法 (支援 step+1 起步加減機制)
-    function getCrossHarborToll(vehicle, isSunday, hour, min) {
-        const totalMin = hour * 60 + min;
-        if (vehicle === 'taxi') {
-            return { text: "全日劃一", class: "flag-fixed", cht: 25, ehc: 25, whc: 25 };
-        }
-        
-        const isMoto = (vehicle === 'motorcycle');
-        const factor = isMoto ? 0.4 : 1.0;
+	function getCrossHarborToll(vehicle, isSunday, hour, min) {
+		const totalMin = hour * 60 + min;
+		if (vehicle === 'taxi') {
+			return { text: "全日劃一", class: "flag-fixed", cht: 25, ehc: 25, whc: 25 };
+		}
+		
+		const isMoto = (vehicle === 'motorcycle');
+		const factor = isMoto ? 0.4 : 1.0;
 
-        const offPeakC = 20, normC = 30, peakC = 40;
-        const offPeakW = 20, normW = 30, peakW = 60; 
+		function calcTrans(startMin, startC, startW, endC, endW) {
+			let step = Math.floor((totalMin - startMin) / 2);
+			let dirC = endC > startC ? 1 : -1;
+			let dirW = endW > startW ? 1 : -1;
+			
+			let pC = startC + ((step + 1) * 2 * dirC);
+			let pW = startW + ((step + 1) * 2 * dirW);
+			
+			if (dirC > 0) pC = Math.min(endC, pC); else pC = Math.max(endC, pC);
+			if (dirW > 0) pW = Math.min(endW, pW); else pW = Math.max(endW, pW);
+			
+			return { 
+				text: "TRANSITION", 
+				class: "flag-yellow", 
+				cht: Math.round(pC * factor * 10) / 10, 
+				ehc: Math.round(pC * factor * 10) / 10, 
+				whc: Math.round(pW * factor * 10) / 10 
+			};
+		}
 
-        function calcTrans(startMin, startC, startW, endC, endW) {
-            let step = Math.floor((totalMin - startMin) / 2);
-            let dirC = endC > startC ? 1 : -1;
-            let dirW = endW > startW ? 1 : -1;
-            
-            // 修正：踏入切換時間那一刻，收費已經立即開始 +$2 (或 -$2)
-            let pC = startC + ((step + 1) * 2 * dirC);
-            let pW = startW + ((step + 1) * 2 * dirW);
-            
-            if (dirC > 0) pC = Math.min(endC, pC); else pC = Math.max(endC, pC);
-            if (dirW > 0) pW = Math.min(endW, pW); else pW = Math.max(endW, pW);
-            
-            return { 
-                text: "TRANSITION", 
-                class: "flag-yellow", 
-                cht: Math.round(pC * factor * 10) / 10, 
-                ehc: Math.round(pC * factor * 10) / 10, 
-                whc: Math.round(pW * factor * 10) / 10 
-            };
-        }
+		if (isSunday) {
+			// 星期日及公眾假期：非繁忙 $20，一般時段 $25
+			const offPeak = 20;
+			const normSunday = 25;
 
-        if (isSunday) {
-            if (totalMin < 615) return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
-            if (totalMin < 625) return calcTrans(615, offPeakC, offPeakW, normC, normW); 
-            if (totalMin < 1155) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
-            if (totalMin < 1165) return calcTrans(1155, normC, normW, offPeakC, offPeakW); 
-            return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
-        } else {
-            if (totalMin < 450) return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
-            if (totalMin < 490) return calcTrans(450, offPeakC, offPeakW, peakC, peakW); 
-            if (totalMin < 615) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
-            if (totalMin < 645) return calcTrans(615, peakC, peakW, normC, normW); 
-            if (totalMin < 990) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
-            if (totalMin < 1020) return calcTrans(990, normC, normW, peakC, peakW); 
-            if (totalMin < 1140) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
-            if (totalMin < 1170) return calcTrans(1140, peakC, peakW, normC, normW); 
-            if (totalMin < 1380) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
-            if (totalMin < 1390) return calcTrans(1380, normC, normW, offPeakC, offPeakW); 
-            return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
-        }
-    }
+			if (totalMin < 615) { // 10:15 前 (非繁忙 $20)
+				return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeak*factor, ehc: offPeak*factor, whc: offPeak*factor };
+			}
+			if (totalMin < 621) { // 10:15 - 10:21 過渡時段 ($20 -> $25)
+				return calcTrans(615, offPeak, offPeak, normSunday, normSunday); 
+			}
+			if (totalMin < 1155) { // 10:21 - 19:15 (一般時段 $25)
+				return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normSunday*factor, ehc: normSunday*factor, whc: normSunday*factor };
+			}
+			if (totalMin < 1161) { // 19:15 - 19:21 過渡時段 ($25 -> $20)
+				return calcTrans(1155, normSunday, normSunday, offPeak, offPeak); 
+			}
+			return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeak*factor, ehc: offPeak*factor, whc: offPeak*factor };
+		} else {
+			// 星期一至六收費標準
+			const offPeakC = 20, normC = 30, peakC = 40;
+			const offPeakW = 20, normW = 30, peakW = 60;
+
+			if (totalMin < 450) return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
+			if (totalMin < 490) return calcTrans(450, offPeakC, offPeakW, peakC, peakW); 
+			if (totalMin < 615) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
+			if (totalMin < 645) return calcTrans(615, peakC, peakW, normC, normW); 
+			if (totalMin < 990) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
+			if (totalMin < 1020) return calcTrans(990, normC, normW, peakC, peakW); 
+			if (totalMin < 1140) return { text: "RED FLAG (繁忙)", class: "flag-red", cht: peakC*factor, ehc: peakC*factor, whc: peakW*factor };
+			if (totalMin < 1170) return calcTrans(1140, peakC, peakW, normC, normW); 
+			if (totalMin < 1380) return { text: "YELLOW FLAG (一般)", class: "flag-yellow", cht: normC*factor, ehc: normC*factor, whc: normW*factor };
+			if (totalMin < 1390) return calcTrans(1380, normC, normW, offPeakC, offPeakW); 
+			return { text: "GREEN FLAG (非繁忙)", class: "flag-green", cht: offPeakC*factor, ehc: offPeakC*factor, whc: offPeakW*factor };
+		}
+	}
 
     function getTltToll(vehicle, isSunday, hour, min) {
         const totalMin = hour * 60 + min;
