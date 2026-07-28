@@ -765,7 +765,7 @@
         </h3>
         <div class="instructions-content" id="guideContent" style="display: none;">
             <div class="instructions-step">1. 🧱 <b>建立基地</b>：在下方輸入名稱並點「新增」，建立你的路線群組。</div>
-            <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組右側的「進入」按鈕進入管理，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
+            <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組右側的「➥」按鈕進入管理，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
             <div class="instructions-step">3. 🚌 <b>出發看時間</b>：在主頁直接點擊群組方塊，即可一秒召喚出所有動態實時到站時間 (ETA)！</div>
             <div class="instructions-step">💡 <b>秘密密技</b>：主頁的基地卡片<b>「往左一拉（手機滑動或電腦滑鼠拖曳）」</b>，即可顯示 <b style="color:#2563eb;">修改</b> 與 <b style="color:red;">移除</b> 功能喔！</div>
 			<div class="instructions-step">
@@ -913,7 +913,7 @@
             
             <div id="errorMessage" class="error" style="display: none;"></div>
             <div id="statusMessage" class="loading" style="display: none;">正在連線到交通總部...</div>
-            <div id="placeholderText" class="no-data">請返回主頁點擊群組右側的「進入」進行路線配對。</div>
+            <div id="placeholderText" class="no-data">請返回主頁點擊群組右側的「➥」進行路線配對。</div>
         </div>
         
         <div class="card" id="arrivalContainerCard" name="arrivalContainer" style="display: none;">
@@ -1025,7 +1025,7 @@
             },
             {
                 title: "⚙️ 第二步：裝配車輛與站點",
-                desc: "建立基地後，點擊右側「進入」進入管理，選擇九巴、城巴或小巴，將你常用到的車輛站點加入清單！",
+                desc: "建立基地後，點擊右側「➥」進入管理，選擇九巴、城巴或小巴，將你常用到的車輛站點加入清單！",
                 badge: "演習 Step 2/3"
             },
             {
@@ -1189,7 +1189,7 @@
         loadStops();
     }
 
-    /* 🧱 渲染基地清單 (修改：右側改為進入圖示，向左滑顯示 修改 | 移除) */
+    /* 🧱 渲染基地清單 (修改：右側改為➥圖示，向左滑顯示 修改 | 移除) */
     function renderProfiles() {
         const profileList = document.getElementById('profileList');
         profileList.innerHTML = '';
@@ -1223,7 +1223,7 @@
             titleDiv.className = 'item-title';
             titleDiv.innerHTML = profiles[id].name;
 
-            /* 右側改為進入按鈕 (進入) */
+            /* 右側改為進入按鈕 (➥) */
             const enterBtn = document.createElement('button');
             enterBtn.style.background = 'none';
             enterBtn.style.border = 'none';
@@ -1231,7 +1231,7 @@
             enterBtn.style.padding = '0';
             enterBtn.style.cursor = 'pointer';
             enterBtn.style.fontSize = '1.2rem';
-            enterBtn.textContent = '進入';
+            enterBtn.textContent = '➥';
             enterBtn.title = '進入內容管理';
 			enterBtn.className = 'btn-primary';
             enterBtn.onclick = (e) => { 
