@@ -11,11 +11,7 @@
 	<meta property="og:description" content="我的書籤">
 	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favlink-icon.png"> 
 	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favlink-icon.png">
-
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="default">
-	<meta name="apple-mobile-web-app-title" content="我的書籤">
-  
+	
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome 圖示庫 -->
@@ -38,6 +34,11 @@
     .bookmark-card {
       background-color: #2B2A33;
       border: 1px solid #42414D;
+      transition: all 0.2s ease;
+    }
+    .bookmark-card.pinned {
+      border-color: #FF9400;
+      background-color: #322F3D;
     }
     .bookmark-input {
       background-color: #2B2A33;
@@ -56,11 +57,34 @@
 </head>
 <body class="min-h-screen pb-24 flex flex-col justify-between">
 
+  <!-- Toast 通知容器 -->
+  <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-full max-w-xs px-4"></div>
+
   <!-- 上方 Top Bar -->
   <header class="sticky top-0 z-20 bg-[#1C1B22]/90 backdrop-blur-md px-4 py-3 border-b border-[#38383D] flex items-center justify-between">
     <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-full brand-gradient-bg flex items-center justify-center shadow-lg shadow-purple-900/30">
-        <i class="fa-solid fa-bookmark text-white text-sm"></i>
+      <!-- App Header Icon -->
+      <div class="w-8 h-8 rounded-xl overflow-hidden shrink-0 shadow-lg shadow-purple-900/40">
+        <svg viewBox="0 0 512 512" width="100%" height="100%">
+          <defs>
+            <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#2B2A33"/><stop offset="100%" stop-color="#14131A"/>
+            </linearGradient>
+            <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#FF9400"/><stop offset="35%" stop-color="#FF2A51"/><stop offset="70%" stop-color="#C642B5"/><stop offset="100%" stop-color="#9059FF"/>
+            </linearGradient>
+            <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00DDFF"/><stop offset="100%" stop-color="#0088FF"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" rx="120" fill="url(#bgGrad)"/>
+          <path d="M 184 96 H 328 A 24 24 0 0 1 352 120 V 396 A 12 12 0 0 1 332 406 L 256 344 L 180 406 A 12 12 0 0 1 160 396 V 120 A 24 24 0 0 1 184 96 Z" fill="url(#brandGrad)"/>
+          <circle cx="256" cy="156" r="16" fill="#1C1B22" opacity="0.85"/>
+          <g transform="translate(256, 256) rotate(-45) translate(-256, -256)">
+            <rect x="198" y="238" width="68" height="36" rx="18" fill="none" stroke="#FFFFFF" stroke-width="12" opacity="0.95"/>
+            <rect x="246" y="238" width="68" height="36" rx="18" fill="none" stroke="url(#cyanGrad)" stroke-width="12"/>
+          </g>
+        </svg>
       </div>
       <div>
         <h1 class="text-base font-bold tracking-wide">
@@ -71,10 +95,9 @@
     
     <div class="flex items-center gap-2">
       <span id="itemCount" class="text-xs font-medium px-2.5 py-1 rounded-full bg-[#2B2A33] text-[#A2A0B3] border border-[#42414D]">
-        離線/未連線
+        0 個書籤
       </span>
-      <!-- API 設定按鈕 -->
-      <button onclick="openApiModal()" class="w-8 h-8 rounded-full bg-[#2B2A33] border border-[#42414D] text-[#A2A0B3] flex items-center justify-center hover:text-white">
+      <button onclick="openApiModal()" class="w-8 h-8 rounded-full bg-[#2B2A33] border border-[#42414D] text-[#A2A0B3] flex items-center justify-center hover:text-white transition-colors" title="設定 API">
         <i class="fa-solid fa-gear text-sm"></i>
       </button>
     </div>
@@ -85,7 +108,7 @@
     <!-- 快速搜尋 -->
     <div class="relative">
       <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8F8F9D] text-sm"></i>
-      <input type="text" id="searchInput" oninput="filterUrls()" placeholder="搜尋書籤標題或網址..." 
+      <input type="text" id="searchInput" oninput="debouncedFilter()" placeholder="搜尋標題、網址或備註..." 
              class="w-full pl-10 pr-4 py-2.5 rounded-xl bookmark-input text-sm placeholder-[#8F8F9D]">
     </div>
 
@@ -94,23 +117,23 @@
       <button onclick="setCategory('全部')" class="text-xs px-3.5 py-1.5 rounded-full font-medium bg-[#9059FF] text-white">全部</button>
     </div>
 
-    <!-- 狀態顯示 -->
+    <!-- 載入狀態 -->
     <div id="loading" class="py-16 text-center space-y-3 hidden">
       <div class="inline-block w-8 h-8 border-3 border-t-transparent border-[#9059FF] rounded-full animate-spin"></div>
-      <p class="text-xs text-[#A2A0B3]" id="loadingText">正在連線至 API...</p>
+      <p class="text-xs text-[#A2A0B3]" id="loadingText">正在連線至雲端同步...</p>
     </div>
 
-    <!-- API 未設定提示區塊 -->
+    <!-- 未設定 API 提示 -->
     <div id="noApiNotice" class="py-12 text-center space-y-3 bg-[#2B2A33] border border-[#42414D] rounded-2xl p-6 my-4">
       <i class="fa-solid fa-link-slash text-4xl text-[#FF7139]"></i>
       <h2 class="text-base font-bold text-white">未設定 GAS API URL</h2>
-      <p class="text-xs text-[#A2A0B3]">請點擊下方按鈕或右上角齒輪設定你的 Google Apps Script Web App 網址。</p>
+      <p class="text-xs text-[#A2A0B3]">請設定 Google Apps Script Web App 網址以開啟雲端同步功能。</p>
       <button onclick="openApiModal()" class="brand-gradient-bg px-5 py-2 rounded-xl text-xs font-semibold text-white shadow-md">
         設定 API 網址
       </button>
     </div>
 
-    <!-- 書籤清單容器 -->
+    <!-- 書籤清單 (預設隱藏，載入完成後會經由 JS 移除 hidden) -->
     <div id="urlGrid" class="grid grid-cols-1 gap-2.5 hidden"></div>
 
   </main>
@@ -119,13 +142,26 @@
   <div class="fixed bottom-0 left-0 right-0 z-30 bg-[#2B2A33] border-t border-[#42414D] px-4 py-2.5 flex items-center justify-between shadow-2xl">
     <div class="flex items-center gap-2 text-xs text-[#A2A0B3]">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span>API 模式</span>
+      <span id="syncStatus">本地已就緒</span>
     </div>
     
-    <button onclick="openModal()" class="brand-gradient-bg text-white font-medium text-sm px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg active:scale-95 transition-transform">
+    <button onclick="openBookmarkModal()" class="brand-gradient-bg text-white font-medium text-sm px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg active:scale-95 transition-transform">
       <i class="fa-solid fa-plus text-xs"></i>
       <span>新增網址</span>
     </button>
+  </div>
+
+  <!-- 自訂 Confirm Modal -->
+  <div id="confirmOverlay" class="fixed inset-0 bg-black/70 z-50 hidden opacity-0 transition-opacity duration-200" onclick="closeConfirm(false)"></div>
+  <div id="confirmSheet" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-[#1C1B22] border border-[#42414D] rounded-2xl p-5 space-y-4 max-w-xs w-full shadow-2xl scale-95 opacity-0 transition-all duration-200">
+    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+      <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> 確認刪除
+    </h3>
+    <p class="text-xs text-[#A2A0B3]" id="confirmMsg">確定要刪除此書籤嗎？此操作無法復原。</p>
+    <div class="flex items-center gap-2 justify-end pt-1">
+      <button onclick="closeConfirm(false)" class="px-4 py-2 rounded-xl bg-[#2B2A33] border border-[#42414D] text-xs text-[#A2A0B3] hover:text-white">取消</button>
+      <button id="confirmOkBtn" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-xs text-white font-semibold shadow-md">確定刪除</button>
+    </div>
   </div>
 
   <!-- API 設定 Modal -->
@@ -147,18 +183,21 @@
     </div>
   </div>
 
-  <!-- 新增網址 Modal -->
+  <!-- 新增/編輯網址 Modal -->
   <div id="modalOverlay" class="fixed inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-200" onclick="closeModal()"></div>
   <div id="modalSheet" class="fixed bottom-0 left-0 right-0 z-50 bg-[#1C1B22] border-t border-[#42414D] rounded-t-2xl p-5 space-y-4 sheet-enter max-w-lg mx-auto">
     <div class="w-12 h-1 bg-[#42414D] rounded-full mx-auto mb-2"></div>
     <div class="flex items-center justify-between">
-      <h3 class="text-base font-bold text-white flex items-center gap-2">
+      <h3 class="text-base font-bold text-white flex items-center gap-2" id="modalTitle">
         <i class="fa-solid fa-bookmark text-[#FF7139]"></i> 儲存新書籤
       </h3>
       <button onclick="closeModal()" class="text-[#A2A0B3] p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
     </div>
 
     <form id="urlForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+      <input type="hidden" id="editRowIndex" value="">
+      <input type="hidden" id="editIsPinned" value="false">
+
       <div>
         <label class="block text-xs font-medium text-[#A2A0B3] mb-1">網址 URL <span class="text-[#FF2A51]">*</span></label>
         <input type="url" id="url" required placeholder="https://example.com" class="w-full px-3 py-2.5 rounded-lg bookmark-input text-sm">
@@ -186,19 +225,98 @@
   <script>
     let rawUrlsData = [];
     let activeCategory = '全部';
+    let confirmCallback = null;
 
+    // 安全 XSS 轉義
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Toast 浮動通知
+    function showToast(msg, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bg = type === 'error' ? 'bg-red-900/90 border-red-500' : (type === 'success' ? 'bg-emerald-900/90 border-emerald-500' : 'bg-blue-900/90 border-blue-500');
+      const icon = type === 'error' ? 'fa-circle-xmark text-red-400' : (type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-info text-blue-400');
+      
+      toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border text-xs font-medium text-white shadow-xl backdrop-blur-md transition-all duration-300 opacity-0 translate-y-[-10px] ${bg}`;
+      toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i> <span>${escapeHTML(msg)}</span>`;
+      
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove('opacity-0', 'translate-y-[-10px]'), 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-10px]');
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // 自訂 Confirm 彈窗
+    function showConfirmModal(msg, onConfirm) {
+      document.getElementById('confirmMsg').innerText = msg;
+      confirmCallback = onConfirm;
+      document.getElementById('confirmOverlay').classList.remove('hidden');
+      document.getElementById('confirmSheet').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('confirmOverlay').classList.remove('opacity-0');
+        document.getElementById('confirmSheet').classList.remove('opacity-0', 'scale-95');
+      }, 10);
+    }
+
+    function closeConfirm(result) {
+      document.getElementById('confirmOverlay').classList.add('opacity-0');
+      document.getElementById('confirmSheet').classList.add('opacity-0', 'scale-95');
+      setTimeout(() => {
+        document.getElementById('confirmOverlay').classList.add('hidden');
+        document.getElementById('confirmSheet').classList.add('hidden');
+        if (result && confirmCallback) confirmCallback();
+        confirmCallback = null;
+      }, 200);
+    }
+
+    document.getElementById('confirmOkBtn').onclick = () => closeConfirm(true);
+
+    // 頁面初始化 (優先繪製快取，達成 0 秒開啟)
     window.onload = function() {
       const savedApiUrl = localStorage.getItem('gas_api_url');
+      const cachedData = localStorage.getItem('gas_bookmarks_cache');
+
+      if (cachedData) {
+        try {
+          rawUrlsData = JSON.parse(cachedData);
+          renderCategories();
+          filterUrls();
+          document.getElementById('syncStatus').innerText = '本地快取';
+          // 【修正】繪製完快取後，確保移除 hidden 讓畫面顯示出來
+          document.getElementById('urlGrid').classList.remove('hidden');
+        } catch (e) {}
+      }
+
       if (savedApiUrl) {
         document.getElementById('apiUrlInput').value = savedApiUrl;
         document.getElementById('noApiNotice').classList.add('hidden');
-        loadUrls();
+        loadUrls(!!cachedData);
       } else {
         document.getElementById('noApiNotice').classList.remove('hidden');
       }
     };
 
-    // API 呼叫函式
+    // 防抖搜尋
+    function debounce(func, wait = 200) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+    const debouncedFilter = debounce(() => filterUrls(), 200);
+
+    // API 溝通函式
     async function fetchApi(action, payload = {}) {
       const apiUrl = localStorage.getItem('gas_api_url');
       if (!apiUrl) throw new Error('請先設定 GAS API 網址');
@@ -209,27 +327,28 @@
       });
 
       const res = await response.json();
-      if (res.status === 'error') {
-        throw new Error(res.message);
-      }
+      if (res.status === 'error') throw new Error(res.message);
       return res.data;
     }
 
-    // 載入資料
-    async function loadUrls() {
-      showLoading('正在同步 Google Sheet 資料...');
+    // 載入與同步資料
+    async function loadUrls(isSilent = false) {
+      if (!isSilent) showLoading('正在同步雲端資料...');
       try {
         rawUrlsData = await fetchApi('get');
+        localStorage.setItem('gas_bookmarks_cache', JSON.stringify(rawUrlsData));
+        document.getElementById('syncStatus').innerText = '已與雲端同步';
         renderCategories();
         filterUrls();
       } catch (err) {
-        alert('載入失敗：' + err.message);
+        showToast('同步失敗：' + err.message, 'error');
       } finally {
+        // 【修正】無論是靜默還是正常載入，都確保顯示卡片清單
         hideLoading();
       }
     }
 
-    // 一鍵複製連結功能
+    // 一鍵複製網址
     async function copyUrl(btnElement) {
       const url = btnElement.getAttribute('data-url');
       if (!url) return;
@@ -241,7 +360,6 @@
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(url);
         } else {
-          // 備用複製方案 (相容舊版瀏覽器或非 HTTPS 環境)
           const textArea = document.createElement("textarea");
           textArea.value = url;
           textArea.style.position = "fixed";
@@ -253,66 +371,122 @@
           document.body.removeChild(textArea);
         }
 
-        // 複製成功視覺回饋 (圖示變綠色勾勾 1.5 秒)
         icon.className = 'fa-solid fa-check text-emerald-400';
-        setTimeout(() => {
-          icon.className = originalClass;
-        }, 1500);
-
+        showToast('已複製連結至剪貼簿！', 'success');
+        setTimeout(() => { icon.className = originalClass; }, 1500);
       } catch (err) {
-        alert('複製失敗，請手動複製網址');
+        showToast('複製失敗，請手動複製', 'error');
       }
     }
 
-    // 表單提交 (新增)
+    // 切換釘選/置頂
+    async function togglePin(rowIndex, currentPinStatus) {
+      const target = rawUrlsData.find(i => i.rowIndex === rowIndex);
+      if (!target) return;
+
+      const newStatus = !(currentPinStatus === true || currentPinStatus === 'TRUE');
+      target.isPinned = newStatus;
+      
+      filterUrls();
+      
+      try {
+        rawUrlsData = await fetchApi('save', {
+          data: { ...target, isPinned: newStatus }
+        });
+        localStorage.setItem('gas_bookmarks_cache', JSON.stringify(rawUrlsData));
+        showToast(newStatus ? '已置頂書籤' : '已取消置頂', 'info');
+        filterUrls();
+      } catch (err) {
+        showToast('更新置頂狀態失敗', 'error');
+        loadUrls(true);
+      }
+    }
+
+    // 開啟編輯對話框
+    function editBookmark(rowIndex) {
+      const item = rawUrlsData.find(i => i.rowIndex === rowIndex);
+      if (!item) return;
+
+      document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-[#00DDFF]"></i> 編輯書籤`;
+      document.getElementById('editRowIndex').value = item.rowIndex;
+      document.getElementById('editIsPinned').value = item.isPinned || false;
+      document.getElementById('url').value = item.url || '';
+      document.getElementById('title').value = item.title || '';
+      document.getElementById('category').value = item.category || '';
+      document.getElementById('note').value = item.note || '';
+
+      openModal();
+    }
+
+    // 開啟新增對話框
+    function openBookmarkModal() {
+      document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-bookmark text-[#FF7139]"></i> 儲存新書籤`;
+      document.getElementById('urlForm').reset();
+      document.getElementById('editRowIndex').value = '';
+      document.getElementById('editIsPinned').value = 'false';
+      openModal();
+    }
+
+    // 儲存（新增或編輯）
     async function handleFormSubmit(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
       submitBtn.innerText = '儲存中...';
 
+      const rowIndexVal = document.getElementById('editRowIndex').value;
+      const isEdit = rowIndexVal !== '';
+
       const data = {
         url: document.getElementById('url').value.trim(),
         title: document.getElementById('title').value.trim(),
         category: document.getElementById('category').value.trim(),
-        note: document.getElementById('note').value.trim()
+        note: document.getElementById('note').value.trim(),
+        isPinned: document.getElementById('editIsPinned').value === 'true' || document.getElementById('editIsPinned').value === true
       };
+
+      if (isEdit) {
+        data.rowIndex = parseInt(rowIndexVal, 10);
+      }
 
       try {
         rawUrlsData = await fetchApi('save', { data });
+        localStorage.setItem('gas_bookmarks_cache', JSON.stringify(rawUrlsData));
         renderCategories();
         filterUrls();
-        document.getElementById('urlForm').reset();
         closeModal();
+        showToast(isEdit ? '書籤已成功修改！' : '新書籤已儲存至雲端！', 'success');
       } catch (err) {
-        alert('儲存失敗：' + err.message);
+        showToast('儲存失敗：' + err.message, 'error');
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = '儲存至雲端';
       }
     }
 
-    // 刪除資料
-    async function deleteUrl(rowIndex) {
-      if (!confirm('確定要刪除此書籤嗎？')) return;
-      
-      showLoading('正在刪除資料...');
-      try {
-        rawUrlsData = await fetchApi('delete', { rowIndex });
-        renderCategories();
-        filterUrls();
-      } catch (err) {
-        alert('刪除失敗：' + err.message);
-      } finally {
-        hideLoading();
-      }
+    // 刪除書籤
+    function deleteUrl(rowIndex) {
+      showConfirmModal('確定要刪除此書籤嗎？', async () => {
+        showLoading('正在刪除資料...');
+        try {
+          rawUrlsData = await fetchApi('delete', { rowIndex });
+          localStorage.setItem('gas_bookmarks_cache', JSON.stringify(rawUrlsData));
+          renderCategories();
+          filterUrls();
+          showToast('書籤已成功刪除', 'success');
+        } catch (err) {
+          showToast('刪除失敗：' + err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
     }
 
-    // 設定 API 網址相關
+    // 儲存 API 網址
     function saveApiUrl() {
       const url = document.getElementById('apiUrlInput').value.trim();
       if (!url.startsWith('https://script.google.com/')) {
-        alert('請輸入正確的 Google Apps Script 網址！');
+        showToast('請輸入正確的 Google Apps Script 網址！', 'error');
         return;
       }
       localStorage.setItem('gas_api_url', url);
@@ -324,13 +498,22 @@
     // 搜尋與分類過濾
     function filterUrls() {
       const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+      
       const filtered = rawUrlsData.filter(item => {
         const matchesCategory = (activeCategory === '全部') || (item.category === activeCategory);
-        const matchesSearch = item.title.toLowerCase().includes(keyword) || 
-                              item.url.toLowerCase().includes(keyword) ||
+        const matchesSearch = (item.title && item.title.toLowerCase().includes(keyword)) || 
+                              (item.url && item.url.toLowerCase().includes(keyword)) ||
                               (item.note && item.note.toLowerCase().includes(keyword));
         return matchesCategory && matchesSearch;
       });
+
+      // 置頂項目優先排序
+      filtered.sort((a, b) => {
+        const aPinned = (a.isPinned === true || a.isPinned === 'TRUE');
+        const bPinned = (b.isPinned === true || b.isPinned === 'TRUE');
+        return (bPinned ? 1 : 0) - (aPinned ? 1 : 0);
+      });
+
       renderGrid(filtered);
     }
 
@@ -341,7 +524,7 @@
       catContainer.innerHTML = categories.map(cat => {
         const isActive = cat === activeCategory;
         const activeClass = isActive ? 'bg-[#9059FF] text-white font-semibold' : 'bg-[#2B2A33] text-[#A2A0B3] border border-[#42414D]';
-        return `<button onclick="setCategory('${cat}')" class="text-xs px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors ${activeClass}">${cat}</button>`;
+        return `<button onclick="setCategory('${escapeHTML(cat)}')" class="text-xs px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors ${activeClass}">${escapeHTML(cat)}</button>`;
       }).join('');
     }
 
@@ -351,15 +534,7 @@
       filterUrls();
     }
 
-    function getFaviconUrl(domainUrl) {
-      try {
-        const domain = new URL(domainUrl).hostname;
-        return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-      } catch (e) {
-        return '';
-      }
-    }
-
+    // 渲染卡片 (純文字排版，無 ICON)
     function renderGrid(urls) {
       const grid = document.getElementById('urlGrid');
       document.getElementById('itemCount').innerText = `${urls.length} 個書籤`;
@@ -371,30 +546,43 @@
       }
 
       urls.forEach(item => {
-        const favicon = getFaviconUrl(item.url);
+        const isPinned = (item.isPinned === true || item.isPinned === 'TRUE');
         const card = document.createElement('div');
-        card.className = "bookmark-card rounded-xl p-3 flex items-center justify-between gap-3 shadow-sm";
+        card.className = `bookmark-card rounded-xl p-3 flex items-center justify-between gap-3 shadow-sm ${isPinned ? 'pinned' : ''}`;
         
+        const safeTitle = escapeHTML(item.title || item.url);
+        const safeUrl = escapeHTML(item.url);
+        const safeNote = escapeHTML(item.note);
+        const safeCategory = escapeHTML(item.category || '未分類');
+
         card.innerHTML = `
-          <a href="${item.url}" target="_blank" class="flex items-center gap-3 flex-1 min-w-0">
-            <div class="w-10 h-10 rounded-lg bg-[#1C1B22] border border-[#42414D] flex items-center justify-center shrink-0 overflow-hidden">
-              <img src="${favicon}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1006/1006771.png'" class="w-5 h-5 object-contain" alt="icon">
+          <!-- 純文字資訊區 -->
+          <a href="${safeUrl}" target="_blank" class="flex flex-col justify-center gap-0.5 flex-1 min-w-0 py-0.5">
+            <div class="flex items-center gap-1.5 min-w-0">
+              ${isPinned ? `<i class="fa-solid fa-thumbtack text-amber-400 text-xs shrink-0" title="置頂書籤"></i>` : ''}
+              <h3 class="text-sm font-semibold text-[#F9F9FB] truncate">${safeTitle}</h3>
             </div>
-            <div class="space-y-0.5 min-w-0">
-              <h3 class="text-sm font-semibold text-[#F9F9FB] truncate">${item.title}</h3>
-              <p class="text-xs text-[#8F8F9D] truncate">${item.url}</p>
-              ${item.note ? `<p class="text-xs text-[#00DDFF]/80 truncate">${item.note}</p>` : ''}
-            </div>
+            <p class="text-xs text-[#8F8F9D] truncate">${safeUrl}</p>
+            ${safeNote ? `<p class="text-xs text-[#00DDFF]/80 truncate">${safeNote}</p>` : ''}
           </a>
-          <div class="flex flex-col items-end justify-between shrink-0 h-full py-0.5 gap-1">
-            <span class="text-[10px] bg-[#38383D] text-[#A2A0B3] px-2 py-0.5 rounded-full border border-[#42414D]">${item.category}</span>
-            <div class="flex items-center gap-1">
-              <!-- 一鍵複製按鈕 -->
-              <button onclick="copyUrl(this)" data-url="${item.url}" class="text-[#8F8F9D] hover:text-[#00DDFF] p-1 text-xs transition-colors" title="複製連結">
+          <!-- 右側標籤與操作按鈕 -->
+          <div class="flex flex-col items-end justify-between shrink-0 h-full py-0.5 gap-1.5">
+            <span class="text-[10px] bg-[#38383D] text-[#A2A0B3] px-2 py-0.5 rounded-full border border-[#42414D]">${safeCategory}</span>
+            <div class="flex items-center gap-1.5">
+              <!-- 置頂按鈕 -->
+              <button onclick="togglePin(${item.rowIndex}, ${isPinned})" class="text-[#8F8F9D] ${isPinned ? 'text-amber-400' : 'hover:text-amber-400'} p-0.5 text-xs transition-colors" title="${isPinned ? '取消置頂' : '置頂'}">
+                <i class="fa-solid fa-thumbtack"></i>
+              </button>
+              <!-- 複製按鈕 -->
+              <button onclick="copyUrl(this)" data-url="${safeUrl}" class="text-[#8F8F9D] hover:text-[#00DDFF] p-0.5 text-xs transition-colors" title="複製連結">
                 <i class="fa-regular fa-copy"></i>
               </button>
+              <!-- 編輯按鈕 -->
+              <button onclick="editBookmark(${item.rowIndex})" class="text-[#8F8F9D] hover:text-[#9059FF] p-0.5 text-xs transition-colors" title="編輯">
+                <i class="fa-regular fa-pen-to-square"></i>
+              </button>
               <!-- 刪除按鈕 -->
-              <button onclick="deleteUrl(${item.rowIndex})" class="text-[#8F8F9D] hover:text-[#FF2A51] p-1 text-xs transition-colors" title="刪除">
+              <button onclick="deleteUrl(${item.rowIndex})" class="text-[#8F8F9D] hover:text-[#FF2A51] p-0.5 text-xs transition-colors" title="刪除">
                 <i class="fa-regular fa-trash-can"></i>
               </button>
             </div>
@@ -416,7 +604,6 @@
     }
 
     function openModal() {
-      if (!localStorage.getItem('gas_api_url')) return openApiModal();
       document.getElementById('modalOverlay').classList.remove('hidden');
       setTimeout(() => {
         document.getElementById('modalOverlay').classList.remove('opacity-0');
