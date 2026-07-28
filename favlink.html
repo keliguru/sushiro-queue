@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的書籤</title>
+  
+	<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favlink-icon.png">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="我的書籤">
+	<meta property="og:description" content="我的書籤">
+	<meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favlink-icon.png"> 
+	<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/favlink-icon.png">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="我的書籤">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 圖示庫 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body {
+      background-color: #1C1B22;
+      color: #F9F9FB;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .brand-gradient-text {
+      background: linear-gradient(135deg, #FF9400 0%, #FF2A51 50%, #C642B5 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-gradient-bg {
+      background: linear-gradient(135deg, #FF7139 0%, #E22781 50%, #9059FF 100%);
+    }
+    .bookmark-card {
+      background-color: #2B2A33;
+      border: 1px solid #42414D;
+    }
+    .bookmark-input {
+      background-color: #2B2A33;
+      border: 1px solid #52525E;
+      color: #F9F9FB;
+    }
+    .bookmark-input:focus {
+      border-color: #00DDFF;
+      outline: none;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .sheet-enter { transform: translateY(100%); transition: transform 0.25s cubic-bezier(0, 0, 0.2, 1); }
+    .sheet-show { transform: translateY(0%); }
+  </style>
+</head>
+<body class="min-h-screen pb-24 flex flex-col justify-between">
+
+  <!-- 上方 Top Bar -->
+  <header class="sticky top-0 z-20 bg-[#1C1B22]/90 backdrop-blur-md px-4 py-3 border-b border-[#38383D] flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-full brand-gradient-bg flex items-center justify-center shadow-lg shadow-purple-900/30">
+        <i class="fa-solid fa-bookmark text-white text-sm"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-wide">
+          <span class="brand-gradient-text text-lg">我的書籤</span>
+        </h1>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <span id="itemCount" class="text-xs font-medium px-2.5 py-1 rounded-full bg-[#2B2A33] text-[#A2A0B3] border border-[#42414D]">
+        離線/未連線
+      </span>
+      <!-- API 設定按鈕 -->
+      <button onclick="openApiModal()" class="w-8 h-8 rounded-full bg-[#2B2A33] border border-[#42414D] text-[#A2A0B3] flex items-center justify-center hover:text-white">
+        <i class="fa-solid fa-gear text-sm"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="px-4 py-3 max-w-lg mx-auto w-full space-y-4 flex-1">
+
+    <!-- 快速搜尋 -->
+    <div class="relative">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8F8F9D] text-sm"></i>
+      <input type="text" id="searchInput" oninput="filterUrls()" placeholder="搜尋書籤標題或網址..." 
+             class="w-full pl-10 pr-4 py-2.5 rounded-xl bookmark-input text-sm placeholder-[#8F8F9D]">
+    </div>
+
+    <!-- 分類 Tab -->
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1" id="categoryContainer">
+      <button onclick="setCategory('全部')" class="text-xs px-3.5 py-1.5 rounded-full font-medium bg-[#9059FF] text-white">全部</button>
+    </div>
+
+    <!-- 狀態顯示 -->
+    <div id="loading" class="py-16 text-center space-y-3 hidden">
+      <div class="inline-block w-8 h-8 border-3 border-t-transparent border-[#9059FF] rounded-full animate-spin"></div>
+      <p class="text-xs text-[#A2A0B3]" id="loadingText">正在連線至 API...</p>
+    </div>
+
+    <!-- API 未設定提示區塊 -->
+    <div id="noApiNotice" class="py-12 text-center space-y-3 bg-[#2B2A33] border border-[#42414D] rounded-2xl p-6 my-4">
+      <i class="fa-solid fa-link-slash text-4xl text-[#FF7139]"></i>
+      <h2 class="text-base font-bold text-white">未設定 GAS API URL</h2>
+      <p class="text-xs text-[#A2A0B3]">請點擊下方按鈕或右上角齒輪設定你的 Google Apps Script Web App 網址。</p>
+      <button onclick="openApiModal()" class="brand-gradient-bg px-5 py-2 rounded-xl text-xs font-semibold text-white shadow-md">
+        設定 API 網址
+      </button>
+    </div>
+
+    <!-- 書籤清單容器 -->
+    <div id="urlGrid" class="grid grid-cols-1 gap-2.5 hidden"></div>
+
+  </main>
+
+  <!-- 底部固定 Nav -->
+  <div class="fixed bottom-0 left-0 right-0 z-30 bg-[#2B2A33] border-t border-[#42414D] px-4 py-2.5 flex items-center justify-between shadow-2xl">
+    <div class="flex items-center gap-2 text-xs text-[#A2A0B3]">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>API 模式</span>
+    </div>
+    
+    <button onclick="openModal()" class="brand-gradient-bg text-white font-medium text-sm px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg active:scale-95 transition-transform">
+      <i class="fa-solid fa-plus text-xs"></i>
+      <span>新增網址</span>
+    </button>
+  </div>
+
+  <!-- API 設定 Modal -->
+  <div id="apiModalOverlay" class="fixed inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-200" onclick="closeApiModal()"></div>
+  <div id="apiModalSheet" class="fixed bottom-0 left-0 right-0 z-50 bg-[#1C1B22] border-t border-[#42414D] rounded-t-2xl p-5 space-y-4 sheet-enter max-w-lg mx-auto">
+    <div class="w-12 h-1 bg-[#42414D] rounded-full mx-auto mb-2"></div>
+    <h3 class="text-base font-bold text-white flex items-center gap-2">
+      <i class="fa-solid fa-gear text-[#00DDFF]"></i> 設定 GAS API URL
+    </h3>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-[#A2A0B3] mb-1">Web App API 網址</label>
+        <input type="url" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" 
+               class="w-full px-3 py-2.5 rounded-lg bookmark-input text-xs font-mono">
+      </div>
+      <button onclick="saveApiUrl()" class="w-full py-2.5 brand-gradient-bg text-white font-semibold rounded-xl text-sm">
+        儲存設定並同步
+      </button>
+    </div>
+  </div>
+
+  <!-- 新增網址 Modal -->
+  <div id="modalOverlay" class="fixed inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-200" onclick="closeModal()"></div>
+  <div id="modalSheet" class="fixed bottom-0 left-0 right-0 z-50 bg-[#1C1B22] border-t border-[#42414D] rounded-t-2xl p-5 space-y-4 sheet-enter max-w-lg mx-auto">
+    <div class="w-12 h-1 bg-[#42414D] rounded-full mx-auto mb-2"></div>
+    <div class="flex items-center justify-between">
+      <h3 class="text-base font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-bookmark text-[#FF7139]"></i> 儲存新書籤
+      </h3>
+      <button onclick="closeModal()" class="text-[#A2A0B3] p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+
+    <form id="urlForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-[#A2A0B3] mb-1">網址 URL <span class="text-[#FF2A51]">*</span></label>
+        <input type="url" id="url" required placeholder="https://example.com" class="w-full px-3 py-2.5 rounded-lg bookmark-input text-sm">
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-medium text-[#A2A0B3] mb-1">網站名稱</label>
+          <input type="text" id="title" placeholder="預設使用網址" class="w-full px-3 py-2.5 rounded-lg bookmark-input text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[#A2A0B3] mb-1">分類標籤</label>
+          <input type="text" id="category" placeholder="工作、影音" class="w-full px-3 py-2.5 rounded-lg bookmark-input text-sm">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-[#A2A0B3] mb-1">備註說明</label>
+        <input type="text" id="note" placeholder="可選填" class="w-full px-3 py-2.5 rounded-lg bookmark-input text-sm">
+      </div>
+      <button type="submit" id="submitBtn" class="w-full py-3 brand-gradient-bg text-white font-semibold rounded-xl shadow-md active:opacity-90 mt-2">
+        儲存至雲端
+      </button>
+    </form>
+  </div>
+
+  <script>
+    let rawUrlsData = [];
+    let activeCategory = '全部';
+
+    window.onload = function() {
+      const savedApiUrl = localStorage.getItem('gas_api_url');
+      if (savedApiUrl) {
+        document.getElementById('apiUrlInput').value = savedApiUrl;
+        document.getElementById('noApiNotice').classList.add('hidden');
+        loadUrls();
+      } else {
+        document.getElementById('noApiNotice').classList.remove('hidden');
+      }
+    };
+
+    // API 呼叫函式
+    async function fetchApi(action, payload = {}) {
+      const apiUrl = localStorage.getItem('gas_api_url');
+      if (!apiUrl) throw new Error('請先設定 GAS API 網址');
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...payload })
+      });
+
+      const res = await response.json();
+      if (res.status === 'error') {
+        throw new Error(res.message);
+      }
+      return res.data;
+    }
+
+    // 載入資料
+    async function loadUrls() {
+      showLoading('正在同步 Google Sheet 資料...');
+      try {
+        rawUrlsData = await fetchApi('get');
+        renderCategories();
+        filterUrls();
+      } catch (err) {
+        alert('載入失敗：' + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // 一鍵複製連結功能
+    async function copyUrl(btnElement) {
+      const url = btnElement.getAttribute('data-url');
+      if (!url) return;
+
+      const icon = btnElement.querySelector('i');
+      const originalClass = icon.className;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          // 備用複製方案 (相容舊版瀏覽器或非 HTTPS 環境)
+          const textArea = document.createElement("textarea");
+          textArea.value = url;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+        }
+
+        // 複製成功視覺回饋 (圖示變綠色勾勾 1.5 秒)
+        icon.className = 'fa-solid fa-check text-emerald-400';
+        setTimeout(() => {
+          icon.className = originalClass;
+        }, 1500);
+
+      } catch (err) {
+        alert('複製失敗，請手動複製網址');
+      }
+    }
+
+    // 表單提交 (新增)
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = '儲存中...';
+
+      const data = {
+        url: document.getElementById('url').value.trim(),
+        title: document.getElementById('title').value.trim(),
+        category: document.getElementById('category').value.trim(),
+        note: document.getElementById('note').value.trim()
+      };
+
+      try {
+        rawUrlsData = await fetchApi('save', { data });
+        renderCategories();
+        filterUrls();
+        document.getElementById('urlForm').reset();
+        closeModal();
+      } catch (err) {
+        alert('儲存失敗：' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = '儲存至雲端';
+      }
+    }
+
+    // 刪除資料
+    async function deleteUrl(rowIndex) {
+      if (!confirm('確定要刪除此書籤嗎？')) return;
+      
+      showLoading('正在刪除資料...');
+      try {
+        rawUrlsData = await fetchApi('delete', { rowIndex });
+        renderCategories();
+        filterUrls();
+      } catch (err) {
+        alert('刪除失敗：' + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // 設定 API 網址相關
+    function saveApiUrl() {
+      const url = document.getElementById('apiUrlInput').value.trim();
+      if (!url.startsWith('https://script.google.com/')) {
+        alert('請輸入正確的 Google Apps Script 網址！');
+        return;
+      }
+      localStorage.setItem('gas_api_url', url);
+      closeApiModal();
+      document.getElementById('noApiNotice').classList.add('hidden');
+      loadUrls();
+    }
+
+    // 搜尋與分類過濾
+    function filterUrls() {
+      const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+      const filtered = rawUrlsData.filter(item => {
+        const matchesCategory = (activeCategory === '全部') || (item.category === activeCategory);
+        const matchesSearch = item.title.toLowerCase().includes(keyword) || 
+                              item.url.toLowerCase().includes(keyword) ||
+                              (item.note && item.note.toLowerCase().includes(keyword));
+        return matchesCategory && matchesSearch;
+      });
+      renderGrid(filtered);
+    }
+
+    function renderCategories() {
+      const catContainer = document.getElementById('categoryContainer');
+      const categories = ['全部', ...new Set(rawUrlsData.map(i => i.category || '未分類').filter(Boolean))];
+
+      catContainer.innerHTML = categories.map(cat => {
+        const isActive = cat === activeCategory;
+        const activeClass = isActive ? 'bg-[#9059FF] text-white font-semibold' : 'bg-[#2B2A33] text-[#A2A0B3] border border-[#42414D]';
+        return `<button onclick="setCategory('${cat}')" class="text-xs px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors ${activeClass}">${cat}</button>`;
+      }).join('');
+    }
+
+    function setCategory(cat) {
+      activeCategory = cat;
+      renderCategories();
+      filterUrls();
+    }
+
+    function getFaviconUrl(domainUrl) {
+      try {
+        const domain = new URL(domainUrl).hostname;
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function renderGrid(urls) {
+      const grid = document.getElementById('urlGrid');
+      document.getElementById('itemCount').innerText = `${urls.length} 個書籤`;
+      grid.innerHTML = '';
+
+      if (urls.length === 0) {
+        grid.innerHTML = `<div class="text-center py-12 text-[#8F8F9D]"><p class="text-xs">沒有找到相符的網址</p></div>`;
+        return;
+      }
+
+      urls.forEach(item => {
+        const favicon = getFaviconUrl(item.url);
+        const card = document.createElement('div');
+        card.className = "bookmark-card rounded-xl p-3 flex items-center justify-between gap-3 shadow-sm";
+        
+        card.innerHTML = `
+          <a href="${item.url}" target="_blank" class="flex items-center gap-3 flex-1 min-w-0">
+            <div class="w-10 h-10 rounded-lg bg-[#1C1B22] border border-[#42414D] flex items-center justify-center shrink-0 overflow-hidden">
+              <img src="${favicon}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1006/1006771.png'" class="w-5 h-5 object-contain" alt="icon">
+            </div>
+            <div class="space-y-0.5 min-w-0">
+              <h3 class="text-sm font-semibold text-[#F9F9FB] truncate">${item.title}</h3>
+              <p class="text-xs text-[#8F8F9D] truncate">${item.url}</p>
+              ${item.note ? `<p class="text-xs text-[#00DDFF]/80 truncate">${item.note}</p>` : ''}
+            </div>
+          </a>
+          <div class="flex flex-col items-end justify-between shrink-0 h-full py-0.5 gap-1">
+            <span class="text-[10px] bg-[#38383D] text-[#A2A0B3] px-2 py-0.5 rounded-full border border-[#42414D]">${item.category}</span>
+            <div class="flex items-center gap-1">
+              <!-- 一鍵複製按鈕 -->
+              <button onclick="copyUrl(this)" data-url="${item.url}" class="text-[#8F8F9D] hover:text-[#00DDFF] p-1 text-xs transition-colors" title="複製連結">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+              <!-- 刪除按鈕 -->
+              <button onclick="deleteUrl(${item.rowIndex})" class="text-[#8F8F9D] hover:text-[#FF2A51] p-1 text-xs transition-colors" title="刪除">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function showLoading(text) {
+      document.getElementById('loadingText').innerText = text;
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('urlGrid').classList.add('hidden');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('urlGrid').classList.remove('hidden');
+    }
+
+    function openModal() {
+      if (!localStorage.getItem('gas_api_url')) return openApiModal();
+      document.getElementById('modalOverlay').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('modalOverlay').classList.remove('opacity-0');
+        document.getElementById('modalSheet').classList.add('sheet-show');
+      }, 10);
+    }
+
+    function closeModal() {
+      document.getElementById('modalSheet').classList.remove('sheet-show');
+      document.getElementById('modalOverlay').classList.add('opacity-0');
+      setTimeout(() => document.getElementById('modalOverlay').classList.add('hidden'), 200);
+    }
+
+    function openApiModal() {
+      document.getElementById('apiModalOverlay').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('apiModalOverlay').classList.remove('opacity-0');
+        document.getElementById('apiModalSheet').classList.add('sheet-show');
+      }, 10);
+    }
+
+    function closeApiModal() {
+      document.getElementById('apiModalSheet').classList.remove('sheet-show');
+      document.getElementById('apiModalOverlay').classList.add('opacity-0');
+      setTimeout(() => document.getElementById('apiModalOverlay').classList.add('hidden'), 200);
+    }
+  </script>
+</body>
+</html>
