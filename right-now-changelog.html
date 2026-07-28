@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>更新日誌 - 玩具交通總部</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/right-now-icon.png">
+    <style>
+        :root {
+            --primary: #005a9c;
+            --primary-hover: #004475;
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #475569;
+            --border: #000000;
+        }
+
+        body.dark-mode {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-light: #94a3b8;
+            --border: #ffffff;
+            background-color: #0f172a;
+            background-image: radial-gradient(#334155 25%, transparent 25%);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: "Comic Sans MS", "Quicksand", "M PLUS Round 1c", "PingFang HK", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #e2e8f0;
+            background-image: radial-gradient(#cbd5e1 25%, transparent 25%);
+            background-size: 18px 18px;
+            color: var(--text);
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 16px;
+            border-radius: 16px;
+            border: 3px solid var(--border);
+            box-shadow: 4px 4px 0px var(--border);
+            width: 100%;
+            position: relative;
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-weight: 900;
+            word-break: break-word;
+            font-size: 1.2rem;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 3px dashed #cbd5e1;
+            color: var(--primary);
+        }
+
+        body.dark-mode h2 {
+            border-bottom-color: #475569;
+        }
+
+        button {
+            padding: 12px 16px;
+            border: 3px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 3px 3px 0px var(--border);
+            -webkit-appearance: none;
+            appearance: none;
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--border);
+        }
+
+        .btn-primary {
+            background-color: #ffd200;
+            color: #000;
+        }
+
+        body.dark-mode .btn-primary {
+            background-color: #005a9c;
+            color: #fff;
+        }
+
+        /* 📜 更新日誌專用樣式 */
+        .changelog-item {
+            border: 3px dashed var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 14px;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        body.dark-mode .changelog-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: #475569;
+        }
+
+        .changelog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        body.dark-mode .changelog-header {
+            border-bottom-color: #475569;
+        }
+
+        .changelog-version {
+            font-size: 1.15rem;
+            font-weight: 950;
+            color: var(--primary);
+        }
+
+        body.dark-mode .changelog-version {
+            color: #38bdf8;
+        }
+
+        .changelog-date {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 800;
+        }
+
+        .changelog-list {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            font-weight: 700;
+        }
+
+        .changelog-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 1px 6px;
+            border-radius: 6px;
+            font-weight: 900;
+            margin-right: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .tag-new { background: #22c55e; color: #fff; }
+        .tag-opt { background: #3b82f6; color: #fff; }
+        .tag-fix { background: #ef4444; color: #fff; }
+
+        .floating-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 15px;
+            padding: 0;
+            font-size: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #ffffff;
+            border: 3px solid var(--border);
+            border-radius: 50%;
+            box-shadow: 3px 3px 0px var(--border);
+            width: 44px;
+            height: 44px;
+            z-index: 999;
+        }
+
+        body.dark-mode .floating-btn {
+            background: #1e293b;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card" id="changelogCard">
+        <h2>📜 玩具交通總部 - 更新日誌</h2>
+        <button class="btn-primary" onclick="history.back()" style="margin-bottom: 14px; font-size: 0.9rem;">
+            ⬅️ 返回上一頁
+        </button>
+        
+        <div id="changelogContent">
+            <!-- v1.7.0 新增項目 -->
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version">v1.7.0</span>
+                    <span class="changelog-date">2026-07-28</span>
+                </div>
+                <ul class="changelog-list">
+                    <li><span class="changelog-tag tag-opt">OPT</span>👉 右側進入圖示：卡片右側改為「進入」，點擊後即可進入該群組的「內容管理 / 配置」頁面。</li>
+                    <li><span class="changelog-tag tag-new">NEW</span>👈 左滑功能選單：向左一拉會展開 150px 的雙按鈕選單，分別為藍色的「修改」與紅色的「移除」。</li>
+                </ul>
+            </div>
+
+            <!-- v1.6.0 新增項目 -->
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version">v1.6.0</span>
+                    <span class="changelog-date">2026-07-28</span>
+                </div>
+                <ul class="changelog-list">
+                    <li><span class="changelog-tag tag-new">NEW</span>🌟 預載「示範基地」：首次開啟自動建立範例基地（九巴 1A / 城巴 102），零門檻立即體驗實時 ETA。</li>
+                    <li><span class="changelog-tag tag-opt">OPT</span>🚀 流程優化：點擊「新增」基地後，自動直接進入該基地的「⚙️ 配置頁面」。</li>
+                    <li><span class="changelog-tag tag-opt">OPT</span>📖 聰明說明：首次造訪自動展開使用說明，第二次起自動維持收合不佔螢幕空間。</li>
+                    <li><span class="changelog-tag tag-opt">OPT</span>🎨 空狀態升級：列表無資料時，新增 [ ⚡ 一鍵載入熱門範例路線 ] 引導按鈕。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version">v1.5.0</span>
+                    <span class="changelog-date">2026-07-28</span>
+                </div>
+                <ul class="changelog-list">
+                    <li><span class="changelog-tag tag-new">NEW</span>新增「📜 更新日誌」獨立頁面與快捷浮動按鈕。</li>
+                    <li><span class="changelog-tag tag-new">NEW</span>👑 VIP 推播通知功能，支援 5 分鐘魔鬼倒數推播。</li>
+                    <li><span class="changelog-tag tag-new">NEW</span>🐣 首次造訪新手互動導覽演習系統。</li>
+                    <li><span class="changelog-tag tag-opt">OPT</span>優化全線車站實時預報 (完整支援九巴/城巴/專線小巴)。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version">v1.4.0</span>
+                    <span class="changelog-date">2026-05-15</span>
+                </div>
+                <ul class="changelog-list">
+                    <li><span class="changelog-tag tag-new">NEW</span>支援專線小巴 (GMB/MIB) 實時數據查詢與站點配對。</li>
+                    <li><span class="changelog-tag tag-new">NEW</span>一鍵「📤 匯出」與「📥 匯入」基地設定與 VIP 備份。</li>
+                    <li><span class="changelog-tag tag-opt">OPT</span>支援啟動時自動打開指定群組基地功能。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version">v1.3.0</span>
+                    <span class="changelog-date">2026-03-01</span>
+                </div>
+                <ul class="changelog-list">
+                    <li><span class="changelog-tag tag-new">NEW</span>車站📌置頂功能，常用車站優先排列最上方。</li>
+                    <li><span class="changelog-tag tag-new">NEW</span>基地卡片左滑手勢，輕鬆隱藏與刪除基地。</li>
+                    <li><span class="changelog-tag tag-opt">OPT</span>新增黑夜模式 🌙 / ☀️ 全局主題切換。</li>
+                </ul>
+            </div>
+
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version">v1.0.0</span>
+                    <span class="changelog-date">2026-01-10</span>
+                </div>
+                <ul class="changelog-list">
+                    <li><span class="changelog-tag tag-new">NEW</span>玩具交通總部正式上線，支援九巴 (KMB) 及城巴 (CTB) 實時到站時間 (ETA)。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button class="floating-btn" id="themeBtn" onclick="toggleDarkMode()" title="切換黑夜模式">🌙</button>
+
+<script>
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('dark_mode_enabled', isDark ? 'true' : 'false');
+        document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('dark_mode_enabled') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeBtn').textContent = '☀️';
+        }
+    });
+</script>
+</body>
+</html>
