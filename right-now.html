@@ -307,48 +307,27 @@
         }
         
         .list-item.swiped .list-item-inner {
-            transform: translateX(-150px);
+            transform: translateX(-85px);
         }
         
-        /* 側滑隱藏區域容器 */
-        .list-item-actions {
+        .list-item-delete {
             position: absolute;
             right: 0;
             top: 0;
             bottom: 0;
-            width: 150px;
-            display: flex;
-            z-index: 1;
-            border-left: 3px solid var(--border);
-            transition: border-color 0.3s;
-        }
-
-        .list-item-action-btn {
-            flex: 1;
+            width: 85px;
+            background: #ff4d4d;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 950;
             font-size: 0.85rem;
             cursor: pointer;
-            color: white;
+            z-index: 1;
+            border-left: 3px solid var(--border);
             letter-spacing: 0.5px;
-            transition: background-color 0.2s;
-        }
-
-        .action-edit {
-            background: #2563eb;
-            border-right: 2px solid var(--border);
-        }
-        .action-edit:active {
-            background: #1d4ed8;
-        }
-
-        .action-delete {
-            background: #ff4d4d;
-        }
-        .action-delete:active {
-            background: #dc2626;
+            transition: border-color 0.3s;
         }
         
         .list-item .item-title { 
@@ -540,6 +519,7 @@
             filter: brightness(0.9);
         }
 
+        /* 👑 升級版高質感 VIP 通知功能區樣式 */
         .vip-details {
             background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
             padding: 16px;
@@ -560,7 +540,7 @@
             cursor: pointer; 
             user-select: none;
             outline: none;
-            list-style: none;
+            list-style: none; /* 隱藏預設箭頭 */
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -569,7 +549,7 @@
             color: #fde68a;
         }
         .vip-summary::-webkit-details-marker {
-            display: none;
+            display: none; /* 針對 Safari 隱藏預設箭頭 */
         }
         .vip-badge-tag {
             background-color: #f59e0b;
@@ -605,6 +585,7 @@
             color: #fef3c7;
         }
 
+        /* 新增  輸入顯示樣式 */
         .webhook-success-container {
             display: flex;
             align-items: center;
@@ -644,103 +625,6 @@
             transform: translate(1px, 1px);
             box-shadow: 0.5px 0.5px 0px var(--border);
         }
-		
-        .onboarding-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.75);
-            z-index: 10000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .onboarding-card {
-            background: var(--card);
-            border: 4px solid var(--border);
-            border-radius: 20px;
-            padding: 24px;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: 6px 6px 0px var(--border);
-            text-align: center;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .onboarding-step-badge {
-            display: inline-block;
-            background: #ffd200;
-            color: #000;
-            font-weight: 900;
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 2px solid #000;
-            margin-bottom: 12px;
-        }
-        .onboarding-btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: space-between;
-        }
-
-        .changelog-item {
-            border: 3px dashed var(--border);
-            border-radius: 14px;
-            padding: 14px;
-            margin-bottom: 14px;
-            background: rgba(0, 0, 0, 0.02);
-        }
-        body.dark-mode .changelog-item {
-            background: rgba(255, 255, 255, 0.03);
-            border-color: #475569;
-        }
-        .changelog-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid var(--border);
-        }
-        body.dark-mode .changelog-header {
-            border-bottom-color: #475569;
-        }
-        .changelog-version {
-            font-size: 1.15rem;
-            font-weight: 950;
-            color: var(--primary);
-        }
-        body.dark-mode .changelog-version {
-            color: #38bdf8;
-        }
-        .changelog-date {
-            font-size: 0.8rem;
-            color: var(--text-light);
-            font-weight: 800;
-        }
-        .changelog-list {
-            margin: 0;
-            padding-left: 18px;
-            font-size: 0.9rem;
-            line-height: 1.6;
-            font-weight: 700;
-        }
-        .changelog-tag {
-            display: inline-block;
-            font-size: 0.7rem;
-            padding: 1px 6px;
-            border-radius: 6px;
-            font-weight: 900;
-            margin-right: 4px;
-            border: 1px solid var(--border);
-        }
-        .tag-new { background: #22c55e; color: #fff; }
-        .tag-opt { background: #3b82f6; color: #fff; }
-        .tag-fix { background: #ef4444; color: #fff; }
     </style>
 </head>
 <body>
@@ -765,15 +649,10 @@
         </h3>
         <div class="instructions-content" id="guideContent" style="display: none;">
             <div class="instructions-step">1. 🧱 <b>建立基地</b>：在下方輸入名稱並點「新增」，建立你的路線群組。</div>
-            <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組右側的「➥」按鈕進入管理，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
+            <div class="instructions-step">2. ⚙️ <b>裝配車輛</b>：點擊群組的「⚙️」按鈕，自由挑選巴士或小巴，並登記你常去的車站點。拖曳項目可自定排序！</div>
             <div class="instructions-step">3. 🚌 <b>出發看時間</b>：在主頁直接點擊群組方塊，即可一秒召喚出所有動態實時到站時間 (ETA)！</div>
-            <div class="instructions-step">💡 <b>秘密密技</b>：主頁的基地卡片<b>「往左一拉（手機滑動或電腦滑鼠拖曳）」</b>，即可顯示 <b style="color:#2563eb;">修改</b> 與 <b style="color:red;">移除</b> 功能喔！</div>
-			<div class="instructions-step">
-				<button style="float: right;" class="btn-backup-mini btn-changelog" id="changelogBtn" onclick="showChangelog()" title="查看更新日誌">
-				更新日誌
-				</button>
-			</div>
-		</div>
+            <div class="instructions-step">💡 <b>秘密密技</b>：主頁的基地卡片<b>「往左一拉（手機滑動或電腦滑鼠拖曳）」</b>，就能隱藏開啟紅色 <b>DELETE</b> 鍵移除基地喔！</div>
+        </div>
     </div>
 
     <div class="card" id="profileContainer">
@@ -807,6 +686,7 @@
         </div>
 
         <div class="divider"></div>
+        <!-- 👑 特别突顯高質感的 VIP 通知功能區 -->
         <details class="vip-details" id="vipNotificationGroup">
             <summary class="vip-summary" id="vipSummaryTitle">
                 <span>👑 VIP 通知功能 <span class="vip-badge-tag">EXECUTIVE</span></span>
@@ -824,19 +704,23 @@
 驚碌電話碌到無神魂？最後 5 分鐘我哋會啟動「每分鐘炸你一次」魔鬼模式。再唔出門口，司機大佬真係踩油走人，唔等埋你㗎啦！
                 </div>
                 
+                <!--  URL 設定欄位區 -->
                 <div style="margin-top: 10px;">
                     <label style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">🔗 暗號：</label>
                     
+                    <!-- 輸入框容器 -->
                     <div id="webhookInputContainer">
                         <input type="text" id="webhookUrlInput" placeholder="暗號..." oninput="savePushoverSettings()">
                     </div>
                     
+                    <!-- 成功提示與修改按鈕容器 (預設隱藏) -->
                     <div id="webhookSuccessContainer" class="webhook-success-container" style="display: none;">
                         <span>✅ 暗號 輸入成功</span>
                         <button type="button" class="btn-edit-url" onclick="editWebhookUrl()" title="修改暗號">✏️</button>
                     </div>
                 </div>
 
+                <!-- Pushover 設定欄位區 ( 輸入成功後才顯示) -->
                 <div id="pushoverFieldsContainer" style="display: none;">
                     <div style="margin-top: 10px;">
                         <label for="pushoverUserKeyInput" style="font-size: 0.85rem; color: #b45309; margin-bottom: 4px; display: block;">👤 Pushover User Key：</label>
@@ -849,7 +733,6 @@
                 </div>
             </div>
         </details>
-		
     </div>
 
     <div class="right-panels">
@@ -913,7 +796,7 @@
             
             <div id="errorMessage" class="error" style="display: none;"></div>
             <div id="statusMessage" class="loading" style="display: none;">正在連線到交通總部...</div>
-            <div id="placeholderText" class="no-data">請返回主頁點擊群組右側的「➥」進行路線配對。</div>
+            <div id="placeholderText" class="no-data">請返回主頁點擊群組的「⚙️」進行路線配對。</div>
         </div>
         
         <div class="card" id="arrivalContainerCard" name="arrivalContainer" style="display: none;">
@@ -938,6 +821,7 @@
                 <div class="loading">正在載入全線車站數據...</div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -959,7 +843,8 @@
     let debounceTimer;
     let autoRefreshTimer = null;
     let isEtaLoading = false;
-	
+
+	// 驗證新的 URL 格式函數
 	function isValidWebhookUrl(url) {
 		const regex = /^https:\/\/([a-zA-Z0-9-]+\.)*cchlsy\.synology\.me(\/.*)?$/;
 		return regex.test(url);
@@ -981,8 +866,10 @@
         const savedWebhookUrl = localStorage.getItem('custom_webhook_url') || "";
         document.getElementById('webhookUrlInput').value = savedWebhookUrl;
 
+        // 頁面初始化時，檢查並渲染  URL 的輸入狀態與 Pushover 欄位
         updateWebhookDisplayState();
 
+        // 初始化 VIP ON/OFF 開關狀態
         const savedVipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
         document.getElementById('vipToggleSwitch').checked = savedVipEnabled;
 
@@ -995,6 +882,7 @@
             renderETA(autoOpenProfileId);
         }
 
+        // 初始化與監聽 VIP 折疊標題動態切換狀態
         const vipGroup = document.getElementById('vipNotificationGroup');
         const vipSummaryTitle = document.getElementById('vipSummaryTitle');
         if (vipGroup && vipSummaryTitle) {
@@ -1005,78 +893,9 @@
             updateVipTitle();
             vipGroup.addEventListener('toggle', updateVipTitle);
         }
-		
-        const isFirstVisit = !localStorage.getItem('first_time_visited');
-        if (isFirstVisit) {
-            showOnboardingTour();
-        }
     });
 
-	function showChangelog() {
-		window.location.href = 'right-now-changelog.html';
-	}
-	
-    function showOnboardingTour() {
-        const steps = [
-            {
-                title: "🧱 第一步：建立交通基地",
-                desc: "歡迎加入玩具交通總部！請先在「基地名稱」輸入你的常用情境（例如：返工、放學），並點擊新增。",
-                badge: "演習 Step 1/3"
-            },
-            {
-                title: "⚙️ 第二步：裝配車輛與站點",
-                desc: "建立基地後，點擊右側「➥」進入管理，選擇九巴、城巴或小巴，將你常用到的車輛站點加入清單！",
-                badge: "演習 Step 2/3"
-            },
-            {
-                title: "⏰ 第三步：一秒檢視即時班次",
-                desc: "搞定！往後只需點擊基地卡片，即可自動召喚最新動態到站時間 (ETA)！",
-                badge: "演習 Step 3/3"
-            }
-        ];
-
-        let currentStep = 0;
-
-        const overlay = document.createElement('div');
-        overlay.className = 'onboarding-overlay';
-        overlay.id = 'onboardingOverlay';
-
-        function updateModal() {
-            overlay.innerHTML = `
-                <div class="onboarding-card">
-                    <span class="onboarding-step-badge">${steps[currentStep].badge}</span>
-                    <h2 style="margin-bottom: 10px;">${steps[currentStep].title}</h2>
-                    <p style="font-size: 0.95rem; font-weight: 700; color: var(--text-light); line-height: 1.5; margin-bottom: 0;">${steps[currentStep].desc}</p>
-                    <div class="onboarding-btn-group">
-                        <button class="btn-danger" id="skipTourBtn">跳過教學</button>
-                        <button class="btn-primary" id="nextTourBtn">${currentStep === steps.length - 1 ? '開始實用 🚀' : '下一步 ➡️'}</button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(overlay);
-
-            document.getElementById('skipTourBtn').onclick = closeTour;
-            document.getElementById('nextTourBtn').onclick = () => {
-                if (currentStep < steps.length - 1) {
-                    currentStep++;
-                    updateModal();
-                } else {
-                    closeTour();
-                }
-            };
-        }
-
-        function closeTour() {
-            localStorage.setItem('first_time_visited', 'true');
-            if (document.getElementById('onboardingOverlay')) {
-                document.getElementById('onboardingOverlay').remove();
-            }
-        }
-
-        updateModal();
-    }
-
+    // 根據目前的 Webhook 網址是否合法，決定顯示「輸入框」還是「成功文字及修改按鈕」，並連動顯示/隱藏 Pushover 欄位
     function updateWebhookDisplayState() {
         const webhookUrl = localStorage.getItem('custom_webhook_url') || "";
         const inputContainer = document.getElementById('webhookInputContainer');
@@ -1094,11 +913,13 @@
         }
     }
 
+    // 當按下筆型(✏️)修改按鈕時，清除當前儲存，切換回輸入框狀態並獲得焦點
     function editWebhookUrl() {
         localStorage.removeItem('custom_webhook_url');
         const input = document.getElementById('webhookUrlInput');
         input.value = "";
         
+        // 如果原本開啟了 VIP 通知，修改網址時自動關閉
         if (localStorage.getItem('vip_notifications_enabled') === 'true') {
             document.getElementById('vipToggleSwitch').checked = false;
             localStorage.setItem('vip_notifications_enabled', 'false');
@@ -1133,8 +954,10 @@
         localStorage.setItem('pushoverapitoken', apiToken);
         localStorage.setItem('custom_webhook_url', webhookUrl);
         
+        // 每次輸入更新顯示狀態
         updateWebhookDisplayState();
         
+        // 若修改 URL 導致格式不正確，則自動關閉 VIP 狀態
         const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
         if (vipEnabled && !isValidWebhookUrl(webhookUrl)) {
             document.getElementById('vipToggleSwitch').checked = false;
@@ -1148,6 +971,7 @@
         const toggle = document.getElementById('vipToggleSwitch');
         const webhookUrl = document.getElementById('webhookUrlInput').value.trim();
         
+        // 啟用時強制驗證 URL
         if (toggle.checked) {
             if (!isValidWebhookUrl(webhookUrl)) {
                 alert('⚠️ 請先輸入正確的暗號才能開啟 VIP 功能！');
@@ -1157,7 +981,7 @@
         }
         
         localStorage.setItem('vip_notifications_enabled', toggle.checked ? 'true' : 'false');
-        fetchETA();
+        fetchETA(); // 即時重新刷新畫面以顯示或隱藏推播按鈕
     }
 
     function toggleDarkMode() {
@@ -1189,24 +1013,15 @@
         loadStops();
     }
 
-    /* 🧱 渲染基地清單 (修改：右側改為➥圖示，向左滑顯示 修改 | 移除) */
     function renderProfiles() {
         const profileList = document.getElementById('profileList');
         profileList.innerHTML = '';
         const keys = Object.keys(profiles);
-
-		if (keys.length === 0) { 
-			profileList.innerHTML = `
-				<li class="no-data" style="padding: 16px; background: rgba(0,0,0,0.02); border-radius: 12px; border: 2px dashed var(--border);">
-					<div style="margin-bottom: 8px;">👋 歡迎來到交通總部！目前還沒有基地。</div>
-					<button class="btn-primary" onclick="loadDemoData()" style="font-size: 0.85rem; padding: 6px 12px;">
-						⚡ 一鍵載入範例基地 (九巴 1A)
-					</button>
-				</li>
-			`; 
-			populateAutoOpenSelect();
-			return; 
-		}
+        if (keys.length === 0) { 
+            profileList.innerHTML = '<li class="no-data">目前空空如也，快建立新基地吧！</li>'; 
+            populateAutoOpenSelect();
+            return; 
+        }
 
         keys.forEach(id => {
             const li = document.createElement('li');
@@ -1215,61 +1030,44 @@
             const innerDiv = document.createElement('div');
             innerDiv.className = 'list-item-inner';
 
-            const iconSpan = document.createElement('span');
-            iconSpan.style.fontSize = '1.2rem';
-            iconSpan.textContent = '🧱';
+            const etaBtn = document.createElement('button'); 
+            etaBtn.className = 'btn-eta'; 
+            etaBtn.textContent = '⚙️'; 
+            etaBtn.onclick = (e) => { 
+                if (li.classList.contains('swiped')) { li.classList.remove('swiped'); e.stopPropagation(); return; }
+                e.stopPropagation(); selectProfile(id); 
+            };
 
             const titleDiv = document.createElement('div');
             titleDiv.className = 'item-title';
             titleDiv.innerHTML = profiles[id].name;
 
-            /* 右側改為進入按鈕 (➥) */
-            const enterBtn = document.createElement('button');
-            enterBtn.style.background = 'none';
-            enterBtn.style.border = 'none';
-            enterBtn.style.boxShadow = 'none';
-            enterBtn.style.padding = '0';
-            enterBtn.style.cursor = 'pointer';
-            enterBtn.style.fontSize = '1.2rem';
-            enterBtn.textContent = '➥';
-            enterBtn.title = '進入內容管理';
-			enterBtn.className = 'btn-primary';
-            enterBtn.onclick = (e) => { 
+            const renameBtn = document.createElement('button');
+            renameBtn.style.background = 'none';
+            renameBtn.style.border = 'none';
+            renameBtn.style.boxShadow = 'none';
+            renameBtn.style.padding = '0';
+            renameBtn.style.cursor = 'pointer';
+            renameBtn.textContent = '✏️';
+            renameBtn.onclick = (e) => { 
                 if (li.classList.contains('swiped')) { li.classList.remove('swiped'); e.stopPropagation(); return; }
-                e.stopPropagation(); 
-                selectProfile(id); 
+                e.stopPropagation(); renameProfile(id); 
             };
             
-            innerDiv.appendChild(iconSpan);
+            innerDiv.appendChild(etaBtn);
             innerDiv.appendChild(titleDiv); 
-            innerDiv.appendChild(enterBtn);
-
-            /* 向左劃開顯示的 [修改] 與 [移除] 區域 */
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'list-item-actions';
-
-            const editAction = document.createElement('div');
-            editAction.className = 'list-item-action-btn action-edit';
-            editAction.textContent = '修改';
-            editAction.onclick = (e) => {
-                e.stopPropagation();
-                li.classList.remove('swiped');
-                renameProfile(id);
-            };
+            innerDiv.appendChild(renameBtn);
 
             const deleteAction = document.createElement('div');
-            deleteAction.className = 'list-item-action-btn action-delete';
-            deleteAction.textContent = '移除';
+            deleteAction.className = 'list-item-delete';
+            deleteAction.textContent = 'DELETE';
             deleteAction.onclick = (e) => { 
                 e.stopPropagation(); 
                 deleteProfile(id); 
             };
 
-            actionsDiv.appendChild(editAction);
-            actionsDiv.appendChild(deleteAction);
-
             li.appendChild(innerDiv);
-            li.appendChild(actionsDiv);
+            li.appendChild(deleteAction);
 
             let startX = 0;
             let startY = 0;
@@ -1313,7 +1111,7 @@
                     li.classList.remove('swiped');
                     return;
                 }
-                if (e.target.tagName !== 'BUTTON' && !e.target.classList.contains('list-item-action-btn')) {
+                if (e.target.tagName !== 'BUTTON' && !e.target.classList.contains('list-item-delete')) {
                     renderETA(id);
                 }
             };
@@ -1323,26 +1121,6 @@
 
         populateAutoOpenSelect();
     }
-	
-	function loadDemoData() {
-		profiles = {
-			'prof_demo': {
-				name: '🌟 示範基地 (九巴 1A)',
-				elements: [
-					JSON.stringify({
-						company: 'KMB',
-						route: '1A',
-						direction: 'outbound',
-						stopValue: '1A-O-1000-0',
-						stopName: '1. (尖沙咀碼頭)',
-						region: ''
-					})
-				]
-			}
-		};
-		saveToStorage();
-		renderProfiles();
-	}
 
     function renderElements() {
         const elementList = document.getElementById('elementList');
@@ -1401,22 +1179,15 @@
         });
     }
 
-	function addProfile() {
-		const input = document.getElementById('profileInput');
-		const name = input.value.trim();
-		if (!name) { alert('請輸入名稱！'); return; }
-		
-		const isDuplicate = Object.values(profiles).some(p => p.name === name);
-		if (isDuplicate) { alert('⚠️ 報告指揮官！這個基地名稱已經存在，請換個不一樣的名字！'); return; }
-		
-		const id = 'prof_' + Date.now();
-		profiles[id] = { name: name, elements: [] };
-		saveToStorage();
-		input.value = '';
-		
-		renderProfiles();
-		selectProfile(id);
-	}
+    function addProfile() {
+        const input = document.getElementById('profileInput'); const name = input.value.trim(); if (!name) { alert('請輸入名稱！'); return; }
+        
+        const isDuplicate = Object.values(profiles).some(p => p.name === name);
+        if (isDuplicate) { alert('⚠️ 報告指揮官！這個基地名稱已經存在，請換個不一樣的名字！'); return; }
+        
+        const id = 'prof_' + Date.now(); profiles[id] = { name: name, elements: [] };
+        saveToStorage(); input.value = ''; currentProfileId = id; renderProfiles(); selectProfile(id);
+    }
 
     function renameProfile(id) {
         const oldName = profiles[id].name;
@@ -1480,6 +1251,7 @@
         });
     }
 
+    // 更新 selectProfile 行為，切換頁面時重新整理 Webhook 與 Pushover 欄位顯示狀態
     function selectProfile(id) {
         currentProfileId = id; 
         document.getElementById('profileSettingCard').style.display = 'block';
@@ -1673,6 +1445,7 @@
         return dateObj.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
 
+    // 連續發送 5 次通知給  WEBHOOK
     async function sendMakeNotification(button, mins, route, stopName, company, stopValue, rawEtaTime) {
         const vipEnabled = localStorage.getItem('vip_notifications_enabled') === 'true';
         if (!vipEnabled) {
@@ -1701,7 +1474,7 @@
         const targetMinsLeft = [5, 4, 3, 2, 1];
 
         for (let i = 0; i < targetMinsLeft.length; i++) {
-            const targetLeft = targetMinsLeft[i];
+            const targetLeft = targetMinsLeft[i]; // 5, 4, 3, 2, 1
             const totalSecondsToWait = Math.max(0, (mins - targetLeft) * 60);
 
             const payload = {
@@ -1847,6 +1620,7 @@
                                 timeDisplay = '未明時間';
                             }
 
+                            // 只有當 VIP 開關開啟且有填寫 Webhook 且時間大於等於 5 分鐘時才顯示通知按鈕
                             let actionBtnHtml = '';
                             if (vipEnabled && isValidWebhookUrl(webhookUrl) && mins !== null && mins >= 5) {
                                 const notifiedKey = `notified_${target.company}_${target.route}_${target.stopValue}`;
@@ -1988,12 +1762,14 @@
                 profiles = targetProfiles;
                 saveToStorage();
 
+                // 恢復 VIP 資料與設定
                 if (importedData.vipSettings) {
                     localStorage.setItem('vip_notifications_enabled', importedData.vipSettings.enabled ? 'true' : 'false');
                     localStorage.setItem('pushoveruserkey', importedData.vipSettings.pushoverUserKey || '');
                     localStorage.setItem('pushoverapitoken', importedData.vipSettings.pushoverApiToken || '');
                     localStorage.setItem('custom_webhook_url', importedData.vipSettings.customWebhookUrl || '');
                     
+                    // 同步更新介面上的 UI 欄位與顯示狀態
                     const toggle = document.getElementById('vipToggleSwitch');
                     if (toggle) toggle.checked = !!importedData.vipSettings.enabled;
                     const userKeyInput = document.getElementById('pushoverUserKeyInput');
@@ -2222,15 +1998,16 @@
         if (isEnabled) {
             populateAutoOpenSelect();
             saveAutoOpenSetting();
+        } else {
+            localStorage.removeItem('auto_open_profile_id');
         }
     }
 
     function saveAutoOpenSetting() {
         const select = document.getElementById('autoOpenProfileSelect');
-        if (select) {
-            localStorage.setItem('auto_open_profile_id', select.value);
-        }
+        localStorage.setItem('auto_open_profile_id', select.value);
     }
 </script>
+
 </body>
 </html>
