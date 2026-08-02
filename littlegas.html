@@ -223,7 +223,44 @@
       background-color: #E2E8F0;
       flex: 0 0 75px;
     }
-    .list-header { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+
+    /* 明細頂部與篩選按鈕列 */
+    .list-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .list-header { font-size: 18px; font-weight: 700; }
+    
+    /* 篩選按鈕組 */
+    .filter-btn-group {
+      display: flex;
+      gap: 4px;
+      background: #F1F5F9;
+      padding: 3px;
+      border-radius: 12px;
+      border: 2.5px solid var(--border-color);
+    }
+    .filter-btn {
+      border: none;
+      background: transparent;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 700;
+      color: var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .filter-btn.active {
+      background: var(--primary);
+      box-shadow: 0 2px 0 var(--border-color);
+    }
+
     .item-list {
       list-style: none;
       padding: 0;
@@ -338,6 +375,35 @@
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast 浮動提示框 */
+    .cartoon-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: var(--border-color);
+      color: #FFFFFF;
+      padding: 12px 22px;
+      border-radius: 50px;
+      border: 3.5px solid var(--border-color);
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+      font-size: 15px;
+      font-weight: 700;
+      z-index: 1000;
+      transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .cartoon-toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    .cartoon-toast.error {
+      background: var(--danger);
+    }
+    .cartoon-toast.success {
+      background: var(--success);
+    }
   </style>
 </head>
 <body>
@@ -416,7 +482,17 @@
         <span class="total-amount">$<span id="totalExpense">0</span></span>
       </div>
     </div>
-    <div class="list-header">📜 歷史明細</div>
+    
+    <!-- 歷史明細標題與分類篩選列 -->
+    <div class="list-header-row">
+      <div class="list-header">📜 歷史明細</div>
+      <div class="filter-btn-group">
+        <button type="button" class="filter-btn active" id="filter-all" onclick="setFilter('all')">全部</button>
+        <button type="button" class="filter-btn" id="filter-income" onclick="setFilter('income')">🟢 收入</button>
+        <button type="button" class="filter-btn" id="filter-expense" onclick="setFilter('expense')">🔴 支出</button>
+      </div>
+    </div>
+
     <div id="loading" class="loading-box">
       <div class="spinner"></div>
       <div>載入明細中...</div>
@@ -429,16 +505,34 @@
     </div>
   </div>
 </div>
+
+<!-- Toast 浮動提示彈窗 -->
+<div id="toast" class="cartoon-toast"></div>
+
 <script>
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPAd8GJhMvHthq1NE8MTiAXN1_cHmbj-_Og9tPGn2dSKSj_qP9QjO-5wN3uGrS5Y_-/exec";
   
   let currentRecords = [];
   let sortedRecords = [];
+  let currentFilter = 'all'; // 篩選狀態：'all' | 'income' | 'expense'
   
   // 分頁控制變數
-  const PAGE_SIZE = 15; // 每次向下掃加載 15 筆
+  const PAGE_SIZE = 5; // 預設顯示最新 5 筆
   let currentPage = 0;
   let observer = null;
+
+  /* Toast 提示系統 */
+  let toastTimer = null;
+  function showToast(msg, type = 'info') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'cartoon-toast show ' + type;
+    
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.className = 'cartoon-toast';
+    }, 2600);
+  }
 
   // 設定當前本地日期
   function setTodayDate() {
@@ -458,7 +552,6 @@
     const amtInput = document.getElementById('amount');
     const ops = ['+', '-', '×', '÷'];
     const current = amtInput.value;
-    // 允許開頭輸入負號
     if (current === '' && val === '-') {
       amtInput.value = '-';
       return;
@@ -467,7 +560,6 @@
       amtInput.value = (current.startsWith('-') ? '-' : '') + val;
       return;
     }
-    // 防止連續輸入多個運算符
     if (ops.includes(val) && ops.includes(current.slice(-1))) {
       amtInput.value = current.slice(0, -1) + val;
       return;
@@ -535,14 +627,22 @@
         currentRecords = resData.data || [];
         renderList(currentRecords);
       } else {
-        alert('讀取失敗：' + resData.message);
+        showToast('讀取失敗：' + resData.message, 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('連線失敗，請檢查網路。');
+      showToast('連線失敗，請檢查網路。', 'error');
     } finally {
       loadingEl.style.display = 'none';
     }
+  }
+
+  // 設置篩選過濾器
+  function setFilter(type) {
+    currentFilter = type;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`filter-${type}`).classList.add('active');
+    renderList(currentRecords);
   }
 
   function renderList(records) {
@@ -558,7 +658,7 @@
       return;
     }
 
-    // 1. 全數據金額總計計算 (不受分頁影響)
+    // 1. 全數據金額總計計算 (不受篩選或分頁影響)
     let totalIncome = 0;
     let totalExpense = 0;
     records.forEach(item => {
@@ -574,14 +674,25 @@
     document.getElementById('totalExpense').textContent = totalExpense.toLocaleString();
     document.getElementById('totalBalance').textContent = (totalIncome - totalExpense).toLocaleString();
 
-    // 2. 初始化分頁狀態
-    sortedRecords = [...records].reverse();
+    // 2. 進行分類篩選並倒序排列
+    let filtered = [...records].reverse();
+    if (currentFilter !== 'all') {
+      filtered = filtered.filter(item => item.type === currentFilter);
+    }
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = '<li class="loading-box">此分類下沒有紀錄喔！🔍</li>';
+      hideSentinel();
+      return;
+    }
+
+    sortedRecords = filtered;
     currentPage = 0;
 
     // 3. 渲染第一頁
     loadMoreRecords();
 
-    // 4. 設定向下滾動監聽器 (IntersectionObserver)
+    // 4. 設定向下滾動監聽器
     setupObserver();
   }
 
@@ -620,7 +731,6 @@
 
     currentPage++;
 
-    // 若還有剩餘資料，顯示滾動加載感應器
     if (currentPage * PAGE_SIZE < sortedRecords.length) {
       showSentinel();
     } else {
@@ -636,7 +746,6 @@
     observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
         if (currentPage * PAGE_SIZE < sortedRecords.length) {
-          // 增加微小延遲感，避免過度頻繁觸發
           setTimeout(() => {
             loadMoreRecords();
           }, 150);
@@ -644,7 +753,7 @@
       }
     }, {
       root: null,
-      rootMargin: '100px', // 接近底部 100px 時即預先加載
+      rootMargin: '100px',
       threshold: 0.1
     });
 
@@ -674,6 +783,7 @@
     document.getElementById('submitBtn').innerHTML = '<span>💾 儲存修改</span>';
     document.getElementById('cancelEditBtn').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast('✏️ 已載入資料，請修改', 'info');
   }
 
   function resetForm() {
@@ -702,13 +812,14 @@
       });
       const resData = await response.json();
       if (resData.status === 'success') {
+        showToast('🗑️ 成功刪除紀錄！', 'success');
         await fetchRecords();
       } else {
-        alert('刪除失敗：' + resData.message);
+        showToast('刪除失敗：' + resData.message, 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('刪除時發生錯誤');
+      showToast('刪除時發生錯誤', 'error');
     }
   }
 
@@ -719,7 +830,7 @@
     const amtVal = document.getElementById('amount').value;
     const numAmt = parseFloat(amtVal);
     if (!amtVal || isNaN(numAmt) || numAmt === 0) {
-      alert('請先輸入有效金額（不可為 0）！');
+      showToast('⚠️ 請先輸入有效金額（不可為 0）！', 'error');
       return;
     }
     const btn = document.getElementById('submitBtn');
@@ -748,14 +859,15 @@
       });
       const resData = await response.json();
       if (resData.status === 'success') {
+        showToast(isEdit ? '💾 修改成功！' : '🎉 新增紀錄成功！', 'success');
         resetForm();
         await fetchRecords();
       } else {
-        alert('處理失敗：' + resData.message);
+        showToast('處理失敗：' + resData.message, 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('操作失敗，請稍後再試');
+      showToast('操作失敗，請稍後再試', 'error');
     } finally {
       btn.disabled = false;
       if (!isEdit) resetForm();
