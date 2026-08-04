@@ -1811,13 +1811,16 @@
                     let cardHtml = `
                         <div class="card ${compClass}">
                             <div class="card-header">
-                                <div class="route-title-area">
+								<div>
+									<button class="${pinBtnClass}" onclick="togglePinStop('${stopKey}')">${pinBtnText}</button>
+								</div>
+								<div class="route-title-area">
                                     <div class="route-number">${meta.icon} ${target.route}</div>
                                     <div class="route-direction">${dirText}</div>
                                 </div>
                                 <div class="stop-info">
                                     <span>📍 ${stopCleanName} </span>
-                                    <button class="${pinBtnClass}" onclick="togglePinStop('${stopKey}')">${pinBtnText}</button>
+                                    
                                 </div>
                                 <div class="stop-id-label">系統: ${meta.name} | ID: ${target.stopValue}</div>
                             </div>
