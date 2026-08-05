@@ -356,9 +356,10 @@
         <!-- 季度切換列 -->
         <div id="season-filter" class="scroll-bar"></div>
         
-        <!-- 追番時間表 (星期幾篩選列) -->
+        <!-- 追番時間表 (星期幾篩選列 - 加入「未觀看」) -->
         <div id="day-filter" class="scroll-bar">
             <button data-day="ALL" class="pill day-pill active" onclick="selectDay('ALL')">全部</button>
+            <button data-day="UNWATCHED" class="pill day-pill" onclick="selectDay('UNWATCHED')">未觀看</button>
             <button data-day="0" class="pill day-pill" onclick="selectDay('0')">週日</button>
             <button data-day="1" class="pill day-pill" onclick="selectDay('1')">週一</button>
             <button data-day="2" class="pill day-pill" onclick="selectDay('2')">週二</button>
@@ -525,7 +526,7 @@
             fetchGraphQL(GQL_QUERY, { season: currentSeason, seasonYear: currentYear, page: 1 });
         }
 
-        /* 修改：重構星期切換邏輯，支援 data-attribute 與自動滾動置中 */
+        /* 星期與狀態切換邏輯，支援 data-attribute 與自動滾動置中 */
         function selectDay(dayCode) {
             document.querySelectorAll('#day-filter .day-pill').forEach(el => el.classList.remove('active'));
             
@@ -715,8 +716,12 @@
                 });
             }
 
+            // 處理標籤篩選 (新增「未觀看」過濾邏輯)
             if (selectedDayFilter !== 'ALL') {
                 displayData = displayData.filter(anime => {
+                    if (selectedDayFilter === 'UNWATCHED') {
+                        return getUnwatchedCount(anime) > 0;
+                    }
                     if (!anime.nextAiringEpisode) return selectedDayFilter === 'END';
                     const day = new Date(anime.nextAiringEpisode.airingAt * 1000).getDay().toString();
                     return day === selectedDayFilter;
