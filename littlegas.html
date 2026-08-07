@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>小氣簿</title>
   
-  <!-- 優化：改用 jsDelivr CDN 加速圖片載入 -->
   <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/keliguru/sushiro-queue@main/littlegas-icon.png">
   <meta property="og:type" content="website">
   <meta property="og:title" content="小氣簿">
@@ -16,7 +15,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="小氣簿">
   
-  <!-- 優化：預先連線至常用的外部資源網域 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://script.google.com">
@@ -39,7 +37,6 @@
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
-    /* 防止手機全局橫向滑動/走位 */
     html, body {
       width: 100%;
       overflow-x: hidden;
@@ -89,7 +86,6 @@
       padding: 16px 14px;
       width: 100%;
     }
-    /* 看板樣式優化 */
     .dashboard-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -124,15 +120,6 @@
       width: 100%;
     }
     .form-group label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-    .form-row { 
-      display: flex; 
-      gap: 10px; 
-      width: 100%;
-    }
-    .form-row .form-group { 
-      flex: 1; 
-      min-width: 0; 
-    }
     .cartoon-input {
       width: 100%;
       height: 46px;
@@ -153,7 +140,6 @@
       background-color: #FFFFFF;
       border-color: #4C6EF5;
     }
-    /* 計算機風格金額顯示螢幕 */
     .calc-screen {
       text-align: right;
       font-size: 22px;
@@ -161,7 +147,6 @@
       color: #1B5E20;
       letter-spacing: 1px;
     }
-    /* 計算機按鈕網格 */
     .calc-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -190,16 +175,9 @@
       transform: translateY(2px);
       box-shadow: 0 2px 0 var(--border-color);
     }
-    .calc-btn.op-btn {
-      background-color: #E2E8F0;
-    }
-    .calc-btn.clear-btn {
-      background-color: #FFD1D1;
-      color: var(--danger);
-    }
-    .calc-btn.equal-btn {
-      background-color: #A8DADC;
-    }
+    .calc-btn.op-btn { background-color: #E2E8F0; }
+    .calc-btn.clear-btn { background-color: #FFD1D1; color: var(--danger); }
+    .calc-btn.equal-btn { background-color: #A8DADC; }
     .btn-group { display: flex; gap: 8px; }
     .cartoon-btn {
       width: 100%;
@@ -224,12 +202,15 @@
       transform: translateY(3px);
       box-shadow: 0 2px 0 var(--border-color);
     }
+    .cartoon-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
     .cartoon-btn.cancel-btn {
       background-color: #E2E8F0;
       flex: 0 0 75px;
     }
 
-    /* 明細頂部與篩選按鈕列 */
     .list-header-row {
       display: flex;
       justify-content: space-between;
@@ -240,7 +221,6 @@
     }
     .list-header { font-size: 18px; font-weight: 700; }
     
-    /* 篩選按鈕組 */
     .filter-btn-group {
       display: flex;
       gap: 4px;
@@ -298,19 +278,8 @@
       min-width: 0; 
       width: 100%;
     }
-    
-    .item-category { 
-      font-size: 16px; 
-      font-weight: 700; 
-      word-break: break-word; 
-    }
-    
-    .item-meta { 
-      font-size: 12px; 
-      font-weight: 500; 
-      color: #64748B; 
-      word-break: break-word; 
-    }
+    .item-category { font-size: 16px; font-weight: 700; word-break: break-word; }
+    .item-meta { font-size: 12px; font-weight: 500; color: #64748B; word-break: break-word; }
     .item-bottom {
       display: flex;
       justify-content: space-between;
@@ -320,7 +289,6 @@
       flex-wrap: wrap;
       gap: 8px;
     }
-    /* 支出標籤 */
     .item-amount-badge {
       background: #FFE3E3;
       color: var(--danger);
@@ -331,7 +299,6 @@
       font-weight: 700;
       word-break: break-all;
     }
-    /* 收入標籤 */
     .item-amount-badge.income {
       background: #E8F5E9;
       color: #2E7D32;
@@ -360,7 +327,6 @@
     .delete-btn { background-color: #FF6B6B; color: white; }
     .loading-box { text-align: center; padding: 20px; font-weight: 700; color: #64748B; }
     
-    /* 滾動加載指示器 */
     .scroll-loader {
       text-align: center;
       padding: 14px;
@@ -381,7 +347,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Toast 浮動提示框 */
     .cartoon-toast {
       position: fixed;
       bottom: 24px;
@@ -400,29 +365,22 @@
       pointer-events: none;
       white-space: nowrap;
     }
-    .cartoon-toast.show {
-      transform: translateX(-50%) translateY(0);
-    }
-    .cartoon-toast.error {
-      background: var(--danger);
-    }
-    .cartoon-toast.success {
-      background: var(--success);
-    }
+    .cartoon-toast.show { transform: translateX(-50%) translateY(0); }
+    .cartoon-toast.error { background: var(--danger); }
+    .cartoon-toast.success { background: var(--success); }
   </style>
 </head>
 <body>
 <div class="mobile-container">
   
   <div class="header">
-    <h1>✨ 我的小氣簿 📒</h1>
+    <h1>✨ 小氣簿 📒</h1>
   </div>
-  <!-- 新增/修改 表單 -->
+  
   <div class="cartoon-card">
     <form id="expenseForm">
-      <!-- 隱藏欄位：儲存當前修改的 ID -->
       <input type="hidden" id="editId" value="">
-      <input type="hidden" id="editRowIndex" value="">
+      
       <div class="form-group">
         <label for="date">📅 日期</label>
         <input type="date" id="date" class="cartoon-input" required>
@@ -435,12 +393,12 @@
         <label for="note">📝 備註</label>
         <input type="text" id="note" class="cartoon-input" placeholder="可不填">
       </div>
-      <!-- 計算機面板區塊 -->
+      
       <div class="form-group">
-        <label for="amount">🧮 金額 ($) <span style="font-size:12px;font-weight:500;color:#64748B;">正數=收入　負數=支出</span></label>
+        <label for="amount">🧮 金額 ($) <span style="font-size:12px;font-weight:500;color:#64748B;">正數=收入 負數=支出</span></label>
         <input type="text" id="amount" class="cartoon-input calc-screen" placeholder="0" readonly required>
       </div>
-      <!-- 計算機按鈕盤 -->
+      
       <div class="calc-grid">
         <button type="button" class="calc-btn clear-btn" onclick="clearCalc()">C</button>
         <button type="button" class="calc-btn clear-btn" onclick="backspaceCalc()">⌫</button>
@@ -471,7 +429,7 @@
       </div>
     </form>
   </div>
-  <!-- 總計看板 + 明細列表 -->
+  
   <div class="cartoon-card">
     <div class="dashboard-grid">
       <div class="total-banner balance-banner">
@@ -488,7 +446,6 @@
       </div>
     </div>
     
-    <!-- 歷史明細標題與分類篩選列 -->
     <div class="list-header-row">
       <div class="list-header">📜 歷史明細</div>
       <div class="filter-btn-group">
@@ -504,29 +461,26 @@
     </div>
     <ul id="itemList" class="item-list"></ul>
     
-    <!-- 滾動加載觸發點與提示 -->
     <div id="scrollSentinel" class="scroll-loader">
       <span>⏳ 載入更多紀錄中...</span>
     </div>
   </div>
 </div>
 
-<!-- Toast 浮動提示彈窗 -->
 <div id="toast" class="cartoon-toast"></div>
 
 <script>
+  // 請替換為你重新部署後的最新 GAS Web App URL
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPAd8GJhMvHthq1NE8MTiAXN1_cHmbj-_Og9tPGn2dSKSj_qP9QjO-5wN3uGrS5Y_-/exec";
   
   let currentRecords = [];
   let sortedRecords = [];
-  let currentFilter = 'all'; // 篩選狀態：'all' | 'income' | 'expense'
+  let currentFilter = 'all'; 
   
-  // 分頁控制變數
-  const PAGE_SIZE = 5; // 預設顯示最新 5 筆
+  const PAGE_SIZE = 5; 
   let currentPage = 0;
   let observer = null;
 
-  /* Toast 提示系統 */
   let toastTimer = null;
   function showToast(msg, type = 'info') {
     const toast = document.getElementById('toast');
@@ -539,16 +493,24 @@
     }, 2600);
   }
 
-  // 設定當前本地日期
-  function setTodayDate() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    document.getElementById('date').value = `${year}-${month}-${day}`;
+  // 格式化日期為 YYYY-MM-DD
+  function formatDateStr(rawDate) {
+    if (!rawDate) return '';
+    const d = new Date(rawDate);
+    if (!isNaN(d.getTime())) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return String(rawDate).substring(0, 10).replace(/\//g, '-');
   }
 
-  // 頁面初次載入
+  function setTodayDate() {
+    const today = new Date();
+    document.getElementById('date').value = formatDateStr(today);
+  }
+
   setTodayDate();
   document.addEventListener('DOMContentLoaded', fetchRecords);
 
@@ -557,49 +519,38 @@
     const amtInput = document.getElementById('amount');
     const ops = ['+', '-', '×', '÷'];
     const current = amtInput.value;
-    if (current === '' && val === '-') {
-      amtInput.value = '-';
-      return;
-    }
+    if (current === '' && val === '-') { amtInput.value = '-'; return; }
     if ((current === '0' || current === '-0') && !ops.includes(val) && val !== '.') {
-      amtInput.value = (current.startsWith('-') ? '-' : '') + val;
-      return;
+      amtInput.value = (current.startsWith('-') ? '-' : '') + val; return;
     }
     if (ops.includes(val) && ops.includes(current.slice(-1))) {
-      amtInput.value = current.slice(0, -1) + val;
-      return;
+      amtInput.value = current.slice(0, -1) + val; return;
     }
     amtInput.value += val;
   }
-  function clearCalc() {
-    document.getElementById('amount').value = '';
-  }
+  
+  function clearCalc() { document.getElementById('amount').value = ''; }
+  
   function backspaceCalc() {
     const amtInput = document.getElementById('amount');
     amtInput.value = amtInput.value.slice(0, -1);
   }
+  
   function toggleSign() {
     const amtInput = document.getElementById('amount');
     let val = amtInput.value.trim();
     if (!val || val === '-' || val === '.') return;
     if (/^-?[0-9]*\.?[0-9]*$/.test(val)) {
-      if (val.startsWith('-')) {
-        amtInput.value = val.slice(1) || '0';
-      } else {
-        amtInput.value = '-' + val;
-      }
+      amtInput.value = val.startsWith('-') ? (val.slice(1) || '0') : ('-' + val);
       return;
     }
     evaluateCalc();
     val = amtInput.value.trim();
     if (val && /^-?[0-9]*\.?[0-9]*$/.test(val)) {
-      if (val.startsWith('-')) {
-        amtInput.value = val.slice(1) || '0';
-      } else {
-        amtInput.value = '-' + val;
-      }
+      amtInput.value = val.startsWith('-') ? (val.slice(1) || '0') : ('-' + val);
     }
   }
+  
   function evaluateCalc() {
     const amtInput = document.getElementById('amount');
     let expr = amtInput.value.trim();
@@ -613,45 +564,40 @@
           amtInput.value = res;
         }
       }
-    } catch (err) {
-      console.warn('計算錯誤:', err);
-    }
+    } catch (err) { console.warn('計算錯誤:', err); }
   }
 
-  // 【優化】使用 LocalStorage 本地快取，背景載入資料
+  /* 從 GAS 載入資料 */
   async function fetchRecords() {
     const loadingEl = document.getElementById('loading');
     const listEl = document.getElementById('itemList');
     hideSentinel();
 
-    // 1. 先嘗試讀取本地快取並立即渲染
     const cachedData = localStorage.getItem('expenseRecords');
     if (cachedData) {
       try {
         currentRecords = JSON.parse(cachedData);
         renderList(currentRecords);
-        loadingEl.style.display = 'none'; // 有快取就不顯示全螢幕轉圈
+        loadingEl.style.display = 'none'; 
       } catch(e) {
         console.warn("快取解析失敗", e);
         loadingEl.style.display = 'block';
       }
     } else {
-      loadingEl.style.display = 'block'; // 沒快取才顯示轉圈
+      loadingEl.style.display = 'block'; 
       listEl.innerHTML = '';
     }
 
-    // 2. 在背景向 GAS 抓取最新資料
     try {
-      const response = await fetch(GAS_WEB_APP_URL);
+      // 加防快取參數 ?t=
+      const response = await fetch(`${GAS_WEB_APP_URL}?t=${Date.now()}`);
       const resData = await response.json();
       if (resData.status === 'success') {
         currentRecords = resData.data || [];
-        // 將最新資料存入快取
         localStorage.setItem('expenseRecords', JSON.stringify(currentRecords));
-        // 重新渲染畫面 (此時使用者已經可以看到舊資料，不會覺得等很久)
         renderList(currentRecords);
       } else {
-        showToast('讀取失敗：' + resData.message, 'error');
+        showToast('讀取失敗：' + (resData.message || '未知錯誤'), 'error');
       }
     } catch (err) {
       console.error(err);
@@ -663,7 +609,6 @@
     }
   }
 
-  // 設置篩選過濾器
   function setFilter(type) {
     currentFilter = type;
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -684,23 +629,17 @@
       return;
     }
 
-    // 1. 全數據金額總計計算 (不受篩選或分頁影響)
     let totalIncome = 0;
     let totalExpense = 0;
     records.forEach(item => {
       const amt = parseFloat(item.amount) || 0;
-      if (item.type === 'income') {
-        totalIncome += amt;
-      } else {
-        totalExpense += amt;
-      }
+      if (item.type === 'income') { totalIncome += amt; } else { totalExpense += amt; }
     });
 
     document.getElementById('totalIncome').textContent = totalIncome.toLocaleString();
     document.getElementById('totalExpense').textContent = totalExpense.toLocaleString();
     document.getElementById('totalBalance').textContent = (totalIncome - totalExpense).toLocaleString();
 
-    // 2. 進行分類篩選並倒序排列
     let filtered = [...records].reverse();
     if (currentFilter !== 'all') {
       filtered = filtered.filter(item => item.type === currentFilter);
@@ -714,15 +653,10 @@
 
     sortedRecords = filtered;
     currentPage = 0;
-
-    // 3. 渲染第一頁
     loadMoreRecords();
-
-    // 4. 設定向下滾動監聽器
     setupObserver();
   }
 
-  // 渲染下一頁的紀錄項目
   function loadMoreRecords() {
     const listEl = document.getElementById('itemList');
     const start = currentPage * PAGE_SIZE;
@@ -732,6 +666,7 @@
     chunk.forEach(item => {
       const amt = parseFloat(item.amount) || 0;
       const isIncome = item.type === 'income';
+      const safeDate = formatDateStr(item.date);
 
       const li = document.createElement('li');
       li.className = 'item-card';
@@ -739,7 +674,7 @@
         <div class="item-top">
           <div class="item-info">
             <div class="item-category">${isIncome ? '🟢' : '🔴'} ${escapeHtml(item.category)}</div>
-            <div class="item-meta">🗓️ ${item.date} ${item.note ? '• ' + escapeHtml(item.note) : ''}</div>
+            <div class="item-meta">🗓️ ${safeDate} ${item.note ? '• ' + escapeHtml(item.note) : ''}</div>
           </div>
         </div>
         <div class="item-bottom">
@@ -747,8 +682,8 @@
             ${isIncome ? '+' : '-'}$${amt.toLocaleString()}
           </div>
           <div class="action-btns">
-            <button class="mini-btn edit-btn" onclick="startEdit('${item.id}', ${item.rowIndex})">✏️ 編輯</button>
-            <button class="mini-btn delete-btn" onclick="deleteRecord('${item.id}', ${item.rowIndex})">🗑️ 刪除</button>
+            <button class="mini-btn edit-btn" onclick="startEdit('${item.id}')">✏️ 編輯</button>
+            <button class="mini-btn delete-btn" onclick="deleteRecord('${item.id}')">🗑️ 刪除</button>
           </div>
         </div>
       `;
@@ -757,30 +692,18 @@
 
     currentPage++;
 
-    if (currentPage * PAGE_SIZE < sortedRecords.length) {
-      showSentinel();
-    } else {
-      hideSentinel();
-    }
+    if (currentPage * PAGE_SIZE < sortedRecords.length) { showSentinel(); } else { hideSentinel(); }
   }
 
-  // 設定滾動監聽
   function setupObserver() {
     const sentinel = document.getElementById('scrollSentinel');
     if (observer) observer.disconnect();
 
     observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
-        if (currentPage * PAGE_SIZE < sortedRecords.length) {
-          // 【優化】移除 setTimeout 以達到無縫滑順載入的效果
-          loadMoreRecords();
-        }
+        if (currentPage * PAGE_SIZE < sortedRecords.length) { loadMoreRecords(); }
       }
-    }, {
-      root: null,
-      rootMargin: '100px',
-      threshold: 0.1
-    });
+    }, { root: null, rootMargin: '100px', threshold: 0.1 });
 
     observer.observe(sentinel);
   }
@@ -795,16 +718,17 @@
     if (sentinel) sentinel.style.display = 'none';
   }
 
-  function startEdit(id, rowIndex) {
-    const item = currentRecords.find(r => String(r.id) === String(id) || r.rowIndex === rowIndex);
+  function startEdit(id) {
+    const item = currentRecords.find(r => String(r.id) === String(id));
     if (!item) return;
     document.getElementById('editId').value = item.id;
-    document.getElementById('editRowIndex').value = item.rowIndex;
-    document.getElementById('date').value = item.date;
+    document.getElementById('date').value = formatDateStr(item.date);
     document.getElementById('category').value = item.category;
+    
     const amt = parseFloat(item.amount) || 0;
     document.getElementById('amount').value = (item.type === 'income') ? amt : -Math.abs(amt);
     document.getElementById('note').value = item.note || '';
+    
     document.getElementById('submitBtn').innerHTML = '<span>💾 儲存修改</span>';
     document.getElementById('cancelEditBtn').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -813,7 +737,6 @@
 
   function resetForm() {
     document.getElementById('editId').value = '';
-    document.getElementById('editRowIndex').value = '';
     document.getElementById('category').value = '';
     document.getElementById('amount').value = '';
     document.getElementById('note').value = '';
@@ -822,12 +745,11 @@
     document.getElementById('cancelEditBtn').style.display = 'none';
   }
 
-  async function deleteRecord(id, rowIndex) {
+  async function deleteRecord(id) {
     if (!confirm("確定要刪除這筆紀錄嗎？")) return;
     const payload = {
       action: 'delete',
-      id: id,
-      rowIndex: rowIndex
+      id: String(id)
     };
     try {
       const response = await fetch(GAS_WEB_APP_URL, {
@@ -840,7 +762,7 @@
         showToast('🗑️ 成功刪除紀錄！', 'success');
         await fetchRecords();
       } else {
-        showToast('刪除失敗：' + resData.message, 'error');
+        showToast('刪除失敗：' + (resData.message || '未知錯誤'), 'error');
       }
     } catch (err) {
       console.error(err);
@@ -858,24 +780,27 @@
       showToast('⚠️ 請先輸入有效金額（不可為 0）！', 'error');
       return;
     }
+    
     const btn = document.getElementById('submitBtn');
     const editId = document.getElementById('editId').value;
     const isEdit = Boolean(editId);
+    
     btn.disabled = true;
     btn.innerHTML = '<span>⏳ 處理中...</span>';
     
     const type = numAmt > 0 ? 'income' : 'expense';
     const amount = Math.abs(numAmt);
+    
     const payload = {
       action: isEdit ? 'edit' : 'add',
       id: editId,
-      rowIndex: document.getElementById('editRowIndex').value,
       type: type,
       date: document.getElementById('date').value,
       category: document.getElementById('category').value,
       amount: amount,
       note: document.getElementById('note').value
     };
+    
     try {
       const response = await fetch(GAS_WEB_APP_URL, {
         method: 'POST',
@@ -888,14 +813,18 @@
         resetForm();
         await fetchRecords();
       } else {
-        showToast('處理失敗：' + resData.message, 'error');
+        showToast('處理失敗：' + (resData.message || '未知錯誤'), 'error');
       }
     } catch (err) {
       console.error(err);
       showToast('操作失敗，請稍後再試', 'error');
     } finally {
       btn.disabled = false;
-      if (!isEdit) resetForm();
+      if (!document.getElementById('editId').value) {
+        document.getElementById('submitBtn').innerHTML = '<span>➕ 新增一筆紀錄</span>';
+      } else {
+        document.getElementById('submitBtn').innerHTML = '<span>💾 儲存修改</span>';
+      }
     }
   });
 
