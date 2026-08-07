@@ -51,6 +51,8 @@
       display: flex;
       justify-content: center;
     }
+    
+    /* 預設手機版容器 */
     .mobile-container {
       width: 100%;
       max-width: 430px;
@@ -58,6 +60,7 @@
       flex-direction: column;
       gap: 18px;
     }
+    
     .header {
       text-align: center;
       padding: 10px 0 5px 0;
@@ -78,6 +81,20 @@
       max-width: 100%;
       word-break: break-word;
     }
+
+    /* 電腦桌面端響應式調整 (寬度 >= 768px 時開啟雙欄) */
+    @media (min-width: 768px) {
+      .mobile-container {
+        max-width: 960px;
+      }
+      .main-content {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+    }
+
     .cartoon-card {
       background: var(--card-bg);
       border: 3.5px solid var(--border-color);
@@ -377,100 +394,106 @@
     <h1>✨ 小氣簿 📒</h1>
   </div>
   
-  <div class="cartoon-card">
-    <form id="expenseForm">
-      <input type="hidden" id="editId" value="">
-      
-      <div class="form-group">
-        <label for="date">📅 日期</label>
-        <input type="date" id="date" class="cartoon-input" required>
-      </div>
-      <div class="form-group">
-        <label for="category">🏷️ 項目/類別</label>
-        <input type="text" id="category" class="cartoon-input" placeholder="不可不填" required>
-      </div>
-      <div class="form-group">
-        <label for="note">📝 備註</label>
-        <input type="text" id="note" class="cartoon-input" placeholder="可不填">
-      </div>
-      
-      <div class="form-group">
-        <label for="amount">🧮 金額 ($) <span style="font-size:12px;font-weight:500;color:#64748B;">正數=收入 負數=支出</span></label>
-        <input type="text" id="amount" class="cartoon-input calc-screen" placeholder="0" readonly required>
-      </div>
-      
-      <div class="calc-grid">
-        <button type="button" class="calc-btn clear-btn" onclick="clearCalc()">C</button>
-        <button type="button" class="calc-btn clear-btn" onclick="backspaceCalc()">⌫</button>
-        <button type="button" class="calc-btn op-btn" onclick="appendCalc('÷')">÷</button>
-        <button type="button" class="calc-btn op-btn" onclick="appendCalc('×')">×</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('7')">7</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('8')">8</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('9')">9</button>
-        <button type="button" class="calc-btn op-btn" onclick="appendCalc('-')">-</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('4')">4</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('5')">5</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('6')">6</button>
-        <button type="button" class="calc-btn op-btn" onclick="appendCalc('+')">+</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('1')">1</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('2')">2</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('3')">3</button>
-        <button type="button" class="calc-btn equal-btn" onclick="evaluateCalc()">=</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('0')">0</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('00')">00</button>
-        <button type="button" class="calc-btn" onclick="appendCalc('.')">.</button>
-        <button type="button" class="calc-btn op-btn" onclick="toggleSign()">±</button>
-      </div>
-      <div class="btn-group">
-        <button type="button" id="cancelEditBtn" class="cartoon-btn cancel-btn" style="display:none;" onclick="resetForm()">取消</button>
-        <button type="submit" id="submitBtn" class="cartoon-btn">
-          <span>➕ 新增一筆紀錄</span>
-        </button>
-      </div>
-    </form>
-  </div>
-  
-  <div class="cartoon-card">
-    <div class="dashboard-grid">
-      <div class="total-banner balance-banner">
-        <span class="total-title">💰 當前總結餘</span>
-        <span class="total-amount">$<span id="totalBalance">0</span></span>
-      </div>
-      <div class="total-banner" style="background-color: #4ECDC4;">
-        <span class="total-title">🟢 累積收入</span>
-        <span class="total-amount">$<span id="totalIncome">0</span></span>
-      </div>
-      <div class="total-banner" style="background-color: #FF6B6B;">
-        <span class="total-title">🔴 累積支出</span>
-        <span class="total-amount">$<span id="totalExpense">0</span></span>
-      </div>
+  <!-- 包裹層：電腦螢幕下自動切換為雙欄 -->
+  <div class="main-content">
+    
+    <!-- 左側：輸入表單與計算機 -->
+    <div class="cartoon-card">
+      <form id="expenseForm">
+        <input type="hidden" id="editId" value="">
+        
+        <div class="form-group">
+          <label for="date">📅 日期</label>
+          <input type="date" id="date" class="cartoon-input" required>
+        </div>
+        <div class="form-group">
+          <label for="category">🏷️ 項目/類別</label>
+          <input type="text" id="category" class="cartoon-input" placeholder="不可不填" required>
+        </div>
+        <div class="form-group">
+          <label for="note">📝 備註</label>
+          <input type="text" id="note" class="cartoon-input" placeholder="可不填">
+        </div>
+        
+        <div class="form-group">
+          <label for="amount">🧮 金額 ($) <span style="font-size:12px;font-weight:500;color:#64748B;">正數=收入 負數=支出</span></label>
+          <input type="text" id="amount" class="cartoon-input calc-screen" placeholder="0" readonly required>
+        </div>
+        
+        <div class="calc-grid">
+          <button type="button" class="calc-btn clear-btn" onclick="clearCalc()">C</button>
+          <button type="button" class="calc-btn clear-btn" onclick="backspaceCalc()">⌫</button>
+          <button type="button" class="calc-btn op-btn" onclick="appendCalc('÷')">÷</button>
+          <button type="button" class="calc-btn op-btn" onclick="appendCalc('×')">×</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('7')">7</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('8')">8</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('9')">9</button>
+          <button type="button" class="calc-btn op-btn" onclick="appendCalc('-')">-</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('4')">4</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('5')">5</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('6')">6</button>
+          <button type="button" class="calc-btn op-btn" onclick="appendCalc('+')">+</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('1')">1</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('2')">2</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('3')">3</button>
+          <button type="button" class="calc-btn equal-btn" onclick="evaluateCalc()">=</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('0')">0</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('00')">00</button>
+          <button type="button" class="calc-btn" onclick="appendCalc('.')">.</button>
+          <button type="button" class="calc-btn op-btn" onclick="toggleSign()">±</button>
+        </div>
+        <div class="btn-group">
+          <button type="button" id="cancelEditBtn" class="cartoon-btn cancel-btn" style="display:none;" onclick="resetForm()">取消</button>
+          <button type="submit" id="submitBtn" class="cartoon-btn">
+            <span>➕ 新增一筆紀錄</span>
+          </button>
+        </div>
+      </form>
     </div>
     
-    <div class="list-header-row">
-      <div class="list-header">📜 歷史明細</div>
-      <div class="filter-btn-group">
-        <button type="button" class="filter-btn active" id="filter-all" onclick="setFilter('all')">全部</button>
-        <button type="button" class="filter-btn" id="filter-income" onclick="setFilter('income')">🟢 收入</button>
-        <button type="button" class="filter-btn" id="filter-expense" onclick="setFilter('expense')">🔴 支出</button>
+    <!-- 右側：總覽與歷史明細 -->
+    <div class="cartoon-card">
+      <div class="dashboard-grid">
+        <div class="total-banner balance-banner">
+          <span class="total-title">💰 當前總結餘</span>
+          <span class="total-amount">$<span id="totalBalance">0</span></span>
+        </div>
+        <div class="total-banner" style="background-color: #4ECDC4;">
+          <span class="total-title">🟢 累積收入</span>
+          <span class="total-amount">$<span id="totalIncome">0</span></span>
+        </div>
+        <div class="total-banner" style="background-color: #FF6B6B;">
+          <span class="total-title">🔴 累積支出</span>
+          <span class="total-amount">$<span id="totalExpense">0</span></span>
+        </div>
+      </div>
+      
+      <div class="list-header-row">
+        <div class="list-header">📜 歷史明細</div>
+        <div class="filter-btn-group">
+          <button type="button" class="filter-btn active" id="filter-all" onclick="setFilter('all')">全部</button>
+          <button type="button" class="filter-btn" id="filter-income" onclick="setFilter('income')">🟢 收入</button>
+          <button type="button" class="filter-btn" id="filter-expense" onclick="setFilter('expense')">🔴 支出</button>
+        </div>
+      </div>
+
+      <div id="loading" class="loading-box">
+        <div class="spinner"></div>
+        <div>載入明細中...</div>
+      </div>
+      <ul id="itemList" class="item-list"></ul>
+      
+      <div id="scrollSentinel" class="scroll-loader">
+        <span>⏳ 載入更多紀錄中...</span>
       </div>
     </div>
 
-    <div id="loading" class="loading-box">
-      <div class="spinner"></div>
-      <div>載入明細中...</div>
-    </div>
-    <ul id="itemList" class="item-list"></ul>
-    
-    <div id="scrollSentinel" class="scroll-loader">
-      <span>⏳ 載入更多紀錄中...</span>
-    </div>
   </div>
 </div>
 
 <div id="toast" class="cartoon-toast"></div>
 
 <script>
-  // 請替換為你重新部署後的最新 GAS Web App URL
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPAd8GJhMvHthq1NE8MTiAXN1_cHmbj-_Og9tPGn2dSKSj_qP9QjO-5wN3uGrS5Y_-/exec";
   
   let currentRecords = [];
@@ -493,7 +516,6 @@
     }, 2600);
   }
 
-  // 格式化日期為 YYYY-MM-DD
   function formatDateStr(rawDate) {
     if (!rawDate) return '';
     const d = new Date(rawDate);
@@ -589,7 +611,6 @@
     }
 
     try {
-      // 加防快取參數 ?t=
       const response = await fetch(`${GAS_WEB_APP_URL}?t=${Date.now()}`);
       const resData = await response.json();
       if (resData.status === 'success') {
