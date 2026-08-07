@@ -5,18 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>小氣簿</title>
   
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/littlegas-icon.png">
+  <!-- 優化：改用 jsDelivr CDN 加速圖片載入 -->
+  <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/keliguru/sushiro-queue@main/littlegas-icon.png">
   <meta property="og:type" content="website">
   <meta property="og:title" content="小氣簿">
   <meta property="og:description" content="小氣簿">
-  <meta property="og:image" content="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/littlegas-icon.png"> 
-  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/keliguru/sushiro-queue/refs/heads/main/littlegas-icon.png">
+  <meta property="og:image" content="https://cdn.jsdelivr.net/gh/keliguru/sushiro-queue@main/littlegas-icon.png"> 
+  <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/keliguru/sushiro-queue@main/littlegas-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="小氣簿">
   
+  <!-- 優化：預先連線至常用的外部資源網域 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
   
   <style>
@@ -613,25 +618,46 @@
     }
   }
 
+  // 【優化】使用 LocalStorage 本地快取，背景載入資料
   async function fetchRecords() {
     const loadingEl = document.getElementById('loading');
     const listEl = document.getElementById('itemList');
-    loadingEl.style.display = 'block';
-    listEl.innerHTML = '';
     hideSentinel();
 
+    // 1. 先嘗試讀取本地快取並立即渲染
+    const cachedData = localStorage.getItem('expenseRecords');
+    if (cachedData) {
+      try {
+        currentRecords = JSON.parse(cachedData);
+        renderList(currentRecords);
+        loadingEl.style.display = 'none'; // 有快取就不顯示全螢幕轉圈
+      } catch(e) {
+        console.warn("快取解析失敗", e);
+        loadingEl.style.display = 'block';
+      }
+    } else {
+      loadingEl.style.display = 'block'; // 沒快取才顯示轉圈
+      listEl.innerHTML = '';
+    }
+
+    // 2. 在背景向 GAS 抓取最新資料
     try {
       const response = await fetch(GAS_WEB_APP_URL);
       const resData = await response.json();
       if (resData.status === 'success') {
         currentRecords = resData.data || [];
+        // 將最新資料存入快取
+        localStorage.setItem('expenseRecords', JSON.stringify(currentRecords));
+        // 重新渲染畫面 (此時使用者已經可以看到舊資料，不會覺得等很久)
         renderList(currentRecords);
       } else {
         showToast('讀取失敗：' + resData.message, 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast('連線失敗，請檢查網路。', 'error');
+      if (!cachedData) {
+        showToast('連線失敗，請檢查網路。', 'error');
+      }
     } finally {
       loadingEl.style.display = 'none';
     }
@@ -746,9 +772,8 @@
     observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
         if (currentPage * PAGE_SIZE < sortedRecords.length) {
-          setTimeout(() => {
-            loadMoreRecords();
-          }, 150);
+          // 【優化】移除 setTimeout 以達到無縫滑順載入的效果
+          loadMoreRecords();
         }
       }
     }, {
