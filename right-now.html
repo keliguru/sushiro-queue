@@ -1806,11 +1806,10 @@
                 }
 
                 try {
-                    const res = null;
+                    let res = null;
 				
 					if (target.company === 'MIB') {
-				 
-					res = await fetch(url,{
+						res = await fetch(url,{
 						method: "GET",
 						mode: "cors", 
 						headers: {
