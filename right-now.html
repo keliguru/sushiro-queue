@@ -951,8 +951,10 @@
     const baseUrlCtb = 'https://rt.data.gov.hk';
     const baseUrlKmb = 'https://data.etabus.gov.hk';
 	
-    const allOriginsProxy = 'https://cors.freehi.workers.dev/?';
-    const baseUrlMib = allOriginsProxy + ('https://data.etagmb.gov.hk');
+    //const allOriginsProxy = 'https://cors.freehi.workers.dev/?';
+	const allOriginsProxy = 'https://corsproxy.io/?url=';
+	
+    const baseUrlMib =  ('https://data.etagmb.gov.hk');
 	
     const stopNameCache = JSON.parse(localStorage.getItem('stop_name_cache')) || {};
     const busTargets = [];
@@ -1554,7 +1556,14 @@
             
             if (companyId === 'MIB') {
                 const selectedRegion = document.getElementById('regionSelect').value;
-                const response = await fetch(`${baseUrlMib}/route/${selectedRegion}/${route}`);
+                const response = await fetch(allOriginsProxy + encodeURIComponent(`${baseUrlMib}/route/${selectedRegion}/${route}`),
+				{
+				method: "GET",
+				mode: "cors", 
+				headers: {
+				"Access-Control-Allow-Origin": "*" 
+				}});
+				
                 if (!response.ok) throw new Error(`找不到小巴路線 ${route}`);
                 const mibJson = await response.json();
                 
@@ -1567,7 +1576,13 @@
                 if (!mibRouteData) throw new Error(`找不到對應的方向資料`);
                 const routeId = mibRouteData.route_id;
 
-                const stopRes = await fetch(`${baseUrlMib}/route-stop/${routeId}/${targetGroupId}`);
+                const stopRes = await fetch(allOriginsProxy+encodeURIComponent(`${baseUrlMib}/route-stop/${routeId}/${targetGroupId}`),{
+				method: "GET",
+				mode: "cors", 
+				headers: {
+				"Access-Control-Allow-Origin": "*" 
+				}});
+				
                 if (!stopRes.ok) throw new Error("無法載入小巴站點");
                 const stopJson = await stopRes.json();
                 const routeStops = stopJson.data?.route_stops || [];
@@ -1586,7 +1601,13 @@
 
             } else if (companyId === 'KMB') {
                 const kmbDir = direction === 'outbound' ? 'outbound' : 'inbound';
-                const res = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`);
+                const res = await fetch((`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`),{
+				method: "GET",
+				mode: "cors", 
+				headers: {
+				"Access-Control-Allow-Origin": "*" 
+				}});
+				
                 if (!res.ok) throw new Error(`九巴路線不支援或輸入錯誤`);
                 const json = await res.json();
                 const stopList = json.data || [];
@@ -1605,7 +1626,13 @@
                 });
 
             } else {
-                const res = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/route-stop/${companyId}/${route}/${direction}`);
+                const res = await fetch((`${baseUrlCtb}/v1/transport/citybus-nwfb/route-stop/${companyId}/${route}/${direction}`),{
+				method: "GET",
+				mode: "cors", 
+				headers: {
+				"Access-Control-Allow-Origin": "*" 
+				}});
+				
                 if (!res.ok) throw new Error(`城巴數據請求失敗`);
                 const json = await res.json();
                 const stopList = json.data || [];
@@ -1637,7 +1664,13 @@
         if (stopNameCache[cacheKey]) return stopNameCache[cacheKey];
         let url = company === 'KMB' ? `${baseUrlKmb}/v1/transport/kmb/stop/${stopId}` : `${baseUrlCtb}/v1/transport/citybus-nwfb/stop/${stopId}`;
         try {
-            const response = await fetch(url);
+            const response = await fetch((url),{
+				method: "GET",
+				mode: "cors", 
+				headers: {
+				"Access-Control-Allow-Origin": "*" 
+				}});
+				
             if (response.ok) {
                 const resData = await response.json(); 
                 const name = resData.data.name_tc || `車站 ${stopId}`;
@@ -1779,7 +1812,7 @@
                 const isPinned = pinnedStops[stopKey];
                 let url = '';
                 if (target.company === 'MIB') {
-                    url = `${baseUrlMib}/eta/route-stop/${target.routeId}/${target.stopValue}`;
+                    url = allOriginsProxy + encodeURIComponent(`${baseUrlMib}/eta/route-stop/${target.routeId}/${target.stopValue}`);
                 } else if (target.company === 'KMB') {
                     url = `${baseUrlKmb}/v1/transport/kmb/eta/${target.stopValue}/${target.route}/1`;
                 } else {
@@ -1787,7 +1820,14 @@
                 }
 
                 try {
-                    const res = await fetch(url); if (!res.ok) throw new Error('連線失敗');
+                    const res = await fetch(url,{
+				method: "GET",
+				mode: "cors", 
+				headers: {
+				"Access-Control-Allow-Origin": "*" 
+				}}); 
+				
+					if (!res.ok) throw new Error('連線失敗');
                     const resData = await res.json();
                     
                     let filteredEta = [];
@@ -2046,7 +2086,12 @@
 					const regions = ['HKI', 'KLN', 'NT'];
 					const fetchPromises = regions.map(async (r) => {
 						try {
-							const res = await fetch(`${baseUrlMib}/route/${r}/${route}`);
+							const res = await fetch(allOriginsProxy+ encodeURIComponent(`${baseUrlMib}/route/${r}/${route}`),{
+							method: "GET",
+							mode: "cors", 
+							headers: {
+							"Access-Control-Allow-Origin": "*" 
+							}});
 							if (res.ok) {
 								const json = await res.json();
 								if (json.data && json.data.length > 0) return { region: r, data: json.data };
@@ -2061,7 +2106,13 @@
 						mibRouteData = found.data.find(item => parseInt(item.group_id) === targetGroupId) || found.data[0];
 					}
 				} else {
-					const routeRes = await fetch(`${baseUrlMib}/route/${activeRegion}/${route}`);
+					const routeRes = await fetch(allOriginsProxy+encodeURIComponent(`${baseUrlMib}/route/${activeRegion}/${route}`),{
+							method: "GET",
+							mode: "cors", 
+							headers: {
+							"Access-Control-Allow-Origin": "*" 
+							}});
+							
 					const routeJson = await routeRes.json();
 					mibRouteData = routeJson.data?.find(item => parseInt(item.group_id) === targetGroupId) || routeJson.data?.[0];
 				}
@@ -2069,21 +2120,41 @@
 				if (!mibRouteData) throw new Error(`找不到小巴路線 ${route} 的方向資料`);
 				actualRouteId = mibRouteData.route_id;
 
-				const stopRes = await fetch(`${baseUrlMib}/route-stop/${actualRouteId}/${targetGroupId}`);
+				const stopRes = await fetch(allOriginsProxy+encodeURIComponent(`${baseUrlMib}/route-stop/${actualRouteId}/${targetGroupId}`),{
+							method: "GET",
+							mode: "cors", 
+							headers: {
+							"Access-Control-Allow-Origin": "*" 
+							}});
 				const stopJson = await stopRes.json();
 				stopList = stopJson.data?.route_stops || [];
 				
 			} else if (company === 'KMB') {
 				const kmbDir = direction === 'outbound' ? 'outbound' : 'inbound';
-				const stopRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`);
+				const stopRes = await fetch(encodeURIComponent(`${baseUrlKmb}/v1/transport/kmb/route-stop/${route}/${kmbDir}/1`),{
+							method: "GET",
+							mode: "cors", 
+							headers: {
+							"Access-Control-Allow-Origin": "*" 
+							}});
 				const stopJson = await stopRes.json();
 				stopList = stopJson.data || [];
 
-				const etaRes = await fetch(`${baseUrlKmb}/v1/transport/kmb/route-eta/${route}/1`);
+				const etaRes = await fetch(encodeURIComponent(`${baseUrlKmb}/v1/transport/kmb/route-eta/${route}/1`),{
+							method: "GET",
+							mode: "cors", 
+							headers: {
+							"Access-Control-Allow-Origin": "*" 
+							}});
 				const etaJson = await etaRes.json();
 				etaData = etaJson.data || [];
 			} else { 
-				const stopRes = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/route-stop/${company}/${route}/${direction}`);
+				const stopRes = await fetch(encodeURIComponent(`${baseUrlCtb}/v1/transport/citybus-nwfb/route-stop/${company}/${route}/${direction}`),{
+							method: "GET",
+							mode: "cors", 
+							headers: {
+							"Access-Control-Allow-Origin": "*" 
+							}});
 				const stopJson = await stopRes.json();
 				stopList = stopJson.data || [];
 			}
@@ -2096,7 +2167,12 @@
 
 				if (company === 'MIB') {
 					try {
-						const etaRes = await fetch(`${baseUrlMib}/eta/route-stop/${actualRouteId}/${stopId}`);
+						const etaRes = await fetch(allOriginsProxy+encodeURIComponent(`${baseUrlMib}/eta/route-stop/${actualRouteId}/${stopId}`),{
+							method: "GET",
+							mode: "cors", 
+							headers: {
+							"Access-Control-Allow-Origin": "*" 
+							}});
 						if (etaRes.ok) {
 							const etaJson = await etaRes.json();
 							if (etaJson.data && etaJson.data.length > 0) {
@@ -2111,7 +2187,12 @@
 					stopETAs = etaData.filter(e => (e.seq == stopSeq) && (e.dir === dirCode));
 				} else if (company === 'CTB' || company === 'NWFB') {
 					try {
-						const etaRes = await fetch(`${baseUrlCtb}/v1/transport/citybus-nwfb/eta/${company}/${stopId}/${route}`);
+						const etaRes = await fetch(encodeURIComponent(`${baseUrlCtb}/v1/transport/citybus-nwfb/eta/${company}/${stopId}/${route}`),{
+							method: "GET",
+							mode: "cors", 
+							headers: {
+							"Access-Control-Allow-Origin": "*" 
+							}});
 						if (etaRes.ok) {
 							const etaJson = await etaRes.json();
 							const dirCode = direction === 'outbound' ? 'O' : 'I';
