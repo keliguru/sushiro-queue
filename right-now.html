@@ -952,7 +952,7 @@
     const baseUrlKmb = 'https://data.etabus.gov.hk';
 	
     //const allOriginsProxy = 'https://cors.freehi.workers.dev/?';
-	const allOriginsProxy = 'https://corsproxy.io/?url=';
+	const allOriginsProxy = 'https://proxy.bluekyro.com/';
 	
     const baseUrlMib =  ('https://data.etagmb.gov.hk');
 	
@@ -1556,7 +1556,7 @@
             
             if (companyId === 'MIB') {
                 const selectedRegion = document.getElementById('regionSelect').value;
-                const response = await fetch(allOriginsProxy + encodeURIComponent(`${baseUrlMib}/route/${selectedRegion}/${route}`),
+                const response = await fetch(allOriginsProxy + `${baseUrlMib}/route/${selectedRegion}/${route}`,
 				{
 				method: "GET",
 				mode: "cors", 
@@ -1576,7 +1576,7 @@
                 if (!mibRouteData) throw new Error(`找不到對應的方向資料`);
                 const routeId = mibRouteData.route_id;
 
-                const stopRes = await fetch(allOriginsProxy+encodeURIComponent(`${baseUrlMib}/route-stop/${routeId}/${targetGroupId}`),{
+                const stopRes = await fetch(allOriginsProxy+`${baseUrlMib}/route-stop/${routeId}/${targetGroupId}`,{
 				method: "GET",
 				mode: "cors", 
 				headers: {
@@ -1798,7 +1798,7 @@
 				
                 let url = '';
                 if (target.company === 'MIB') {
-                    url = allOriginsProxy + encodeURIComponent(`${baseUrlMib}/eta/route-stop/${target.routeId}/${target.stopValue}`);
+                    url = allOriginsProxy + `${baseUrlMib}/eta/route-stop/${target.routeId}/${target.stopValue}`;
                 } else if (target.company === 'KMB') {
                     url = `${baseUrlKmb}/v1/transport/kmb/eta/${target.stopValue}/${target.route}/1`;
                 } else {
@@ -2078,7 +2078,7 @@
 					const regions = ['HKI', 'KLN', 'NT'];
 					const fetchPromises = regions.map(async (r) => {
 						try {
-							const res = await fetch(allOriginsProxy+ encodeURIComponent(`${baseUrlMib}/route/${r}/${route}`),{
+							const res = await fetch(allOriginsProxy+ `${baseUrlMib}/route/${r}/${route}`,{
 							method: "GET",
 							mode: "cors", 
 							headers: {
@@ -2098,7 +2098,7 @@
 						mibRouteData = found.data.find(item => parseInt(item.group_id) === targetGroupId) || found.data[0];
 					}
 				} else {
-					const routeRes = await fetch(allOriginsProxy+encodeURIComponent(`${baseUrlMib}/route/${activeRegion}/${route}`),{
+					const routeRes = await fetch(allOriginsProxy+`${baseUrlMib}/route/${activeRegion}/${route}`,{
 							method: "GET",
 							mode: "cors", 
 							headers: {
@@ -2112,7 +2112,7 @@
 				if (!mibRouteData) throw new Error(`找不到小巴路線 ${route} 的方向資料`);
 				actualRouteId = mibRouteData.route_id;
 
-				const stopRes = await fetch(allOriginsProxy+encodeURIComponent(`${baseUrlMib}/route-stop/${actualRouteId}/${targetGroupId}`),{
+				const stopRes = await fetch(allOriginsProxy+`${baseUrlMib}/route-stop/${actualRouteId}/${targetGroupId}`,{
 							method: "GET",
 							mode: "cors", 
 							headers: {
@@ -2144,7 +2144,7 @@
 
 				if (company === 'MIB') {
 					try {
-						const etaRes = await fetch(allOriginsProxy+encodeURIComponent(`${baseUrlMib}/eta/route-stop/${actualRouteId}/${stopId}`),{
+						const etaRes = await fetch(allOriginsProxy+`${baseUrlMib}/eta/route-stop/${actualRouteId}/${stopId}`,{
 							method: "GET",
 							mode: "cors", 
 							headers: {
