@@ -408,6 +408,7 @@
             defaultTab: () => localStorage.getItem('setting_default_tab') || 'home',
             hideWatched: () => localStorage.getItem('setting_hide_watched') === 'true',
             todayHighlight: () => localStorage.getItem('setting_today_highlight') === 'true',
+            gasUrl: () => localStorage.getItem('setting_gas_url') || '',
             platforms: () => {
                 const p = localStorage.getItem('setting_platforms');
                 return p ? JSON.parse(p) : ['Netflix', 'Disney+', 'YouTube', 'ViuTV'];
@@ -861,6 +862,7 @@
 
             const hideWatchedChecked = SETTINGS.hideWatched() ? 'checked' : '';
             const todayHighlightChecked = SETTINGS.todayHighlight() ? 'checked' : '';
+            const gasUrlValue = SETTINGS.gasUrl();
             
             // 平台選擇 tags 產生
             const platforms = ['Netflix', 'Disney+', 'YouTube', 'ViuTV', '動畫瘋', 'Bilibili'];
@@ -967,9 +969,22 @@
                         </div>
                     </div>
 
-                    <!-- 5. 備份與還原區塊 -->
+                    <!-- 5. Google Apps Script 雲端同步 -->
                     <div class="setting-section">
-                        <h3 class="setting-section-title">💾 我的最愛備份與還原</h3>
+                        <h3 class="setting-section-title" style="color: #4285F4;">☁️ Google Apps Script 雲端同步</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height: 1.4;">
+                            貼上部署好的 Google Apps Script Web App URL，即可將「我的最愛」紀錄上載備份至雲端或從雲端還原。
+                        </p>
+                        <input type="text" id="gasUrlInput" class="note-input" style="margin-bottom:12px;" placeholder="https://script.google.com/macros/s/.../exec" value="${gasUrlValue}" onchange="updateSetting('gas_url', this.value)">
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn" id="btnGasBackup" style="flex:1; font-size:13px; background:#4285F4; color:#fff;" onclick="backupToGAS()">☁️ 雲端上載備份</button>
+                            <button class="btn" id="btnGasRestore" style="flex:1; font-size:13px; background:#34A853; color:#fff;" onclick="restoreFromGAS()">☁️ 雲端下載還原</button>
+                        </div>
+                    </div>
+
+                    <!-- 6. 備份與還原區塊 -->
+                    <div class="setting-section">
+                        <h3 class="setting-section-title">💾 本地備份與還原</h3>
                         <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">
                             僅匯出/匯入你的「我的最愛追番清單」及相關進度心得。更換裝置時，不會影響目標裝置的系統個人化外觀設定。
                         </p>
@@ -979,7 +994,7 @@
                         </div>
                     </div>
 
-                    <!-- 6. 危險區域 -->
+                    <!-- 7. 危險區域 -->
                     <div class="setting-section" style="border: 1px solid rgba(229, 9, 20, 0.3);">
                         <h3 class="setting-section-title" style="color: #ff5c5c;">⚠️ 危險區域</h3>
                         <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">
@@ -1081,6 +1096,127 @@
             }, 1500);
         }
 
+        /* 取得最愛資料 Payload 結構 */
+        function getFavoritePayload() {
+            const now = new Date();
+            const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
+            const data = { 
+                _export_timestamp: now.toISOString(),
+                anime_favorites: localStorage.getItem('anime_favorites'),
+                anime_favorites_details: localStorage.getItem('anime_favorites_details')
+            };
+            
+            favs.forEach(id => {
+                const relatedKeys = [`watched_${id}`, `platform_${id}`, `review_${id}`, `watch_link_${id}`, `nickname_${id}`];
+                relatedKeys.forEach(key => {
+                    const val = localStorage.getItem(key);
+                    if (val !== null) data[key] = val;
+                });
+            });
+            return data;
+        }
+
+        /* 套用最愛資料 Payload */
+        function applyFavoritePayload(data) {
+            Object.keys(data).forEach(key => {
+                if (key === 'anime_favorites' || key === 'anime_favorites_details' || 
+                    key.startsWith('watched_') || key.startsWith('platform_') || 
+                    key.startsWith('review_') || key.startsWith('watch_link_') || 
+                    key.startsWith('nickname_')) {
+                    if (data[key] !== null) {
+                        localStorage.setItem(key, data[key]);
+                    }
+                }
+            });
+        }
+
+        /* Google Apps Script 雲端上載備份 */
+        async function backupToGAS() {
+            const url = SETTINGS.gasUrl().trim();
+            if (!url) {
+                alert("請先輸入有效的 Google Apps Script Web App URL！");
+                return;
+            }
+
+            const btn = document.getElementById('btnGasBackup');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ 上載中...";
+            btn.disabled = true;
+
+            const payload = {
+                action: 'backup',
+                data: getFavoritePayload()
+            };
+
+            try {
+                // 使用 text/plain 避免跨域 OPTIONS 預檢問題
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                const resJson = await response.json();
+                if (resJson.status === 'success') {
+                    btn.innerHTML = "✅ 上載成功！";
+                    alert(`☁️ 上載備份成功！\n備份時間：${new Date(resJson.timestamp).toLocaleString()}`);
+                } else {
+                    alert("❌ 上載失敗：" + resJson.message);
+                }
+            } catch (err) {
+                console.error("GAS 備份失敗:", err);
+                alert("❌ 上載失敗，請檢查 URL 是否正確及網路連線。");
+            } finally {
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 1500);
+            }
+        }
+
+        /* Google Apps Script 雲端下載還原 */
+        async function restoreFromGAS() {
+            const url = SETTINGS.gasUrl().trim();
+            if (!url) {
+                alert("請先輸入有效的 Google Apps Script Web App URL！");
+                return;
+            }
+
+            const check = confirm("⚠️ 確定要從雲端下載還原嗎？\n這將會覆蓋當前裝置的「我的最愛」與追番進度紀錄！");
+            if (!check) return;
+
+            const btn = document.getElementById('btnGasRestore');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ 下載中...";
+            btn.disabled = true;
+
+            const payload = { action: 'restore' };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                const resJson = await response.json();
+                if (resJson.status === 'success' && resJson.data) {
+                    applyFavoritePayload(resJson.data);
+                    btn.innerHTML = "✅ 還原成功！";
+                    alert(`☁️ 雲端下載還原成功！\n資料備份時間：${new Date(resJson.timestamp).toLocaleString()}`);
+                    location.reload();
+                } else {
+                    alert("❌ 還原失敗：" + (resJson.message || "尚無備份資料"));
+                }
+            } catch (err) {
+                console.error("GAS 還原失敗:", err);
+                alert("❌ 還原失敗，請檢查 URL 是否正確及網路連線。");
+            } finally {
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 1500);
+            }
+        }
+
         function toggleExpand(id) {
             const panel = document.getElementById(`collapsible-${id}`);
             const icon = document.getElementById(`expand-icon-${id}`);
@@ -1162,20 +1298,7 @@
             const pad = (n) => String(n).padStart(2, '0');
             const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
             
-            const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
-            const data = { 
-                _export_timestamp: now.toISOString(),
-                anime_favorites: localStorage.getItem('anime_favorites'),
-                anime_favorites_details: localStorage.getItem('anime_favorites_details')
-            };
-            
-            favs.forEach(id => {
-                const relatedKeys = [`watched_${id}`, `platform_${id}`, `review_${id}`, `watch_link_${id}`, `nickname_${id}`];
-                relatedKeys.forEach(key => {
-                    const val = localStorage.getItem(key);
-                    if (val !== null) data[key] = val;
-                });
-            });
+            const data = getFavoritePayload();
 
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a'); 
@@ -1189,17 +1312,7 @@
             reader.onload = (e) => { 
                 try {
                     const data = JSON.parse(e.target.result); 
-                    
-                    Object.keys(data).forEach(key => {
-                        if (key === 'anime_favorites' || key === 'anime_favorites_details' || 
-                            key.startsWith('watched_') || key.startsWith('platform_') || 
-                            key.startsWith('review_') || key.startsWith('watch_link_') || 
-                            key.startsWith('nickname_')) {
-                            if (data[key] !== null) {
-                                localStorage.setItem(key, data[key]);
-                            }
-                        }
-                    }); 
+                    applyFavoritePayload(data);
                     location.reload(); 
                 } catch (err) {
                     alert("匯入失敗，請確認備份 JSON 檔案是否正確。");
