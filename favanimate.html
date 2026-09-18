@@ -1096,25 +1096,52 @@
             }, 1500);
         }
 
-        /* 取得最愛資料 Payload 結構 */
-        function getFavoritePayload() {
-            const now = new Date();
-            const favs = JSON.parse(localStorage.getItem('anime_favorites') || '[]').map(Number);
-            const data = { 
-                _export_timestamp: now.toISOString(),
-                anime_favorites: localStorage.getItem('anime_favorites'),
-                anime_favorites_details: localStorage.getItem('anime_favorites_details')
-            };
-            
-            favs.forEach(id => {
-                const relatedKeys = [`watched_${id}`, `platform_${id}`, `review_${id}`, `watch_link_${id}`, `nickname_${id}`];
-                relatedKeys.forEach(key => {
-                    const val = localStorage.getItem(key);
-                    if (val !== null) data[key] = val;
-                });
-            });
-            return data;
-        }
+		/* 取得最愛資料 Payload 結構 */
+		function getFavoritePayload() {
+			const now = new Date();
+			// 1. 取得最愛 ID 陣列（同時保留原始與數字型態）
+			const rawFavs = JSON.parse(localStorage.getItem('anime_favorites') || '[]');
+			const favsNums = rawFavs.map(Number);
+			
+			const data = { 
+				_export_timestamp: now.toISOString(),
+				anime_favorites: localStorage.getItem('anime_favorites'),
+				anime_favorites_details: localStorage.getItem('anime_favorites_details')
+			};
+			
+			// 2. 方法 A：針對明確標示的最愛 ID 提取相關動態 Key
+			favsNums.forEach(id => {
+				const relatedKeys = [
+					`watched_${id}`, 
+					`platform_${id}`, 
+					`review_${id}`, 
+					`watch_link_${id}`, 
+					`nickname_${id}`
+				];
+				relatedKeys.forEach(key => {
+					const val = localStorage.getItem(key);
+					if (val !== null) data[key] = val;
+				});
+			});
+
+			// 3. 方法 B (保險機制)：遍歷全域 LocalStorage，確保任何遺漏的動態 key 都被打包
+			for (let i = 0; i < localStorage.length; i++) {
+				const key = localStorage.key(i);
+				if (key) {
+					const isRelatedKey = key.startsWith('watched_') || 
+										 key.startsWith('platform_') || 
+										 key.startsWith('review_') || 
+										 key.startsWith('watch_link_') || 
+										 key.startsWith('nickname_');
+					if (isRelatedKey) {
+						const val = localStorage.getItem(key);
+						if (val !== null) data[key] = val;
+					}
+				}
+			}
+
+			return data;
+		}
 
         /* 套用最愛資料 Payload */
         function applyFavoritePayload(data) {
@@ -1156,12 +1183,14 @@
                     body: JSON.stringify(payload)
                 });
                 const resJson = await response.json();
+				
                 if (resJson.status === 'success') {
                     btn.innerHTML = "✅ 上載成功！";
                     alert(`☁️ 上載備份成功！\n備份時間：${new Date(resJson.timestamp).toLocaleString()}`);
                 } else {
                     alert("❌ 上載失敗：" + resJson.message);
                 }
+				
             } catch (err) {
                 console.error("GAS 備份失敗:", err);
                 alert("❌ 上載失敗，請檢查 URL 是否正確及網路連線。");
